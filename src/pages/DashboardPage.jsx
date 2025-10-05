@@ -852,7 +852,7 @@ function DashboardPage() {
               </div>
 
               {/* Payout Account Status */}
-              {payoutAccount ? (
+              {payoutAccount && payoutAccount.payouts_enabled ? (
                 <div className="bg-white border-2 border-black rounded-xl p-4 mb-6">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -883,7 +883,10 @@ function DashboardPage() {
                 <div className="bg-yellow-100 border-2 border-black rounded-xl p-4 mb-6">
                   <h4 className="font-extrabold mb-2">⚠️ Setup Payout Account</h4>
                   <p className="text-sm font-semibold mb-3">
-                    Connect your Stripe account to receive payouts
+                    {payoutAccount ? 
+                      'Complete your Stripe onboarding to enable payouts' : 
+                      'Connect your Stripe account to receive payouts'
+                    }
                   </p>
                   {connectError && (
                     <div className="bg-red-100 border-2 border-red-500 rounded-lg p-3 mb-3">
@@ -893,9 +896,9 @@ function DashboardPage() {
                   <button 
                     onClick={handleConnectStripe}
                     disabled={connectingStripe}
-                    className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed w-full"
                   >
-                    {connectingStripe ? 'Connecting...' : 'Connect Stripe Account'}
+                    {connectingStripe ? 'Connecting...' : (payoutAccount ? 'Complete Stripe Onboarding' : 'Connect Stripe Account')}
                   </button>
                 </div>
               )}
