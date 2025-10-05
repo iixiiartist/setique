@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { X, Upload } from './Icons'
@@ -7,12 +7,54 @@ import { TagInput } from './TagInput'
 export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth()
   
-  // Form state
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [price, setPrice] = useState('')
-  const [modality, setModality] = useState('vision')
-  const [tags, setTags] = useState([])
+  // Form state with localStorage persistence
+  const [title, setTitle] = useState(() => {
+    return localStorage.getItem('draft_modal_dataset_title') || ''
+  })
+  const [description, setDescription] = useState(() => {
+    return localStorage.getItem('draft_modal_dataset_desc') || ''
+  })
+  const [price, setPrice] = useState(() => {
+    return localStorage.getItem('draft_modal_dataset_price') || ''
+  })
+  const [modality, setModality] = useState(() => {
+    return localStorage.getItem('draft_modal_dataset_modality') || 'vision'
+  })
+  const [tags, setTags] = useState(() => {
+    const saved = localStorage.getItem('draft_modal_dataset_tags')
+    return saved ? JSON.parse(saved) : []
+  })
+  
+  // Auto-save form to localStorage
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_dataset_title', title)
+    }
+  }, [title, isOpen])
+  
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_dataset_desc', description)
+    }
+  }, [description, isOpen])
+  
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_dataset_price', price)
+    }
+  }, [price, isOpen])
+  
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_dataset_modality', modality)
+    }
+  }, [modality, isOpen])
+  
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_dataset_tags', JSON.stringify(tags))
+    }
+  }, [tags, isOpen])
   
   // File upload state
   const [uploadFile, setUploadFile] = useState(null)
@@ -113,7 +155,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
 
       alert(`✅ Published "${title}"! Your dataset is now live on the marketplace.`)
       
-      // Reset form
+      // Reset form and clear localStorage draft
       setTitle('')
       setDescription('')
       setPrice('')
@@ -121,6 +163,11 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
       setTags([])
       setUploadFile(null)
       setUploadProgress(0)
+      localStorage.removeItem('draft_modal_dataset_title')
+      localStorage.removeItem('draft_modal_dataset_desc')
+      localStorage.removeItem('draft_modal_dataset_price')
+      localStorage.removeItem('draft_modal_dataset_modality')
+      localStorage.removeItem('draft_modal_dataset_tags')
       
       // Call success callback to refresh dashboard data
       if (onSuccess) {

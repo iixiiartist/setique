@@ -42,12 +42,44 @@ function HomePage() {
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
 
-  // Creator form state
-  const [newTitle, setNewTitle] = useState('')
-  const [newDesc, setNewDesc] = useState('')
-  const [newPrice, setNewPrice] = useState('')
-  const [newModality, setNewModality] = useState('vision')
-  const [newTags, setNewTags] = useState([])
+  // Creator form state with localStorage persistence
+  const [newTitle, setNewTitle] = useState(() => {
+    return localStorage.getItem('draft_dataset_title') || ''
+  })
+  const [newDesc, setNewDesc] = useState(() => {
+    return localStorage.getItem('draft_dataset_desc') || ''
+  })
+  const [newPrice, setNewPrice] = useState(() => {
+    return localStorage.getItem('draft_dataset_price') || ''
+  })
+  const [newModality, setNewModality] = useState(() => {
+    return localStorage.getItem('draft_dataset_modality') || 'vision'
+  })
+  const [newTags, setNewTags] = useState(() => {
+    const saved = localStorage.getItem('draft_dataset_tags')
+    return saved ? JSON.parse(saved) : []
+  })
+  
+  // Auto-save form to localStorage
+  useEffect(() => {
+    localStorage.setItem('draft_dataset_title', newTitle)
+  }, [newTitle])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_dataset_desc', newDesc)
+  }, [newDesc])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_dataset_price', newPrice)
+  }, [newPrice])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_dataset_modality', newModality)
+  }, [newModality])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_dataset_tags', JSON.stringify(newTags))
+  }, [newTags])
   
   // File upload state
   const [uploadFile, setUploadFile] = useState(null)
@@ -72,14 +104,59 @@ function HomePage() {
   const isCreatorFormValid =
     newTitle.trim() !== '' && newDesc.trim() !== '' && !isNaN(numericNewPrice) && numericNewPrice >= 0 && uploadFile !== null
 
-  // Bounty form state
-  const [bountyTitle, setBountyTitle] = useState('')
-  const [bountyDesc, setBountyDesc] = useState('')
-  const [bountyModality, setBountyModality] = useState('image')
-  const [bountyQuantity, setBountyQuantity] = useState('')
-  const [bountyBudget, setBountyBudget] = useState('')
-  const [bountyTags, setBountyTags] = useState([])
-  const [bountyDeadline, setBountyDeadline] = useState('')
+  // Bounty form state with localStorage persistence
+  const [bountyTitle, setBountyTitle] = useState(() => {
+    return localStorage.getItem('draft_bounty_title') || ''
+  })
+  const [bountyDesc, setBountyDesc] = useState(() => {
+    return localStorage.getItem('draft_bounty_desc') || ''
+  })
+  const [bountyModality, setBountyModality] = useState(() => {
+    return localStorage.getItem('draft_bounty_modality') || 'image'
+  })
+  const [bountyQuantity, setBountyQuantity] = useState(() => {
+    return localStorage.getItem('draft_bounty_quantity') || ''
+  })
+  const [bountyBudget, setBountyBudget] = useState(() => {
+    return localStorage.getItem('draft_bounty_budget') || ''
+  })
+  const [bountyTags, setBountyTags] = useState(() => {
+    const saved = localStorage.getItem('draft_bounty_tags')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [bountyDeadline, setBountyDeadline] = useState(() => {
+    return localStorage.getItem('draft_bounty_deadline') || ''
+  })
+  
+  // Auto-save bounty form to localStorage
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_title', bountyTitle)
+  }, [bountyTitle])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_desc', bountyDesc)
+  }, [bountyDesc])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_modality', bountyModality)
+  }, [bountyModality])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_quantity', bountyQuantity)
+  }, [bountyQuantity])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_budget', bountyBudget)
+  }, [bountyBudget])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_tags', JSON.stringify(bountyTags))
+  }, [bountyTags])
+  
+  useEffect(() => {
+    localStorage.setItem('draft_bounty_deadline', bountyDeadline)
+  }, [bountyDeadline])
+  
   const isBountyFormValid =
     bountyTitle.trim() && bountyBudget && bountyTags.length > 0
 
@@ -336,13 +413,18 @@ function HomePage() {
         `Published "${newTitle}"! Your dataset is now live on the marketplace.`
       )
       
-      // Reset form
+      // Reset form and clear localStorage draft
       setNewTitle('')
       setNewDesc('')
       setNewPrice('')
       setNewTags([])
       setUploadFile(null)
       setUploadProgress(0)
+      localStorage.removeItem('draft_dataset_title')
+      localStorage.removeItem('draft_dataset_desc')
+      localStorage.removeItem('draft_dataset_price')
+      localStorage.removeItem('draft_dataset_modality')
+      localStorage.removeItem('draft_dataset_tags')
       
       fetchDatasets()
     } catch (error) {
@@ -501,6 +583,13 @@ function HomePage() {
       setBountyBudget('')
       setBountyTags([])
       setBountyDeadline('')
+      localStorage.removeItem('draft_bounty_title')
+      localStorage.removeItem('draft_bounty_desc')
+      localStorage.removeItem('draft_bounty_modality')
+      localStorage.removeItem('draft_bounty_quantity')
+      localStorage.removeItem('draft_bounty_budget')
+      localStorage.removeItem('draft_bounty_tags')
+      localStorage.removeItem('draft_bounty_deadline')
       fetchBounties()
     } catch (error) {
       console.error('Error posting bounty:', error)
