@@ -25,62 +25,62 @@ export const handler = async (event) => {
       }
     }
 
-    // 1. Verify user has purchased this dataset
-    const { data: purchase, error: purchaseError } = await supabase
-      .from('purchases')
-      .select('id, status')
-      .eq('user_id', userId)
-      .eq('dataset_id', datasetId)
-      .eq('status', 'completed')
-      .single()
-
-    if (purchaseError || !purchase) {
-      console.error('Purchase verification failed:', purchaseError)
-      
-      // Log failed download attempt
-      await supabase.from('download_logs').insert({
-        user_id: userId,
-        dataset_id: datasetId,
-        purchase_id: purchase?.id || null,
-        success: false,
-        error_message: 'Purchase not found or not completed',
-        ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
-        user_agent: event.headers['user-agent']
-      })
-
-      return {
-        statusCode: 403,
-        body: JSON.stringify({ 
-          error: 'You must purchase this dataset before downloading' 
-        })
-      }
-    }
-
-    // 2. Get dataset file path
-    const { data: dataset, error: datasetError } = await supabase
+    // 1. Get dataset info first to check if user is the creator
+    const { data: datasetInfo, error: datasetCheckError } = await supabase
       .from('datasets')
-      .select('download_url, title, description, schema_fields, sample_data, notes')
+      .select('creator_id, download_url, title, description, schema_fields, sample_data, notes')
       .eq('id', datasetId)
       .single()
 
-    if (datasetError || !dataset) {
-      console.error('Dataset fetch failed:', datasetError)
-      
-      await supabase.from('download_logs').insert({
-        user_id: userId,
-        dataset_id: datasetId,
-        purchase_id: purchase.id,
-        success: false,
-        error_message: 'Dataset not found',
-        ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
-        user_agent: event.headers['user-agent']
-      })
-
+    if (datasetCheckError || !datasetInfo) {
+      console.error('Dataset check failed:', datasetCheckError)
       return {
         statusCode: 404,
         body: JSON.stringify({ error: 'Dataset not found' })
       }
     }
+
+    // Allow creators to download their own datasets without purchasing
+    const isCreator = datasetInfo.creator_id === userId
+    let purchase = null
+
+    if (!isCreator) {
+      // 2. Verify user has purchased this dataset
+      const { data: purchaseData, error: purchaseError } = await supabase
+        .from('purchases')
+        .select('id, status')
+        .eq('user_id', userId)
+        .eq('dataset_id', datasetId)
+        .eq('status', 'completed')
+        .single()
+
+      if (purchaseError || !purchaseData) {
+        console.error('Purchase verification failed:', purchaseError)
+        
+        // Log failed download attempt
+        await supabase.from('download_logs').insert({
+          user_id: userId,
+          dataset_id: datasetId,
+          purchase_id: null,
+          success: false,
+          error_message: 'Purchase not found or not completed',
+          ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
+          user_agent: event.headers['user-agent']
+        })
+
+        return {
+          statusCode: 403,
+          body: JSON.stringify({ 
+            error: 'You must purchase this dataset before downloading' 
+          })
+        }
+      }
+      
+      purchase = purchaseData
+    }
+
+    // 3. Use dataset info (already fetched above)
+    const dataset = datasetInfo
 
     // Check if this is a demo dataset
     const isDemoDataset = dataset.title.includes('(DEMO)')
@@ -159,7 +159,7 @@ Visit **setique.com** to start creating and selling real datasets today!
       await supabase.from('download_logs').insert({
         user_id: userId,
         dataset_id: datasetId,
-        purchase_id: purchase.id,
+        purchase_id: purchase?.id || null,
         success: true,
         ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
         user_agent: event.headers['user-agent']
@@ -181,7 +181,7 @@ Visit **setique.com** to start creating and selling real datasets today!
       await supabase.from('download_logs').insert({
         user_id: userId,
         dataset_id: datasetId,
-        purchase_id: purchase.id,
+        purchase_id: purchase?.id || null,
         success: false,
         error_message: 'Dataset file not found',
         ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
@@ -205,7 +205,7 @@ Visit **setique.com** to start creating and selling real datasets today!
       await supabase.from('download_logs').insert({
         user_id: userId,
         dataset_id: datasetId,
-        purchase_id: purchase.id,
+        purchase_id: purchase?.id || null,
         success: false,
         error_message: signedUrlError.message,
         ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
@@ -222,7 +222,7 @@ Visit **setique.com** to start creating and selling real datasets today!
     await supabase.from('download_logs').insert({
       user_id: userId,
       dataset_id: datasetId,
-      purchase_id: purchase.id,
+      purchase_id: purchase?.id || null,
       success: true,
       ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
       user_agent: event.headers['user-agent']
