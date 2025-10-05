@@ -130,6 +130,7 @@ function HomePage() {
           dataset_partnerships!dataset_partnerships_dataset_id_fkey (
             id,
             curator_user_id,
+            status,
             pro_curators!dataset_partnerships_curator_user_id_fkey (
               display_name,
               badge_level
@@ -138,7 +139,6 @@ function HomePage() {
         `
         )
         .eq('is_active', true)
-        .eq('dataset_partnerships.status', 'active')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -1225,7 +1225,7 @@ function HomePage() {
                     <h3 className="text-2xl font-extrabold text-black uppercase">
                       {d.title}
                     </h3>
-                    {d.dataset_partnerships?.[0]?.pro_curators && (
+                    {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
                       <div className="mt-2 flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
                           <Star className="w-3 h-3 mr-1 fill-current" />
