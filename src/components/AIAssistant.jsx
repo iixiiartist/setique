@@ -133,232 +133,186 @@ const generateResponse = (userMessage, context, conversationHistory = []) => {
   // Pro Curator questions
   if (msg.match(/pro curator|curator|partnership|improve.*dataset|help.*curat/)) {
     if (msg.match(/become|apply|how to be|sign up/)) {
-      return `**Becoming a Pro Curator:**
+      return `Great! So you want to become a Pro Curator. Here's the deal:
 
-${ASSISTANT_KNOWLEDGE.proCurator.forCurators.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+You'll apply through your Dashboard (Pro Curator tab), browse curation requests from dataset owners, and submit proposals for projects you can help with. When accepted, you earn 40% of all future sales from that dataset.
 
-**Badge Progression:**
-• 🔵 **Verified**: Newly approved, ready to work
-• 🟣 **Expert**: 10+ projects, 4.5+ rating
-• 🟡 **Master**: 50+ projects, 4.8+ rating
+As you complete projects, you'll earn badges:
+🔵 Verified (starting out)
+🟣 Expert (10+ projects, 4.5+ stars)
+🟡 Master (50+ projects, 4.8+ stars)
 
-**To Apply:** Go to Dashboard → Pro Curator tab → Fill out application
+The cool part? You get ongoing passive income. Every time that dataset sells, you get paid. If a dataset sells for $100, you earn $40, the creator gets $40, and we take $20.
 
-**Earnings:** You earn 40% of sales, creator gets 40%, platform gets 20%
-
-Ready to apply?`
+Head to your Dashboard → Pro Curator tab to apply. Takes about 5 minutes to fill out. Ready to get started?`
     } else if (msg.match(/request|need help|hire|find/)) {
-      return `**Hiring a Pro Curator:**
+      return `Looking for help improving your dataset? Smart move!
 
-${ASSISTANT_KNOWLEDGE.proCurator.forCreators.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+Here's how it works: You post a curation request describing what you need (better organization, metadata, cleaning, etc.) and set your budget. Pro Curators will submit proposals explaining how they can help.
 
-**How It Works:**
-1. Click "Request Curation Help" in your Dashboard
-2. Describe your dataset and what improvements you need
-3. Set your budget range
-4. Review proposals from Pro Curators
-5. Accept a proposal and work together!
+You pick the curator you like best, they do the work, and then you split revenue 50/50 on your 80% share. So if your dataset sells for $100: you get $40, your curator gets $40, platform gets $20.
 
-**Revenue Split:** You get 40% of sales, curator gets 40%, platform 20%
+Why partner with a curator?
+- Professional data cleaning and formatting
+- Better metadata = higher prices
+- Share the work, keep earning together
+- Their reputation helps your dataset sell
 
-**Example:** $100 sale → You earn $40, Curator earns $40, Platform $20
+To post a request, go to Dashboard → "Request Curation Help" button. Takes a few minutes to describe what you need.
 
-**Why Partner?**
-• Professional data cleaning and formatting
-• Better metadata and documentation
-• Higher quality = higher prices
-• Share the work, share the income
-
-Want to post a curation request?`
+Want to give it a shot?`
     } else {
-      return `**Pro Curator System:**
+      return `Pro Curator is our partnership system where dataset owners and expert curators team up to create better datasets and share the revenue.
 
-${ASSISTANT_KNOWLEDGE.proCurator.overview}
+If you're a dataset owner: Get professional help improving your data, split sales 50/50
+If you want to be a curator: Earn 40% of ongoing sales from datasets you help improve
 
-**For Dataset Creators:**
-• Get expert help improving your datasets
-• Split revenue 50/50 with your curator
-• Higher quality data sells better
-• Post requests, review proposals, collaborate
+It's in the Dashboard → Pro Curator tab, or you can browse curation requests on the Marketplace page.
 
-**For Pro Curators:**
-• Earn money improving datasets
-• 40% of ongoing sales revenue
-• Build reputation with badges
-• Work on diverse projects
-
-**Access:**
-• Browse requests: Homepage → Marketplace button
-• Become a curator: Dashboard → Pro Curator tab
-• Post requests: Dashboard → Request Curation Help
-
-What would you like to know more about?`
+Want to know more about becoming a curator, or hiring one?`
     }
   }
   
   // Data curation questions
   if (msg.match(/curat|quality|clean|prepar|format/)) {
-    return `**Data Curation Best Practices:**
+    return `Good question! Data curation is really about making your data as useful and clean as possible.
 
-${ASSISTANT_KNOWLEDGE.curation.quality.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+The basics:
+- Clean out duplicates and handle missing values properly
+- Structure it consistently (same format throughout)
+- Add good metadata so people know what they're getting
+- Write clear documentation explaining your schema
 
-**Presentation Tips:**
-${ASSISTANT_KNOWLEDGE.curation.presentation.map(tip => `• ${tip}`).join('\n')}
+For presentation:
+- Use descriptive titles that actually explain what's in there
+- Write compelling descriptions with real use cases
+- Tag it properly so buyers can find it
+- Be honest about the modality (vision, audio, text, etc.)
 
-Would you like specific advice on pricing, metadata, or dataset structure?`
+Think of it like being a librarian but for AI training data. The better organized and labeled your data is, the more valuable it becomes.
+
+Need specific help with pricing, metadata structure, or something else?`
   }
   
   // Pricing questions
   if (msg.match(/pric|cost|charge|worth|value/)) {
-    return `**Smart Pricing Strategies:**
+    return `Pricing is an art! Here's my take:
 
-${ASSISTANT_KNOWLEDGE.curation.pricing.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+Start by researching similar datasets to see what's out there. Look at data quality, uniqueness, and how much demand there is.
 
-**Pro Tips:**
-• Start with competitive pricing to build reputation
-• Demo datasets ($0) are great for showcasing quality
-• Adjust prices based on demand and feedback
-• Unique, high-quality data commands premium prices
+My advice? Start with a free demo dataset ($0) to showcase your quality and build trust. Once people see what you can do, they'll be more willing to pay for your premium stuff.
 
-Need help pricing a specific dataset?`
+For pricing your full datasets:
+- Factor in collection effort and how fresh the data is
+- Consider complexity and size
+- Adjust based on uniqueness (rare data = premium prices)
+- Don't undersell yourself, but also don't price yourself out
+
+A good strategy: Offer a free 10-20 sample pack, then price the full collection based on value. You can always adjust based on buyer feedback.
+
+Got a specific dataset in mind? Tell me more and I can give you a pricing range.`
   }
   
   // Bounty questions
   if (msg.match(/bount/)) {
     if (msg.match(/post|create|make/)) {
-      return `**Posting Effective Bounties:**
+      return `Want to post a bounty? Great way to get exactly the data you need!
 
-${ASSISTANT_KNOWLEDGE.bounties.posting.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+Here's what works:
+Be really specific about what you want. The clearer you are, the better submissions you'll get. Include the modality, quantity, quality standards you need, and any deadlines.
 
-**Where to Post:** Click "Post a Bounty" on the homepage, fill in details, and submit!
+Set a realistic budget. Higher bounties attract better quality data. And use clear language - you want creators to understand exactly what you're looking for.
 
-**Review Process:** Go to Dashboard → My Bounties tab to review submissions and approve datasets you want to purchase.`
+To post one: Click "Post a Bounty" on the homepage, fill in the details, and you're live. Then go to Dashboard → My Bounties to review submissions. When you find data you like, approve it and you'll automatically purchase it.
+
+Ready to post? What kind of data are you looking for?`
     } else if (msg.match(/submit|apply|respond/)) {
-      return `**Submitting to Bounties:**
+      return `Submitting to bounties is a great way to earn! Here's how to win:
 
-${ASSISTANT_KNOWLEDGE.bounties.submitting.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+Read the requirements super carefully before submitting. Make sure your data actually matches what they want. Add notes explaining exactly how your dataset meets their needs - show you understand their problem.
 
-**How to Submit:** 
-1. Find a bounty that matches your data
-2. Click "Submit Your Dataset"
-3. Select your dataset and add notes
-4. Track status in Dashboard → My Submissions
+Price competitively but don't undervalue your work. Only submit high-quality, relevant stuff. You can submit multiple datasets to one bounty if they're all relevant.
 
-**Status Guide:**
-• ⏳ Pending: Waiting for review
-• ✓ Approved: They purchased your dataset!
-• ✗ Rejected: Didn't meet requirements`
+To submit: Find a bounty, click "Submit Your Dataset," select your dataset, add your pitch notes. Track everything in Dashboard → My Submissions.
+
+Status meanings:
+⏳ Pending = they're reviewing it
+✓ Approved = congrats, they bought it!
+✗ Rejected = didn't match what they needed
+
+See any bounties that match your data?`
     } else {
-      return `**Bounties on SETIQUE:**
+      return `Bounties are basically job postings for datasets. Buyers say "I need this specific data" and creators respond with "I've got that!"
 
-Bounties let buyers request specific datasets they need. As a creator, you can submit your datasets to relevant bounties and earn money when approved!
+You can either post a bounty (if you need data) or submit to bounties (if you have data to sell). Both can be pretty lucrative.
 
-Would you like to know about:
-• Posting bounties (requesting data)
-• Submitting to bounties (responding with data)
-• Best practices for either?`
+Want to know more about posting bounties or submitting to them?`
     }
   }
   
   // Dashboard/Navigation questions
   if (msg.match(/dashboard|where|find|navigat|how do i/)) {
     if (msg.match(/dashboard/)) {
-      return `**Dashboard Guide:**
+      return `Your dashboard is mission control. It's got tabs for everything:
 
-Your dashboard has several tabs:
-• **Overview**: Recent activity and quick stats
-• **My Datasets**: Datasets you've uploaded for sale
-• **My Purchases**: Datasets you've bought
-• **Earnings**: Track your income from sales
-• **My Bounties**: Bounties you posted (with submissions)
-• **My Submissions**: Datasets you submitted to bounties
-• **★ Pro Curator**: Apply to become a curator or manage your profile
+Overview shows recent activity. My Datasets is what you've uploaded. My Purchases is what you've bought. Earnings tracks your income. My Bounties shows bounties you posted (with submissions). My Submissions is your bounty responses. And ★ Pro Curator is where you can apply or manage your curator profile.
 
-Access it by clicking your email in the top right → Dashboard`
+To get there, click your email in the top right → Dashboard. Easy.
+
+What are you trying to do?`
     } else {
-      return `**Quick Navigation:**
+      return `Quick tour:
 
-📍 **Homepage:** Browse all datasets and bounties, upload new datasets
-📊 **Dashboard:** Manage your datasets, purchases, and earnings
-💰 **Earnings Tab:** Connect Stripe and track your income
-🎯 **Bounties:** Post requests or submit your datasets
+Homepage is where you browse datasets and bounties, plus upload new stuff.
+Dashboard is where you manage everything - your data, purchases, earnings.
+Earnings tab is where you connect Stripe and watch the money come in.
 
-${context.location === '/' ? "You're on the homepage now! Scroll down to see datasets and bounties." : ""}
-${context.location === '/dashboard' ? "You're in your dashboard! Use the tabs above to navigate." : ""}
+${context.location === '/' ? "You're on the homepage right now. Scroll down to see what's available." : ""}
+${context.location === '/dashboard' ? "You're in your dashboard. Check out the tabs up top." : ""}
 
-What would you like to do?`
+Where do you want to go?`
     }
   }
   
   // Stripe Connect questions
   if (msg.match(/stripe|payout|payment|earn|money|paid/)) {
-    return `**Getting Paid on SETIQUE:**
+    return `Getting paid is easy once you set up Stripe Connect. It's a one-time thing that takes like 2-3 minutes.
 
-**Setup (One-time):**
-1. Go to Dashboard → Earnings tab
-2. Click "Setup Stripe Connect"
-3. Complete Stripe onboarding (2-3 minutes)
-4. Start earning 80% of each sale!
+Just go to Dashboard → Earnings tab → "Setup Stripe Connect" and follow the prompts. After that, you earn 80% of every sale automatically. Platform takes 20%, and payments go straight to your bank account.
 
-**Payment Flow:**
-• Customer buys your dataset → You receive 80%
-• Platform takes 20% fee
-• Automatic payouts to your bank account
-• Track all earnings in the Earnings tab
+You can track everything in the Earnings tab - see every sale, how much you made, the whole nine yards.
 
-**Demo Datasets:** Price at $0 to showcase your work and attract buyers to your premium datasets!
+Pro tip: If you want to showcase your work, price some datasets at $0 as demos. People see your quality for free, then they're more likely to buy your premium stuff.
 
-Need help with Stripe setup?`
+Need help setting up Stripe?`
   }
   
   // Upload/Create dataset questions
   if (msg.match(/upload|create|add|new dataset|sell/)) {
-    return `**Creating Your First Dataset:**
+    return `Ready to upload your first dataset? Here's the quick version:
 
-**Step 1: Upload**
-• Click "Upload New Dataset" on the homepage
-• Fill in title, description, price, and modality
-• Add relevant tags for discoverability
-• Upload your data file
+Click "Upload New Dataset" on the homepage. Fill in a clear title, write a compelling description that explains use cases, set your price, pick the right modality, and add tags so people can find it.
 
-**Step 2: Pricing**
-• Research similar datasets
-• Consider data quality and uniqueness
-• Start with $0 for demos to build reputation
-• Adjust based on market response
+For pricing, I'd say research similar datasets first. For your first few, consider making them free or cheap to build trust and showcase quality. You can always upload premium versions later.
 
-**Step 3: Optimize**
-• Write compelling descriptions
-• Include use cases and value propositions
-• Use clear, searchable titles
-• Add comprehensive tags
+Make your description pop - explain what's in it, why it's useful, what problems it solves. Think about it from a buyer's perspective: why should they care?
 
-**Pro Tip:** Your first few datasets should showcase quality. Consider making them free or low-cost to build trust!
+Your title should be searchable and specific. "Cat photos" is generic. "High-res photos of 50 cat breeds in natural poses" tells people exactly what you've got.
 
-Ready to upload? Click the button on the homepage!`
+Ready to upload? The button's right on the homepage!`
   }
   
   // Purchase questions
   if (msg.match(/buy|purchas|download|access/)) {
-    return `**Buying Datasets:**
+    return `Buying datasets is straightforward. Browse on the homepage, click one that looks interesting, then hit "Purchase" or "Get Dataset."
 
-**How to Purchase:**
-1. Browse datasets on the homepage
-2. Click a dataset to view details
-3. Click "Purchase" or "Get Dataset"
-4. Complete Stripe checkout (for paid datasets)
-5. Access downloads in Dashboard → My Purchases
+For paid datasets, you'll go through Stripe checkout. For free ones, they're instantly added to your library.
 
-**Free Datasets:** Demo datasets are instantly added to your library!
+After you buy, everything's in Dashboard → My Purchases. You can download and re-download as many times as you want - no limits. Your entire purchase history is there too.
 
-**After Purchase:**
-• Download from My Purchases tab
-• Re-download anytime (no limits)
-• Access all purchase history
+One thing: the system won't let you accidentally buy the same dataset twice. If you already own it, you'll see "✓ Owned" instead of a purchase button.
 
-**Can't Re-buy:** The system prevents duplicate purchases - you'll see "✓ Owned" instead!
-
-Looking for a specific type of data?`
+What kind of data are you looking for?`
   }
   
   // Getting started
@@ -469,86 +423,61 @@ What are you trying to do?`
   // If discussing pricing recently, provide contextual pricing help
   if (recentTopics.includes('pricing') || recentTopics.includes('price')) {
     if (msg.match(/yeah|yes|sure|ok|i (have|do|am)|my|specific/)) {
-      return `**Great! Let me help you price that specific dataset.**
+      return `Great! Let me help you price that specific dataset.
 
-To give you the best advice, tell me more about:
-1. **What type of data?** (images, text, audio, etc.)
-2. **How much data?** (file size, number of samples)
-3. **Collection effort?** (hours spent, difficulty)
-4. **Uniqueness?** (is this data rare or commonly available?)
+Tell me a bit more:
+- What type of data is it? (images, text, audio, etc.)
+- How much data? (file size, number of samples)
+- How much effort went into collecting it?
+- Is it rare or pretty common?
 
-For most educational/historical datasets like notebooks:
-• **Demo version ($0)**: 5-10 sample pages to showcase quality
-• **Full collection ($15-50)**: Complete set with good documentation
-• **Premium ($50-150)**: If transcribed, categorized, or AI-ready
+For example, if you've got educational notebooks:
+Demo version ($0): 5-10 sample pages to show quality
+Full collection ($15-50): Complete set with good docs
+Premium ($50-150): Transcribed, categorized, AI-ready
 
-What's unique about your data?`
+What makes your dataset unique?`
     }
   }
   
   // If discussing bounties recently, continue that thread
   if (recentTopics.includes('bounty') || recentTopics.includes('bounties')) {
     if (msg.match(/best practice|how to|tips|advice|help|improve|better/)) {
-      return `**Best Practices for Bounty Success:**
+      return `Here's what actually works for bounty success:
 
-**For Submitting to Bounties:**
-1. ✅ **Match requirements exactly** - Read carefully and address all points
-2. 📝 **Add detailed notes** - Explain how your data meets their needs
-3. 🎯 **Quality over quantity** - One perfect match beats multiple mediocre ones
-4. 💰 **Price competitively** - Research similar datasets
-5. ⚡ **Respond quickly** - Early submissions get noticed
+If you're submitting:
+- Match requirements exactly - read it twice
+- Add notes explaining how your data solves their problem
+- Quality over quantity - one perfect match wins
+- Price competitively but don't undersell
+- Submit fast - early bird gets noticed
 
-**For Posting Bounties:**
-1. 📋 **Be specific** - Clear requirements = better submissions
-2. 💵 **Set realistic budgets** - Higher budgets attract better data
-3. ⏰ **Add deadlines** - Creates urgency
-4. 🔄 **Respond promptly** - Review submissions quickly
-5. 💬 **Communicate** - Approve or provide feedback
+If you're posting:
+- Be super specific about what you want
+- Set realistic budgets (higher = better submissions)
+- Add deadlines to create urgency
+- Review and respond quickly
+- Give feedback even if you reject
 
-**Pro Tips:**
-• Include use case examples in your bounty
-• As a submitter, show you understand the buyer's problem
-• Quality submissions build your reputation
-• First few bounties set expectations!
+Real talk: Your reputation matters. Quality submissions and clear bounties build trust. First few set the tone!
 
-Want help with a specific bounty?`
+Need help with something specific?`
     }
   }
   
   // Generic helpful menu (only if no context)
-  return `I'd be happy to help! I specialize in:
+  return `I'm here to help with whatever you need!
 
-**📊 Data Curation**
-• Best practices for cleaning and formatting data
-• Metadata and documentation tips
-• Quality assurance strategies
+I can answer questions about:
 
-**💰 Pricing & Strategy**
-• How to price your datasets competitively
-• Building reputation with demo datasets
-• Maximizing your earnings
+Data curation - how to clean and format your data
+Pricing strategies - what to charge and how to build reputation
+Bounty system - posting requests or submitting your data
+Pro Curator partnerships - earning revenue by helping others or hiring help
+Platform navigation - finding your way around
+Stripe payments - getting set up and tracking earnings
 
-**🎯 Bounty System**
-• Posting effective bounty requests
-• Submitting winning proposals
-• Understanding the approval process
-
-**⭐ Pro Curator System**
-• Becoming a Pro Curator and earning revenue
-• Hiring curators to improve your datasets
-• Partnership revenue splits and badges
-
-**🗺️ Platform Navigation**
-• Finding datasets and bounties
-• Using your dashboard effectively
-• Managing purchases and earnings
-
-**💳 Payments & Stripe**
-• Setting up Stripe Connect
-• Understanding payouts
-• Tracking earnings
-
-What would you like to know more about? Feel free to ask anything specific!`
+What's on your mind? Just ask me anything!`
 }
 
 // Domain-specific dataset advice
