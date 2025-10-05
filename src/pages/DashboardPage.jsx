@@ -12,6 +12,12 @@ import {
   LogOut,
   Home,
   Package,
+  Edit,
+  Trash,
+  Eye,
+  EyeOff,
+  Upload,
+  X,
 } from '../components/Icons'
 
 function DashboardPage() {
@@ -36,6 +42,11 @@ function DashboardPage() {
   // Stripe Connect state
   const [connectingStripe, setConnectingStripe] = useState(false)
   const [connectError, setConnectError] = useState(null)
+  
+  // Dataset management state
+  const [editingDataset, setEditingDataset] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -203,6 +214,124 @@ function DashboardPage() {
     } catch (error) {
       console.error('Download error:', error)
       alert('Error: ' + error.message)
+    }
+  }
+
+  // Dataset management handlers
+  const handleToggleActive = async (datasetId, currentStatus) => {
+    setActionLoading(true)
+    try {
+      const { error } = await supabase
+        .from('datasets')
+        .update({ is_active: !currentStatus })
+        .eq('id', datasetId)
+        .eq('creator_id', user.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setMyDatasets(prev => 
+        prev.map(d => d.id === datasetId ? { ...d, is_active: !currentStatus } : d)
+      )
+      
+      alert(`Dataset ${!currentStatus ? 'activated' : 'deactivated'} successfully!`)
+    } catch (error) {
+      console.error('Error toggling dataset:', error)
+      alert('Failed to update dataset status')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleEditDataset = (dataset) => {
+    setEditingDataset({
+      id: dataset.id,
+      title: dataset.title,
+      description: dataset.description,
+      price: dataset.price,
+      modality: dataset.modality,
+      tags: dataset.tags || []
+    })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingDataset) return
+    
+    setActionLoading(true)
+    try {
+      const { error } = await supabase
+        .from('datasets')
+        .update({
+          title: editingDataset.title,
+          description: editingDataset.description,
+          price: parseFloat(editingDataset.price),
+          modality: editingDataset.modality,
+          tags: editingDataset.tags,
+        })
+        .eq('id', editingDataset.id)
+        .eq('creator_id', user.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setMyDatasets(prev => 
+        prev.map(d => d.id === editingDataset.id ? { ...d, ...editingDataset, price: parseFloat(editingDataset.price) } : d)
+      )
+      
+      setEditingDataset(null)
+      alert('Dataset updated successfully!')
+    } catch (error) {
+      console.error('Error updating dataset:', error)
+      alert('Failed to update dataset')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeleteDataset = async (datasetId) => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(datasetId)
+      return
+    }
+    
+    if (deleteConfirm !== datasetId) return
+    
+    setActionLoading(true)
+    try {
+      // Check if dataset has purchases
+      const { data: purchases, error: purchaseError } = await supabase
+        .from('purchases')
+        .select('id')
+        .eq('dataset_id', datasetId)
+        .limit(1)
+      
+      if (purchaseError) throw purchaseError
+      
+      if (purchases && purchases.length > 0) {
+        alert('Cannot delete dataset that has been purchased. Consider deactivating it instead.')
+        setDeleteConfirm(null)
+        setActionLoading(false)
+        return
+      }
+      
+      // Delete the dataset
+      const { error } = await supabase
+        .from('datasets')
+        .delete()
+        .eq('id', datasetId)
+        .eq('creator_id', user.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setMyDatasets(prev => prev.filter(d => d.id !== datasetId))
+      setDeleteConfirm(null)
+      alert('Dataset deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting dataset:', error)
+      alert('Failed to delete dataset')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -465,35 +594,101 @@ function DashboardPage() {
 
           {activeTab === 'datasets' && (
             <div>
-              <h3 className="text-2xl font-extrabold mb-4">My Datasets</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-extrabold">My Datasets</h3>
+                <button
+                  onClick={() => navigate('/#curator-form')}
+                  className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload New Dataset
+                </button>
+              </div>
+              
               {myDatasets.length > 0 ? (
                 <div className="space-y-4">
                   {myDatasets.map((dataset) => (
                     <div
                       key={dataset.id}
-                      className="border-2 border-black rounded-xl p-4 bg-yellow-100"
+                      className="border-2 border-black rounded-xl p-6 bg-yellow-100 relative"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="text-xl font-extrabold">{dataset.title}</h4>
-                          <p className="text-sm font-semibold text-black/70 mt-1">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h4 className="text-xl font-extrabold">{dataset.title}</h4>
+                            <button
+                              onClick={() => handleToggleActive(dataset.id, dataset.is_active)}
+                              disabled={actionLoading}
+                              className={`px-3 py-1 rounded-full border-2 border-black font-bold text-xs flex items-center gap-1 transition hover:scale-105 ${
+                                dataset.is_active 
+                                  ? 'bg-green-300 hover:bg-green-400' 
+                                  : 'bg-gray-300 hover:bg-gray-400'
+                              }`}
+                              title={dataset.is_active ? 'Click to deactivate' : 'Click to activate'}
+                            >
+                              {dataset.is_active ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                              {dataset.is_active ? 'Active' : 'Inactive'}
+                            </button>
+                          </div>
+                          <p className="text-sm font-semibold text-black/70 mb-3">
                             {dataset.description}
                           </p>
+                          <div className="flex flex-wrap gap-4 text-sm font-bold">
+                            <span className="flex items-center gap-1">
+                              💰 ${dataset.price}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              📦 {dataset.modality}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              🛒 {dataset.purchase_count || 0} sales
+                            </span>
+                            <span className="flex items-center gap-1">
+                              📅 {new Date(dataset.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {dataset.tags && dataset.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {dataset.tags.map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="px-2 py-1 bg-white border border-black rounded-full text-xs font-bold"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <span
-                          className={`px-3 py-1 rounded-full border-2 border-black font-bold text-xs ${
-                            dataset.is_active ? 'bg-green-300' : 'bg-gray-300'
-                          }`}
-                        >
-                          {dataset.is_active ? 'Active' : 'Inactive'}
-                        </span>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleEditDataset(dataset)}
+                            className="p-2 bg-blue-300 rounded-lg border-2 border-black hover:scale-110 transition"
+                            title="Edit dataset"
+                          >
+                            <Edit className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDataset(dataset.id)}
+                            className={`p-2 rounded-lg border-2 border-black hover:scale-110 transition ${
+                              deleteConfirm === dataset.id 
+                                ? 'bg-red-500 text-white' 
+                                : 'bg-red-300'
+                            }`}
+                            title={deleteConfirm === dataset.id ? 'Click again to confirm' : 'Delete dataset'}
+                          >
+                            <Trash className="h-5 w-5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-4 mt-3 text-sm font-bold">
-                        <span>💰 ${dataset.price}</span>
-                        <span>📦 {dataset.modality}</span>
-                        <span>🛒 {dataset.purchase_count} sales</span>
-                        <span>📅 {new Date(dataset.created_at).toLocaleDateString()}</span>
-                      </div>
+                      
+                      {deleteConfirm === dataset.id && (
+                        <div className="mt-3 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
+                          <p className="font-bold text-sm text-red-700">
+                            ⚠️ Are you sure? Click delete again to confirm. This cannot be undone!
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -979,6 +1174,108 @@ function DashboardPage() {
           )}
         </div>
       </main>
+      
+      {/* Edit Dataset Modal */}
+      {editingDataset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl border-4 border-black max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-extrabold">Edit Dataset</h3>
+                <button
+                  onClick={() => setEditingDataset(null)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-bold mb-2">Title</label>
+                  <input
+                    type="text"
+                    value={editingDataset.title}
+                    onChange={(e) => setEditingDataset(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
+                    placeholder="Dataset title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block font-bold mb-2">Description</label>
+                  <textarea
+                    value={editingDataset.description}
+                    onChange={(e) => setEditingDataset(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
+                    rows="4"
+                    placeholder="Describe your dataset..."
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold mb-2">Price ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingDataset.price}
+                      onChange={(e) => setEditingDataset(prev => ({ ...prev, price: e.target.value }))}
+                      className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block font-bold mb-2">Modality</label>
+                    <select
+                      value={editingDataset.modality}
+                      onChange={(e) => setEditingDataset(prev => ({ ...prev, modality: e.target.value }))}
+                      className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
+                    >
+                      <option value="vision">Vision</option>
+                      <option value="audio">Audio</option>
+                      <option value="text">Text</option>
+                      <option value="multimodal">Multimodal</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block font-bold mb-2">Tags (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={editingDataset.tags?.join(', ') || ''}
+                    onChange={(e) => setEditingDataset(prev => ({ 
+                      ...prev, 
+                      tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) 
+                    }))}
+                    className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
+                    placeholder="machine-learning, computer-vision, nlp"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={actionLoading}
+                  className="flex-1 bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50"
+                >
+                  {actionLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => setEditingDataset(null)}
+                  className="flex-1 bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
