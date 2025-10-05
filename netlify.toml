@@ -4,8 +4,6 @@
 
 [build.environment]
   NODE_VERSION = "20.17.0"
-  # Correct format for omitting secret keys: an array of strings
-  SECRETS_SCAN_OMIT_KEYS = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]
 
 [functions]
   directory = "netlify/functions"
@@ -16,13 +14,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[dev]
-  command = "npm run dev"
-  port = 3000
-  targetPort = 3000
