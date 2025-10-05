@@ -483,6 +483,237 @@ function HomePage() {
           </div>
         </section>
 
+        {/* Data Curation Guide Section */}
+        <section id="curator-guide" className="max-w-6xl mx-auto mb-24 pt-10">
+          <div className="bg-gradient-to-br from-yellow-200 via-pink-200 to-cyan-200 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
+            <div className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] p-6 border-b-4 border-black">
+              <h3 className="text-4xl font-extrabold text-white drop-shadow-[2px_2px_0_#000]">
+                📚 Data Curation Guide for Beginners
+              </h3>
+              <p className="text-white/90 font-semibold mt-2">
+                Never created a dataset before? Start here.
+              </p>
+            </div>
+            
+            <div className="p-8 space-y-8">
+              {/* What is Data Curation */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-3 text-black">
+                  🤔 What is Data Curation?
+                </h4>
+                <p className="font-semibold text-black/80 mb-3">
+                  Data curation is the process of organizing, annotating, and packaging information 
+                  so that AI models can learn from it. Think of yourself as a librarian for AI—you're 
+                  collecting and labeling examples that teach machines about the world.
+                </p>
+                <div className="bg-white border-2 border-black rounded-xl p-4">
+                  <p className="font-bold mb-2">💡 Example:</p>
+                  <p className="font-semibold text-sm">
+                    Instead of just having 100 cat photos, a curated dataset has 100 cat photos with 
+                    labels like "breed: tabby, pose: sitting, mood: grumpy". This context makes the 
+                    data valuable for training AI.
+                  </p>
+                </div>
+              </div>
+
+              {/* Types of Data You Can Curate */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-3 text-black">
+                  🎨 What Kind of Data Can I Curate?
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-yellow-200 border-2 border-black rounded-xl p-4">
+                    <div className="font-extrabold text-lg mb-2">📸 Vision/Image</div>
+                    <ul className="text-sm font-semibold space-y-1 list-disc list-inside">
+                      <li>Photos of specific objects, places, or events</li>
+                      <li>Annotated images with bounding boxes</li>
+                      <li>Image pairs (before/after, style transfers)</li>
+                    </ul>
+                  </div>
+                  <div className="bg-cyan-200 border-2 border-black rounded-xl p-4">
+                    <div className="font-extrabold text-lg mb-2">🎵 Audio</div>
+                    <ul className="text-sm font-semibold space-y-1 list-disc list-inside">
+                      <li>Sound effects labeled by category</li>
+                      <li>Voice recordings with transcripts</li>
+                      <li>Music samples tagged by genre/mood</li>
+                    </ul>
+                  </div>
+                  <div className="bg-pink-200 border-2 border-black rounded-xl p-4">
+                    <div className="font-extrabold text-lg mb-2">📝 Text/NLP</div>
+                    <ul className="text-sm font-semibold space-y-1 list-disc list-inside">
+                      <li>Conversation examples (Q&A pairs)</li>
+                      <li>Labeled text for sentiment/intent</li>
+                      <li>Domain-specific writing samples</li>
+                    </ul>
+                  </div>
+                  <div className="bg-yellow-200 border-2 border-black rounded-xl p-4">
+                    <div className="font-extrabold text-lg mb-2">🎬 Video</div>
+                    <ul className="text-sm font-semibold space-y-1 list-disc list-inside">
+                      <li>Video clips with scene descriptions</li>
+                      <li>Action recognition datasets</li>
+                      <li>Timestamped event annotations</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step by Step Guide */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-4 text-black">
+                  🛠️ How to Create Your First Dataset
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] rounded-full flex items-center justify-center border-2 border-black font-extrabold text-white text-xl">
+                      1
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-lg mb-1">Choose Your Niche</div>
+                      <p className="font-semibold text-sm text-black/80">
+                        Pick something you know deeply or have access to. The more specific, the better. 
+                        "Photos of dogs" is generic. "Photos of rare Australian shepherd coat patterns" 
+                        is valuable.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] rounded-full flex items-center justify-center border-2 border-black font-extrabold text-white text-xl">
+                      2
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-lg mb-1">Collect Your Data</div>
+                      <p className="font-semibold text-sm text-black/80">
+                        Gather your raw materials: photos, audio files, text documents, etc. Aim for 
+                        consistency in quality and format. 50-100 high-quality examples are better than 
+                        1,000 low-quality ones.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] rounded-full flex items-center justify-center border-2 border-black font-extrabold text-white text-xl">
+                      3
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-lg mb-1">Add Annotations</div>
+                      <p className="font-semibold text-sm text-black/80 mb-2">
+                        Create a simple CSV or JSON file that labels your data. Each row should describe 
+                        one file with relevant metadata.
+                      </p>
+                      <div className="bg-black text-yellow-200 font-mono text-xs p-3 rounded border-2 border-black">
+                        filename,label,color,size<br/>
+                        dog_001.jpg,australian_shepherd,blue_merle,medium<br/>
+                        dog_002.jpg,australian_shepherd,red_tri,large
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] rounded-full flex items-center justify-center border-2 border-black font-extrabold text-white text-xl">
+                      4
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-lg mb-1">Package It Up</div>
+                      <p className="font-semibold text-sm text-black/80">
+                        Create a ZIP file containing your data files and annotation file. Add a README.txt 
+                        explaining what's inside, how to use it, and any licensing information.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] rounded-full flex items-center justify-center border-2 border-black font-extrabold text-white text-xl">
+                      5
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-lg mb-1">Set Your Price & Publish</div>
+                      <p className="font-semibold text-sm text-black/80">
+                        Consider the time invested, rarity of the data, and what similar datasets cost. 
+                        Niche datasets with good annotations typically sell for $50-$500. Upload your ZIP 
+                        file below and you're live!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quality Tips */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-3 text-black">
+                  ⭐ Tips for High-Quality Datasets
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-white border-2 border-black rounded-xl p-4">
+                    <div className="text-2xl mb-2">✅</div>
+                    <ul className="text-sm font-semibold space-y-2">
+                      <li><strong>Be Consistent:</strong> Use the same naming convention and format</li>
+                      <li><strong>Be Thorough:</strong> Label all important attributes</li>
+                      <li><strong>Be Honest:</strong> Clearly state data limitations</li>
+                      <li><strong>Include Samples:</strong> Show 2-3 example rows</li>
+                    </ul>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-xl p-4">
+                    <div className="text-2xl mb-2">❌</div>
+                    <ul className="text-sm font-semibold space-y-2">
+                      <li><strong>Don't Mix Quality:</strong> Keep standards uniform</li>
+                      <li><strong>Don't Skip Documentation:</strong> Always explain your schema</li>
+                      <li><strong>Don't Use Copyrighted Material:</strong> Only share what you own</li>
+                      <li><strong>Don't Rush:</strong> Quality over quantity always</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Common Questions */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-3 text-black">
+                  ❓ Common Questions
+                </h4>
+                <div className="space-y-3">
+                  <details className="bg-white border-2 border-black rounded-xl p-4 cursor-pointer">
+                    <summary className="font-extrabold">How big should my dataset be?</summary>
+                    <p className="font-semibold text-sm mt-2 text-black/80">
+                      Start small! 50-200 well-curated examples are often enough for fine-tuning. 
+                      Quality and proper labeling matter more than quantity.
+                    </p>
+                  </details>
+                  <details className="bg-white border-2 border-black rounded-xl p-4 cursor-pointer">
+                    <summary className="font-extrabold">What tools do I need?</summary>
+                    <p className="font-semibold text-sm mt-2 text-black/80">
+                      Just Excel/Google Sheets for CSV annotations, a text editor for JSON, and any 
+                      ZIP tool. For images, tools like LabelImg (free) help with bounding boxes.
+                    </p>
+                  </details>
+                  <details className="bg-white border-2 border-black rounded-xl p-4 cursor-pointer">
+                    <summary className="font-extrabold">Can I update my dataset after publishing?</summary>
+                    <p className="font-semibold text-sm mt-2 text-black/80">
+                      Not yet, but this feature is coming soon! For now, ensure your dataset is complete 
+                      before publishing. You can always create v2 as a new listing.
+                    </p>
+                  </details>
+                  <details className="bg-white border-2 border-black rounded-xl p-4 cursor-pointer">
+                    <summary className="font-extrabold">What if I don't have data but have an idea?</summary>
+                    <p className="font-semibold text-sm mt-2 text-black/80">
+                      Post a bounty! Scroll down to the "Commission a Custom Dataset" section and 
+                      offer a reward for curators to build exactly what you need.
+                    </p>
+                  </details>
+                </div>
+              </div>
+
+              <div className="text-center pt-4">
+                <a
+                  href="#curator-form"
+                  className="inline-block bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform shadow-xl active:scale-100"
+                >
+                  Ready to Create Your Dataset →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Curator Form Section */}
         <section id="curator-form" className="max-w-4xl mx-auto mb-24 pt-10">
           <div className="bg-yellow-200 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
