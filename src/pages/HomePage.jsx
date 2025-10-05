@@ -142,9 +142,10 @@ function HomePage() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
+      console.log('📦 Fetched datasets:', data?.length || 0, 'datasets')
       setDatasets(data || [])
     } catch (error) {
-      console.error('Error fetching datasets:', error)
+      console.error('❌ Error fetching datasets:', error)
     } finally {
       setLoading(false)
     }
