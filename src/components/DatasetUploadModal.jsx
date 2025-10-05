@@ -20,7 +20,9 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   
-  const isFormValid = title.trim() !== '' && description.trim() !== '' && price > 0 && uploadFile !== null
+  // Allow price = 0 for demo datasets; treat blank or negative as invalid
+  const numericPrice = price === '' ? NaN : parseFloat(price)
+  const isFormValid = title.trim() !== '' && description.trim() !== '' && !isNaN(numericPrice) && numericPrice >= 0 && uploadFile !== null
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -83,7 +85,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           creator_id: user.id,
           title: title.trim(),
           description: description.trim(),
-          price: parseFloat(price),
+          price: isNaN(numericPrice) ? 0 : numericPrice,
           modality: modality,
           tags: tags,
           accent_color: getAccentColor(modality),
