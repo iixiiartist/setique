@@ -2,7 +2,7 @@
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  'A Photographic Archive of Brutalist Architecture in Pittsburgh',
+  '(DEMO) A Photographic Archive of Brutalist Architecture in Pittsburgh',
   '400+ high-resolution photos of Pittsburgh''s brutalist landmarks, annotated with architect, year, and material data.',
   ARRAY['vision', 'architecture', 'pittsburgh'],
   149,
@@ -17,7 +17,7 @@ LIMIT 1;
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  'Audio Library of Antique Mechanical Keyboards',
+  '(DEMO) Audio Library of Antique Mechanical Keyboards',
   '50 unique recordings of rare mechanical keyboards, from the IBM Model M to the Alps ''Bigfoot''. Each keypress is isolated.',
   ARRAY['audio', 'niche', 'vintage tech'],
   79,
@@ -32,7 +32,7 @@ LIMIT 1;
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  'A Lexicon of 1980s Skateboarder Slang',
+  '(DEMO) A Lexicon of 1980s Skateboarder Slang',
   'A curated text file of over 1,500 slang terms used by skateboarders in the 1980s, with definitions and examples.',
   ARRAY['text', 'nlp', 'subculture'],
   59,
@@ -47,7 +47,7 @@ LIMIT 1;
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  '50k Urban Street-Sign Images (COCO-annotated)',
+  '(DEMO) 50k Urban Street-Sign Images (COCO-annotated)',
   'Multi-city, day/night, weather-varied dataset for robust object detection models that need real-world grit.',
   ARRAY['vision', 'coco', 'detection'],
   129,
@@ -62,7 +62,7 @@ LIMIT 1;
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  'Encyclopedia of North American Diner Pancakes',
+  '(DEMO) Encyclopedia of North American Diner Pancakes',
   '5,000+ images of pancakes from diners across the US & Canada, annotated for fluffiness, toppings, and plate aesthetics.',
   ARRAY['vision', 'food', 'niche'],
   119,
@@ -77,7 +77,7 @@ LIMIT 1;
 INSERT INTO datasets (creator_id, title, description, tags, price, modality, accent_color, schema_fields, sample_data, notes)
 SELECT 
   id,
-  '8k Household Actions (Video Clips, 1080p)',
+  '(DEMO) 8k Household Actions (Video Clips, 1080p)',
   'Short clips of everyday actions (open fridge, pour water). Essential for training embodied AI and robotics.',
   ARRAY['video', 'actions', 'robotics'],
   149,
@@ -93,7 +93,7 @@ LIMIT 1;
 INSERT INTO bounties (creator_id, title, description, modality, quantity, budget, status)
 SELECT 
   id,
-  'Recordings of Different Types of Rain',
+  '(DEMO) Recordings of Different Types of Rain',
   'Need high-quality audio recordings of various types of rain: light drizzle, heavy downpour, thunderstorm, etc.',
   'audio',
   '5 hours',
@@ -105,7 +105,7 @@ LIMIT 1;
 INSERT INTO bounties (creator_id, title, description, modality, quantity, budget, status)
 SELECT 
   id,
-  'Positive Customer Support Chat Logs',
+  '(DEMO) Positive Customer Support Chat Logs',
   'Looking for transcripts of positive customer support interactions for training sentiment analysis models.',
   'text',
   '10,000 lines',
