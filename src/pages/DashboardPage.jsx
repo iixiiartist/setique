@@ -164,20 +164,27 @@ function DashboardPage() {
       
       setMySubmissions(submissions || [])
 
-      // Check if user is an admin
-      const { data: adminData } = await supabase
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    }
+
+    // Check if user is an admin (separate try-catch so it doesn't break dashboard)
+    try {
+      const { data: adminData, error: adminError } = await supabase
         .from('admins')
         .select('*')
         .eq('user_id', user.id)
         .single()
       
-      setIsAdmin(!!adminData)
-
+      if (!adminError && adminData) {
+        setIsAdmin(true)
+      }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    } finally {
-      setLoading(false)
+      // Silently fail if admins table doesn't exist
+      console.log('Admin check skipped:', error.message)
     }
+
+    setLoading(false)
   }, [user])
 
   useEffect(() => {
