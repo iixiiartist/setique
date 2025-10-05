@@ -142,6 +142,41 @@ exports.handler = async (event) => {
           .eq('id', targetId)
         break
 
+      case 'delete_dataset':
+        // Admin can delete any dataset
+        result = await supabase
+          .from('datasets')
+          .delete()
+          .eq('id', targetId)
+        break
+
+      case 'get_user_details':
+        // Get user profile with their datasets and purchases
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', targetId)
+          .single()
+        
+        const { data: userDatasets } = await supabase
+          .from('datasets')
+          .select('*')
+          .eq('creator_id', targetId)
+        
+        const { data: userPurchases } = await supabase
+          .from('dataset_purchases')
+          .select('*, datasets(title, price)')
+          .eq('buyer_id', targetId)
+        
+        result = {
+          data: {
+            profile: userProfile,
+            datasets: userDatasets,
+            purchases: userPurchases
+          }
+        }
+        break
+
       default:
         return {
           statusCode: 400,

@@ -103,6 +103,21 @@ export default function AdminDashboard() {
       const revenue = await revenueRes.json();
       const activity = await activityRes.json();
 
+      console.log('Admin data loaded:', {
+        curators: curators.data?.length || 0,
+        users: users.data?.length || 0,
+        datasets: datasets.data?.length || 0,
+        revenue: revenue.data,
+        activity: activity.data?.length || 0
+      });
+
+      // Log any errors
+      if (!curatorsRes.ok) console.error('Curators error:', curators);
+      if (!usersRes.ok) console.error('Users error:', users);
+      if (!datasetsRes.ok) console.error('Datasets error:', datasets);
+      if (!revenueRes.ok) console.error('Revenue error:', revenue);
+      if (!activityRes.ok) console.error('Activity error:', activity);
+
       setAllCurators(curators.data || []);
       setPendingCurators(curators.data?.filter(c => c.certification_status === 'pending') || []);
       setAllUsers(users.data || []);
@@ -241,6 +256,55 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error toggling featured status:', error);
       alert('Failed to update featured status: ' + error.message);
+    }
+  };
+
+  const handleViewUserDetails = (userId) => {
+    // Open user's datasets in a new window or navigate
+    const userDatasets = allDatasets.filter(d => d.creator_id === userId);
+    alert(`User has ${userDatasets.length} dataset(s).\n\nUser ID: ${userId}\n\nImplement full user detail view as needed.`);
+  };
+
+  const handleViewDataset = (datasetId) => {
+    // Navigate to dataset detail or open in marketplace
+    window.open(`/?dataset=${datasetId}`, '_blank');
+  };
+
+  const handleDeleteDataset = async (datasetId, datasetTitle) => {
+    if (!confirm(`⚠️ Are you sure you want to DELETE "${datasetTitle}"?\n\nThis action cannot be undone and will remove all associated data.`)) {
+      return;
+    }
+
+    const confirmAgain = prompt(`Type "DELETE" to confirm deletion of "${datasetTitle}"`);
+    if (confirmAgain !== 'DELETE') {
+      alert('Deletion cancelled.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'delete_dataset',
+          targetId: datasetId,
+          targetType: 'dataset',
+          details: { datasetTitle, action: 'delete' }
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete dataset');
+      }
+
+      alert('✅ Dataset deleted successfully!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error deleting dataset:', error);
+      alert('Failed to delete dataset: ' + error.message);
     }
   };
 
@@ -537,73 +601,128 @@ export default function AdminDashboard() {
 
             {activeTab === 'users' && (
               <div>
-                <h2 className="text-2xl font-extrabold mb-4">User Management</h2>
-                <div className="space-y-3">
-                  {allUsers.map((user) => (
-                    <div key={user.id} className="border-2 border-black rounded-lg p-4 flex justify-between items-center">
-                      <div>
-                        <div className="font-bold text-lg">{user.username || 'Anonymous'}</div>
-                        <div className="text-sm text-gray-600">{user.email}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-extrabold">User Management</h2>
+                  <div className="text-sm text-gray-600">
+                    Total: <span className="font-bold">{allUsers.length}</span> users
+                  </div>
+                </div>
+
+                {allUsers.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-xl font-bold mb-2">No users found</p>
+                    <p>Check your database connection or run the diagnostic SQL script.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {allUsers.map((userProfile) => (
+                      <div key={userProfile.id} className="border-2 border-black rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                        <div className="flex-1">
+                          <div className="font-bold text-lg">{userProfile.username || 'Anonymous User'}</div>
+                          <div className="text-sm text-gray-600">{userProfile.email || 'No email'}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            User ID: <span className="font-mono">{userProfile.id?.slice(0, 20)}...</span>
+                          </div>
+                          {userProfile.created_at && (
+                            <div className="text-xs text-gray-500">
+                              Joined: {new Date(userProfile.created_at).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewUserDetails(userProfile.id)}
+                            className="bg-blue-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                          >
+                            View Details
+                          </button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-gray-600">Profile ID</div>
-                        <div className="text-xs text-gray-500 font-mono">{user.id.slice(0, 8)}...</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'datasets' && (
               <div>
-                <h2 className="text-2xl font-extrabold mb-4">Dataset Management</h2>
-                <div className="space-y-4">
-                  {allDatasets.map((dataset) => (
-                    <div key={dataset.id} className="border-2 border-black rounded-xl p-6 bg-white">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-extrabold mb-2">{dataset.title}</h3>
-                          <div className="flex items-center gap-3 text-sm text-gray-600">
-                            <span>By: {dataset.profiles?.username || 'Unknown'}</span>
-                            <span>•</span>
-                            <span>{dataset.dataset_type}</span>
-                            <span>•</span>
-                            <span className="font-bold text-green-600">${dataset.price}</span>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-extrabold">Dataset Management</h2>
+                  <div className="text-sm text-gray-600">
+                    Total: <span className="font-bold">{allDatasets.length}</span> datasets
+                  </div>
+                </div>
+
+                {allDatasets.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-xl font-bold mb-2">No datasets found</p>
+                    <p>Users haven&apos;t uploaded any datasets yet, or there may be a database connection issue.</p>
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="mt-4 bg-blue-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                    >
+                      Go Upload a Dataset
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {allDatasets.map((dataset) => (
+                      <div key={dataset.id} className="border-2 border-black rounded-xl p-6 bg-white hover:shadow-lg transition">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-xl font-extrabold mb-2">{dataset.title}</h3>
+                            <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
+                              <span>By: <span className="font-bold">{dataset.profiles?.username || 'Unknown'}</span></span>
+                              <span>•</span>
+                              <span className="px-2 py-1 bg-purple-100 rounded">{dataset.dataset_type}</span>
+                              <span>•</span>
+                              <span className="font-bold text-green-600">${dataset.price}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {dataset.is_featured && (
+                              <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
+                                ⭐ FEATURED
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleToggleFeatured(dataset.id)}
+                              className="bg-blue-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm whitespace-nowrap"
+                            >
+                              {dataset.is_featured ? 'Unfeature' : 'Feature'}
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {dataset.is_featured && (
-                            <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
-                              ⭐ FEATURED
-                            </span>
-                          )}
+                        <p className="text-gray-700 text-sm line-clamp-2 mb-3">{dataset.description}</p>
+                        <div className="flex items-center gap-4 text-sm pt-3 border-t border-gray-200 flex-wrap">
+                          <span className="font-bold">Size:</span>
+                          <span>{(dataset.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
+                          <span>•</span>
+                          <span className="font-bold">Purchases:</span>
+                          <span>{dataset.purchases?.[0]?.count || 0}</span>
+                          <span>•</span>
+                          <span className="text-xs text-gray-500">
+                            Created: {new Date(dataset.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 mt-4">
                           <button
-                            onClick={() => handleToggleFeatured(dataset.id)}
-                            className="bg-blue-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                            onClick={() => handleViewDataset(dataset.id)}
+                            className="bg-green-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
                           >
-                            {dataset.is_featured ? 'Unfeature' : 'Feature'}
+                            View Details
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDataset(dataset.id, dataset.title)}
+                            className="bg-red-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                          >
+                            Delete
                           </button>
                         </div>
                       </div>
-                      <p className="text-gray-700 text-sm line-clamp-2 mb-3">{dataset.description}</p>
-                      <div className="flex items-center gap-4 text-sm pt-3 border-t border-gray-200">
-                        <span className="font-bold">Size:</span>
-                        <span>{(dataset.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
-                        <span>•</span>
-                        <span className="font-bold">Purchases:</span>
-                        <span>{dataset.purchases?.[0]?.count || 0}</span>
-                        <span>•</span>
-                        <span className="text-xs text-gray-500">
-                          Created: {new Date(dataset.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
