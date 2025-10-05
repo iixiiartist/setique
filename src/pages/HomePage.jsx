@@ -522,8 +522,6 @@ function HomePage() {
                 <option value="text">Text</option>
                 <option value="nlp">NLP</option>
                 <option value="video">Video</option>
-                <option value="architecture">Architecture</option>
-                <option value="subculture">Subculture</option>
               </select>
             </div>
           </div>
