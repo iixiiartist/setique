@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
+import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import { TagInput } from '../components/TagInput'
 import {
   Star,
@@ -29,6 +30,7 @@ function HomePage() {
   // Modal state
   const [selected, setSelected] = useState(null)
   const [selectedBounty, setSelectedBounty] = useState(null)
+  const [submissionBounty, setSubmissionBounty] = useState(null)
   const [checkoutIdx, setCheckoutIdx] = useState(null)
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
@@ -1568,7 +1570,8 @@ function HomePage() {
                     setSignInOpen(true)
                     return
                   }
-                  alert('Bounty submission coming soon! For now, contact the poster directly.')
+                  // Open submission modal
+                  setSubmissionBounty(bounties[selectedBounty])
                 }}
                 className="flex-1 bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 active:scale-95 transition"
               >
@@ -1584,6 +1587,17 @@ function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Bounty Submission Modal */}
+      <BountySubmissionModal
+        isOpen={submissionBounty !== null}
+        onClose={() => setSubmissionBounty(null)}
+        bounty={submissionBounty}
+        onSuccess={() => {
+          // Refresh data after successful submission
+          fetchBounties()
+        }}
+      />
     </div>
   )
 }

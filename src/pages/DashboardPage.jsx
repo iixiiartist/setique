@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { stripePromise } from '../lib/stripe'
 import {
   Database,
   ShoppingBag,
@@ -26,6 +27,11 @@ function DashboardPage() {
   
   // Buyer data
   const [myPurchases, setMyPurchases] = useState([])
+  
+  // Bounty data
+  const [myBounties, setMyBounties] = useState([])
+  const [mySubmissions, setMySubmissions] = useState([])
+  const [expandedBounty, setExpandedBounty] = useState(null)
   
   // Stripe Connect state
   const [connectingStripe, setConnectingStripe] = useState(false)
@@ -84,6 +90,38 @@ function DashboardPage() {
         .order('purchased_at', { ascending: false })
       
       setMyPurchases(purchases || [])
+
+      // Fetch user's bounties (that they posted)
+      const { data: bounties } = await supabase
+        .from('bounties')
+        .select(`
+          *,
+          bounty_submissions (
+            id,
+            status,
+            notes,
+            submitted_at,
+            datasets (*),
+            profiles:creator_id (*)
+          )
+        `)
+        .eq('creator_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      setMyBounties(bounties || [])
+
+      // Fetch user's submissions (datasets they submitted to bounties)
+      const { data: submissions } = await supabase
+        .from('bounty_submissions')
+        .select(`
+          *,
+          bounties (*),
+          datasets (*)
+        `)
+        .eq('creator_id', user.id)
+        .order('submitted_at', { ascending: false })
+      
+      setMySubmissions(submissions || [])
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -327,6 +365,26 @@ function DashboardPage() {
             }`}
           >
             Earnings
+          </button>
+          <button
+            onClick={() => setActiveTab('bounties')}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
+              activeTab === 'bounties'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            My Bounties ({myBounties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('submissions')}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
+              activeTab === 'submissions'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            My Submissions ({mySubmissions.length})
           </button>
         </div>
 
@@ -626,6 +684,295 @@ function DashboardPage() {
                   <p className="font-bold text-black/60">
                     No earnings yet. Create and sell datasets to start earning!
                   </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* My Bounties Tab */}
+          {activeTab === 'bounties' && (
+            <div>
+              <h3 className="text-2xl font-extrabold mb-4">Bounties I Posted</h3>
+              <p className="text-sm text-black/70 mb-6">
+                View submissions from creators responding to your bounties
+              </p>
+
+              {myBounties.length > 0 ? (
+                <div className="space-y-4">
+                  {myBounties.map((bounty) => (
+                    <div
+                      key={bounty.id}
+                      className="bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 border-2 border-black rounded-xl p-4"
+                    >
+                      {/* Bounty Header */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
+                          <div className="flex gap-3 text-sm font-semibold text-black/70">
+                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
+                              {bounty.modality}
+                            </span>
+                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
+                              ${bounty.budget}
+                            </span>
+                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
+                              {bounty.bounty_submissions?.length || 0} submissions
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setExpandedBounty(expandedBounty === bounty.id ? null : bounty.id)}
+                          className="bg-white border-2 border-black rounded-full px-4 py-2 font-bold hover:bg-gray-100 transition"
+                        >
+                          {expandedBounty === bounty.id ? 'Hide' : 'View'} Submissions
+                        </button>
+                      </div>
+
+                      {/* Submissions (Expanded) */}
+                      {expandedBounty === bounty.id && (
+                        <div className="mt-4 space-y-3">
+                          {bounty.bounty_submissions && bounty.bounty_submissions.length > 0 ? (
+                            bounty.bounty_submissions.map((submission) => (
+                              <div
+                                key={submission.id}
+                                className="bg-white border-2 border-black rounded-xl p-4"
+                              >
+                                <div className="flex justify-between items-start mb-3">
+                                  <div className="flex-1">
+                                    <h5 className="font-extrabold text-base mb-1">
+                                      {submission.datasets?.title || 'Untitled Dataset'}
+                                    </h5>
+                                    <p className="text-sm font-semibold text-black/70 mb-1">
+                                      By {submission.profiles?.username || 'Anonymous'}
+                                    </p>
+                                    <p className="text-sm text-black/70 mb-2">
+                                      Price: ${submission.datasets?.price || 0}
+                                    </p>
+                                    {submission.notes && (
+                                      <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-3">
+                                        <p className="text-sm font-semibold italic">
+                                          &quot;{submission.notes}&quot;
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-2 ml-4">
+                                    {submission.status === 'pending' && (
+                                      <>
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              const dataset = submission.datasets
+                                              
+                                              // Check if user already owns this dataset
+                                              const { data: existingPurchase } = await supabase
+                                                .from('purchases')
+                                                .select('id')
+                                                .eq('user_id', user.id)
+                                                .eq('dataset_id', dataset.id)
+                                                .single()
+
+                                              if (existingPurchase) {
+                                                alert('You already own this dataset!')
+                                                return
+                                              }
+
+                                              // Update submission to approved
+                                              const { error: updateError } = await supabase
+                                                .from('bounty_submissions')
+                                                .update({ status: 'approved' })
+                                                .eq('id', submission.id)
+
+                                              if (updateError) throw updateError
+
+                                              // Handle free datasets
+                                              if (dataset.price === 0) {
+                                                const { error: purchaseError } = await supabase
+                                                  .from('purchases')
+                                                  .insert([{
+                                                    user_id: user.id,
+                                                    dataset_id: dataset.id,
+                                                    amount: 0,
+                                                    status: 'completed'
+                                                  }])
+
+                                                if (purchaseError) throw purchaseError
+                                                alert('✅ Submission approved and dataset added to your library!')
+                                                fetchDashboardData()
+                                                return
+                                              }
+
+                                              // For paid datasets, create Stripe checkout
+                                              const stripe = await stripePromise
+                                              
+                                              const response = await fetch('/.netlify/functions/create-checkout', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                  datasetId: dataset.id,
+                                                  userId: user.id
+                                                })
+                                              })
+
+                                              const { sessionId, error } = await response.json()
+                                              if (error) throw new Error(error)
+
+                                              // Redirect to Stripe checkout
+                                              await stripe.redirectToCheckout({ sessionId })
+                                              
+                                            } catch (err) {
+                                              console.error('Error approving submission:', err)
+                                              alert('Error approving submission: ' + err.message)
+                                            }
+                                          }}
+                                          className="bg-green-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm whitespace-nowrap"
+                                        >
+                                          ✓ Approve & Purchase
+                                        </button>
+                                        <button
+                                          onClick={async () => {
+                                            if (!window.confirm('Are you sure you want to reject this submission?')) return
+                                            try {
+                                              const { error } = await supabase
+                                                .from('bounty_submissions')
+                                                .update({ status: 'rejected' })
+                                                .eq('id', submission.id)
+
+                                              if (error) throw error
+                                              alert('Submission rejected.')
+                                              fetchDashboardData()
+                                            } catch (err) {
+                                              alert('Error rejecting submission: ' + err.message)
+                                            }
+                                          }}
+                                          className="bg-red-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                                        >
+                                          ✗ Reject
+                                        </button>
+                                      </>
+                                    )}
+                                    {submission.status === 'approved' && (
+                                      <span className="bg-green-100 border-2 border-green-600 text-green-800 font-bold px-4 py-2 rounded-full text-sm">
+                                        ✓ Approved
+                                      </span>
+                                    )}
+                                    {submission.status === 'rejected' && (
+                                      <span className="bg-red-100 border-2 border-red-600 text-red-800 font-bold px-4 py-2 rounded-full text-sm">
+                                        ✗ Rejected
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-xs text-black/50 font-semibold">
+                                  Submitted {new Date(submission.submitted_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="bg-white border-2 border-black rounded-xl p-6 text-center">
+                              <p className="text-sm font-bold text-black/60">
+                                No submissions yet. Share your bounty to get responses!
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Package className="h-16 w-16 mx-auto mb-4 text-black/30" />
+                  <p className="font-bold text-black/60 mb-2">
+                    No bounties posted yet
+                  </p>
+                  <p className="text-sm text-black/50 mb-4">
+                    Post a bounty on the homepage to request specific datasets
+                  </p>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
+                  >
+                    Go to Homepage
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* My Submissions Tab */}
+          {activeTab === 'submissions' && (
+            <div>
+              <h3 className="text-2xl font-extrabold mb-4">My Bounty Submissions</h3>
+              <p className="text-sm text-black/70 mb-6">
+                Track the status of datasets you&apos;ve submitted to bounties
+              </p>
+
+              {mySubmissions.length > 0 ? (
+                <div className="space-y-4">
+                  {mySubmissions.map((submission) => (
+                    <div
+                      key={submission.id}
+                      className="bg-white border-2 border-black rounded-xl p-4"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h4 className="font-extrabold text-lg mb-1">
+                            {submission.datasets?.title || 'Untitled Dataset'}
+                          </h4>
+                          <p className="text-sm font-semibold text-black/70 mb-2">
+                            → Submitted to: <strong>{submission.bounties?.title}</strong>
+                          </p>
+                          <p className="text-sm text-black/60 mb-2">
+                            Bounty Budget: ${submission.bounties?.budget} • Your Price: ${submission.datasets?.price}
+                          </p>
+                          {submission.notes && (
+                            <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-2">
+                              <p className="text-sm italic">
+                                &quot;{submission.notes}&quot;
+                              </p>
+                            </div>
+                          )}
+                          <p className="text-xs text-black/50 font-semibold">
+                            Submitted {new Date(submission.submitted_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="ml-4">
+                          {submission.status === 'pending' && (
+                            <span className="bg-yellow-100 border-2 border-yellow-600 text-yellow-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                              ⏳ Pending Review
+                            </span>
+                          )}
+                          {submission.status === 'approved' && (
+                            <span className="bg-green-100 border-2 border-green-600 text-green-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                              ✓ Approved
+                            </span>
+                          )}
+                          {submission.status === 'rejected' && (
+                            <span className="bg-red-100 border-2 border-red-600 text-red-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
+                              ✗ Rejected
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Database className="h-16 w-16 mx-auto mb-4 text-black/30" />
+                  <p className="font-bold text-black/60 mb-2">
+                    No submissions yet
+                  </p>
+                  <p className="text-sm text-black/50 mb-4">
+                    Browse bounties on the homepage and submit your datasets
+                  </p>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
+                  >
+                    Browse Bounties
+                  </button>
                 </div>
               )}
             </div>
