@@ -661,53 +661,41 @@ function getDatasetSpecificAdvice(dataType, userMessage, recentContext) {
   
   // If recently discussing pricing, focus on pricing advice
   if (recentContext.includes('pric')) {
-    return `**Pricing ${info.title}:**
+    return `Nice! ${info.title.replace('/','/')} data. Let me break down pricing for you:
 
-**Suggested Pricing Tiers:**
-• **Demo:** ${info.pricing.demo}
-• **Standard:** ${info.pricing.standard}
-• **Premium:** ${info.pricing.premium}
+Demo ($0): ${info.pricing.demo} - Great for showcasing quality
+Standard (${info.pricing.standard.split(' - ')[0]}): ${info.pricing.standard.split(' - ')[1]}
+Premium (${info.pricing.premium.split(' - ')[0]}): ${info.pricing.premium.split(' - ')[1]}
 
-**Value Drivers:**
-${info.unique}
+What makes your data valuable? ${info.unique}
 
-**Specific Tips:**
-${info.tips.map(tip => `• ${tip}`).join('\n')}
+Quick tips:
+${info.tips.map(tip => `- ${tip}`).join('\n')}
 
-**Your Strategy:**
-1. Start with a free demo to showcase quality
-2. Price the full dataset based on ${info.unique.split(',')[0]}
-3. Adjust based on buyer feedback
-4. Consider creating different tiers (partial vs. complete)
+My advice: Start with a free demo pack to show what you've got. Once people see the quality, price your full collection based on ${info.unique.split(',')[0].toLowerCase()}. You can always adjust based on what buyers tell you.
 
-Want help with curation best practices for this data type?`
+Want help with the actual curation process?`
   }
   
   // Default: comprehensive advice
-  return `**${info.title} - Complete Guide:**
+  return `Great! You've got ${info.title.toLowerCase()} to sell. Here's the complete rundown:
 
-**Curation Best Practices:**
-${info.curation.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+Curation tips:
+${info.curation.map((tip, i) => `${i + 1}. ${tip.replace(/\*\*/g, '')}`).join('\n')}
 
-**Pricing Strategy:**
-• **Demo:** ${info.pricing.demo}
-• **Standard:** ${info.pricing.standard}
-• **Premium:** ${info.pricing.premium}
+Pricing guidance:
+Demo: ${info.pricing.demo}
+Standard: ${info.pricing.standard}
+Premium: ${info.pricing.premium}
 
-**What Makes Your Data Valuable:**
-${info.unique}
+What makes it valuable: ${info.unique}
 
-**Pro Tips:**
-${info.tips.map(tip => `• ${tip}`).join('\n')}
+Pro tips:
+${info.tips.map(tip => `- ${tip}`).join('\n')}
 
-**Next Steps:**
-1. Clean and organize your data following the tips above
-2. Create a demo version (free) to showcase quality
-3. Write a compelling description highlighting ${info.unique.split(',')[0]}
-4. Price competitively based on quality and effort
-5. Use relevant tags and accurate modality
+Start with a free demo to showcase quality, then price based on ${info.unique.split(',')[0].toLowerCase()}. You can always adjust after getting feedback from buyers.
 
-Need specific help with any step?`
+Want more specific help with any part of this?`
 }
 
 export function AIAssistant() {
