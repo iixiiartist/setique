@@ -70,9 +70,10 @@ const ASSISTANT_KNOWLEDGE = {
   }
 }
 
-// AI Response Generator
-const generateResponse = (userMessage, context) => {
+// AI Response Generator with conversation memory
+const generateResponse = (userMessage, context, conversationHistory = []) => {
   const msg = userMessage.toLowerCase()
+  const lastMessages = conversationHistory.slice(-5) // Last 5 messages for context
   
   // Greeting responses
   if (msg.match(/^(hi|hello|hey|greetings)/)) {
@@ -336,7 +337,83 @@ What are you trying to do?`
     }
   }
   
-  // Default helpful response
+  // Default helpful response with conversation context awareness
+  // Check if user is continuing a conversation
+  const recentTopics = lastMessages
+    .filter(m => m.type === 'assistant')
+    .slice(-2)
+    .map(m => m.text.toLowerCase())
+    .join(' ')
+  
+  // Detect specific dataset types for tailored advice
+  const datasetTypes = {
+    handwritten: /handwrit|notebook|journal|note|manuscrip/i,
+    audio: /audio|sound|music|voice|speech|podcast/i,
+    video: /video|footage|film|movie|visual/i,
+    images: /image|photo|picture|visual|scan/i,
+    text: /text|document|article|book|writing/i,
+    sensor: /sensor|iot|temperature|data point|measur/i,
+    financial: /financ|stock|market|trading|price/i,
+    medical: /medical|health|patient|clinical|diagnos/i
+  }
+  
+  // Provide domain-specific advice if user mentioned a dataset type
+  for (const [type, pattern] of Object.entries(datasetTypes)) {
+    if (pattern.test(userMessage)) {
+      return getDatasetSpecificAdvice(type, userMessage, recentTopics)
+    }
+  }
+  
+  // If discussing pricing recently, provide contextual pricing help
+  if (recentTopics.includes('pricing') || recentTopics.includes('price')) {
+    if (msg.match(/yeah|yes|sure|ok|i (have|do|am)|my|specific/)) {
+      return `**Great! Let me help you price that specific dataset.**
+
+To give you the best advice, tell me more about:
+1. **What type of data?** (images, text, audio, etc.)
+2. **How much data?** (file size, number of samples)
+3. **Collection effort?** (hours spent, difficulty)
+4. **Uniqueness?** (is this data rare or commonly available?)
+
+For most educational/historical datasets like notebooks:
+• **Demo version ($0)**: 5-10 sample pages to showcase quality
+• **Full collection ($15-50)**: Complete set with good documentation
+• **Premium ($50-150)**: If transcribed, categorized, or AI-ready
+
+What's unique about your data?`
+    }
+  }
+  
+  // If discussing bounties recently, continue that thread
+  if (recentTopics.includes('bounty') || recentTopics.includes('bounties')) {
+    if (msg.match(/best practice|how to|tips|advice|help|improve|better/)) {
+      return `**Best Practices for Bounty Success:**
+
+**For Submitting to Bounties:**
+1. ✅ **Match requirements exactly** - Read carefully and address all points
+2. 📝 **Add detailed notes** - Explain how your data meets their needs
+3. 🎯 **Quality over quantity** - One perfect match beats multiple mediocre ones
+4. 💰 **Price competitively** - Research similar datasets
+5. ⚡ **Respond quickly** - Early submissions get noticed
+
+**For Posting Bounties:**
+1. 📋 **Be specific** - Clear requirements = better submissions
+2. 💵 **Set realistic budgets** - Higher budgets attract better data
+3. ⏰ **Add deadlines** - Creates urgency
+4. 🔄 **Respond promptly** - Review submissions quickly
+5. 💬 **Communicate** - Approve or provide feedback
+
+**Pro Tips:**
+• Include use case examples in your bounty
+• As a submitter, show you understand the buyer's problem
+• Quality submissions build your reputation
+• First few bounties set expectations!
+
+Want help with a specific bounty?`
+    }
+  }
+  
+  // Generic helpful menu (only if no context)
   return `I'd be happy to help! I specialize in:
 
 **📊 Data Curation**
@@ -365,6 +442,234 @@ What are you trying to do?`
 • Tracking earnings
 
 What would you like to know more about? Feel free to ask anything specific!`
+}
+
+// Domain-specific dataset advice
+function getDatasetSpecificAdvice(dataType, userMessage, recentContext) {
+  const advice = {
+    handwritten: {
+      title: "Handwritten Notebooks/Documents",
+      curation: [
+        "Scan at high resolution (300+ DPI) for clarity",
+        "Ensure consistent lighting and no shadows",
+        "Organize by date, subject, or topic",
+        "Consider OCR transcription for added value",
+        "Include metadata: date ranges, subjects, context"
+      ],
+      pricing: {
+        demo: "$0 - 5-10 sample pages showing variety and quality",
+        standard: "$15-40 - Full collection (50-200 pages), well-scanned",
+        premium: "$50-150 - Transcribed, categorized, or AI-ready format"
+      },
+      unique: "Historical value, subject matter expertise, handwriting style diversity",
+      tips: [
+        "High school notebooks can be valuable for handwriting recognition AI training",
+        "Subject-specific notes (math, science) may attract educational AI developers",
+        "If you have multiple years/subjects, consider bundling or separate datasets"
+      ]
+    },
+    audio: {
+      title: "Audio/Sound Datasets",
+      curation: [
+        "Use consistent audio format (WAV/FLAC for quality, MP3 for size)",
+        "Remove background noise and normalize volume",
+        "Include transcripts if speech/dialogue",
+        "Tag by category, language, speaker, environment",
+        "Provide sample rate and bit depth specifications"
+      ],
+      pricing: {
+        demo: "$0 - 5-10 sample clips (30-60 sec each)",
+        standard: "$25-75 - Collection of 50-500 clips, categorized",
+        premium: "$100-300 - Professionally recorded, transcribed, labeled"
+      },
+      unique: "Recording quality, diversity of sources, annotations",
+      tips: [
+        "Speech datasets need speaker diversity and transcripts",
+        "Ambient sounds should cover various environments",
+        "Music requires rights clearance - be transparent"
+      ]
+    },
+    images: {
+      title: "Image/Photo Datasets",
+      curation: [
+        "Consistent resolution and format (PNG/JPEG)",
+        "Remove blurry or low-quality images",
+        "Organize into clear categories",
+        "Add labels/annotations if applicable",
+        "Include camera/capture metadata"
+      ],
+      pricing: {
+        demo: "$0 - 20-50 representative images",
+        standard: "$20-80 - 500-5000 images, categorized",
+        premium: "$100-500 - Labeled, annotated, or high-res professional"
+      },
+      unique: "Subject rarity, annotation quality, resolution, diversity",
+      tips: [
+        "Labeled images (bounding boxes, segmentation) command premium prices",
+        "Specialized subjects (medical, rare objects) are more valuable",
+        "Copyright matters - only sell images you have rights to"
+      ]
+    },
+    text: {
+      title: "Text/Document Datasets",
+      curation: [
+        "Clean formatting (remove HTML/special characters)",
+        "Consistent structure (JSON, CSV, or plain text)",
+        "Remove duplicates and irrelevant content",
+        "Include metadata (source, date, topic)",
+        "Specify language and character encoding"
+      ],
+      pricing: {
+        demo: "$0 - 100-500 sample documents",
+        standard: "$20-60 - 1000-10000 documents, cleaned",
+        premium: "$75-200 - Labeled, categorized, domain-specific"
+      },
+      unique: "Domain specificity, curation quality, labeling",
+      tips: [
+        "Domain-specific text (legal, medical, technical) is more valuable",
+        "Clean, de-duplicated data saves buyers preprocessing time",
+        "Sentiment labels or topic tags increase value"
+      ]
+    },
+    video: {
+      title: "Video/Footage Datasets",
+      curation: [
+        "Consistent resolution and frame rate",
+        "Trim to remove irrelevant content",
+        "Organize by scene type or activity",
+        "Include annotations or frame labels if applicable",
+        "Provide codec and technical specifications"
+      ],
+      pricing: {
+        demo: "$0 - 5-10 short clips (10-30 seconds)",
+        standard: "$50-150 - Collection of 50-500 clips",
+        premium: "$200-800 - Annotated, labeled, high-quality professional"
+      },
+      unique: "Scene diversity, annotation quality, resolution",
+      tips: [
+        "Action recognition datasets need frame-by-frame labels",
+        "Dashcam/surveillance footage valuable for CV training",
+        "Rights and privacy matter - ensure clearance"
+      ]
+    },
+    sensor: {
+      title: "Sensor/IoT Data",
+      curation: [
+        "Clean and validate sensor readings",
+        "Remove outliers and errors",
+        "Include calibration information",
+        "Timestamp all data points accurately",
+        "Document sensor specifications and setup"
+      ],
+      pricing: {
+        demo: "$0 - 24 hours of sample data",
+        standard: "$30-80 - Weeks/months of data, multiple sensors",
+        premium: "$100-250 - Labeled events, multiple locations/conditions"
+      },
+      unique: "Rare conditions captured, sensor diversity, event labels",
+      tips: [
+        "Industrial IoT data is valuable for predictive maintenance",
+        "Environmental data with rare events (storms, etc.) commands premium",
+        "Include context about sensor placement and conditions"
+      ]
+    },
+    financial: {
+      title: "Financial/Market Data",
+      curation: [
+        "Verify data accuracy against reliable sources",
+        "Handle missing data (weekends, holidays) properly",
+        "Include relevant indicators and metadata",
+        "Specify timezone and currency",
+        "Ensure compliance with data licensing"
+      ],
+      pricing: {
+        demo: "$0 - 1-3 months recent data",
+        standard: "$40-120 - Years of historical data, multiple assets",
+        premium: "$150-500 - Alternative data, high-frequency, unique sources"
+      },
+      unique: "Data frequency, historical depth, alternative signals",
+      tips: [
+        "Alternative data (sentiment, satellite, etc.) is premium",
+        "High-frequency data (tick-level) more valuable than daily",
+        "Verify licensing - some financial data has restrictions"
+      ]
+    },
+    medical: {
+      title: "Medical/Health Data",
+      curation: [
+        "⚠️ **CRITICAL**: Ensure HIPAA/GDPR compliance",
+        "De-identify all personal information",
+        "Include diagnoses/labels if applicable",
+        "Document data collection methodology",
+        "Specify demographic distributions"
+      ],
+      pricing: {
+        demo: "$0 - Small anonymized sample (check legal)",
+        standard: "$100-300 - Properly de-identified, labeled",
+        premium: "$500-2000+ - Rare conditions, expert annotations"
+      },
+      unique: "Rare conditions, expert labels, imaging quality",
+      tips: [
+        "Medical data requires careful legal review",
+        "Expert annotations (radiologist labels) are premium",
+        "Research institutions may pay top dollar for rare cases",
+        "Consider partnering with medical institutions for legitimacy"
+      ]
+    }
+  }
+  
+  const info = advice[dataType]
+  if (!info) return null
+  
+  // If recently discussing pricing, focus on pricing advice
+  if (recentContext.includes('pric')) {
+    return `**Pricing ${info.title}:**
+
+**Suggested Pricing Tiers:**
+• **Demo:** ${info.pricing.demo}
+• **Standard:** ${info.pricing.standard}
+• **Premium:** ${info.pricing.premium}
+
+**Value Drivers:**
+${info.unique}
+
+**Specific Tips:**
+${info.tips.map(tip => `• ${tip}`).join('\n')}
+
+**Your Strategy:**
+1. Start with a free demo to showcase quality
+2. Price the full dataset based on ${info.unique.split(',')[0]}
+3. Adjust based on buyer feedback
+4. Consider creating different tiers (partial vs. complete)
+
+Want help with curation best practices for this data type?`
+  }
+  
+  // Default: comprehensive advice
+  return `**${info.title} - Complete Guide:**
+
+**Curation Best Practices:**
+${info.curation.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+
+**Pricing Strategy:**
+• **Demo:** ${info.pricing.demo}
+• **Standard:** ${info.pricing.standard}
+• **Premium:** ${info.pricing.premium}
+
+**What Makes Your Data Valuable:**
+${info.unique}
+
+**Pro Tips:**
+${info.tips.map(tip => `• ${tip}`).join('\n')}
+
+**Next Steps:**
+1. Clean and organize your data following the tips above
+2. Create a demo version (free) to showcase quality
+3. Write a compelling description highlighting ${info.unique.split(',')[0]}
+4. Price competitively based on quality and effort
+5. Use relevant tags and accurate modality
+
+Need specific help with any step?`
 }
 
 export function AIAssistant() {
@@ -432,7 +737,8 @@ export function AIAssistant() {
       hasDatasets: false, // Could fetch this from dashboard
     }
     
-    const response = generateResponse(userMsg.text, context)
+    // Pass conversation history for context-aware responses
+    const response = generateResponse(userMsg.text, context, messages)
     
     const assistantMsg = {
       id: Date.now() + 1,
