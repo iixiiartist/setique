@@ -403,7 +403,7 @@ function HomePage() {
               <p className="text-sm font-semibold">
                 Platform in active development. All transactions in test mode. 
                 <a 
-                  href="mailto:feedback@setique.com" 
+                  href="mailto:joseph@anconsulting.us" 
                   className="underline ml-1 hover:text-cyan-600 transition"
                 >
                   Report issues or share feedback
@@ -422,14 +422,26 @@ function HomePage() {
       )}
 
       {/* Feedback Widget - Floating Button */}
-      <a
-        href="mailto:feedback@setique.com?subject=Setique Beta Feedback"
-        className="fixed bottom-6 right-6 bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-6 py-3 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:shadow-[8px_8px_0_#000] hover:scale-110 transition-all z-50 flex items-center gap-2"
+      <button
+        onClick={() => {
+          const email = 'joseph@anconsulting.us'
+          const subject = 'Setique Beta Feedback'
+          const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}`
+          
+          // Try to open mailto link
+          window.location.href = mailtoLink
+          
+          // Also show alert with email address as backup
+          setTimeout(() => {
+            alert(`Send feedback to: ${email}\n\nSubject: ${subject}\n\nIf your email client didn't open, please email us directly at the address above.`)
+          }, 500)
+        }}
+        className="fixed bottom-6 right-6 bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-6 py-3 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:shadow-[8px_8px_0_#000] hover:scale-110 transition-all z-50 flex items-center gap-2 cursor-pointer"
         aria-label="Send beta feedback"
       >
         <span className="text-xl">💬</span>
         <span className="hidden sm:inline">Beta Feedback</span>
-      </a>
+      </button>
 
       <header className="flex flex-col sm:flex-row items-center justify-between mb-12">
         <a
@@ -1105,7 +1117,7 @@ function HomePage() {
                         {bounty.modality}
                       </span>
                       <h5 className="font-extrabold text-lg mt-2">
-                        {bounty.title}
+                        {bounty.title.startsWith('(DEMO)') ? bounty.title : bounty.title}
                       </h5>
                       <p className="text-sm text-black/70 font-semibold">
                         {bounty.description.substring(0, 100)}...
@@ -1322,7 +1334,7 @@ function HomePage() {
                 {bounties[selectedBounty].modality} Bounty
               </span>
               <h4 className="text-3xl font-extrabold mb-2">
-                {bounties[selectedBounty].title}
+                {bounties[selectedBounty].title.startsWith('(DEMO)') ? bounties[selectedBounty].title : bounties[selectedBounty].title}
               </h4>
               <div className="flex items-center gap-2 text-sm font-semibold text-black/70">
                 <span>
