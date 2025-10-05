@@ -63,6 +63,9 @@ function DashboardPage() {
   const [editingDataset, setEditingDataset] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  
+  // Admin state
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -160,6 +163,15 @@ function DashboardPage() {
         .order('submitted_at', { ascending: false })
       
       setMySubmissions(submissions || [])
+
+      // Check if user is an admin
+      const { data: adminData } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+      
+      setIsAdmin(!!adminData)
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -461,12 +473,24 @@ function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-4xl font-extrabold mb-2">
-            Welcome back, {profile?.username || 'there'}! 👋
-          </h2>
-          <p className="text-lg font-semibold text-black/70">
-            Here&apos;s what&apos;s happening with your data economy
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-4xl font-extrabold mb-2">
+                Welcome back, {profile?.username || 'there'}! 👋
+              </h2>
+              <p className="text-lg font-semibold text-black/70">
+                Here&apos;s what&apos;s happening with your data economy
+              </p>
+            </div>
+            {isAdmin && (
+              <a
+                href="/admin"
+                className="bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
+              >
+                🔐 Admin Dashboard
+              </a>
+            )}
+          </div>
         </div>
 
         {/* Stats Overview */}
