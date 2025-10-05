@@ -23,6 +23,20 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   // Allow price = 0 for demo datasets; treat blank or negative as invalid
   const numericPrice = price === '' ? NaN : parseFloat(price)
   const isFormValid = title.trim() !== '' && description.trim() !== '' && !isNaN(numericPrice) && numericPrice >= 0 && uploadFile !== null
+  
+  // Debug form validation
+  console.log('📋 Form validation:', {
+    title: title.trim(),
+    titleValid: title.trim() !== '',
+    description: description.trim(),
+    descriptionValid: description.trim() !== '',
+    price: price,
+    numericPrice: numericPrice,
+    priceValid: !isNaN(numericPrice) && numericPrice >= 0,
+    uploadFile: uploadFile?.name,
+    fileValid: uploadFile !== null,
+    isFormValid: isFormValid
+  })
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
