@@ -212,7 +212,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
             <p className="text-xs text-gray-600 mt-2 font-semibold">
-              Budget is for the curation service. Final dataset price will include your desired markup.
+              Optional budget for initial curation work. Once live, you and your curator will split revenue 50/50 (you get 40% of sales, curator gets 40%, platform 20%).
             </p>
           </div>
 

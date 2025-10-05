@@ -13,8 +13,7 @@ export default function ProCuratorProfile() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [specialties, setSpecialties] = useState([]);
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [portfolioSamples, setPortfolioSamples] = useState(['']);
+  const [portfolioSamples, setPortfolioSamples] = useState(['', '', '']);
   
   const specialtyOptions = [
     'handwritten_text',
@@ -51,7 +50,6 @@ export default function ProCuratorProfile() {
         setDisplayName(data.display_name || '');
         setBio(data.bio || '');
         setSpecialties(data.specialties || []);
-        setHourlyRate(data.hourly_rate?.toString() || '');
         setPortfolioSamples(data.portfolio_samples || ['']);
       }
     } catch (error) {
@@ -80,7 +78,6 @@ export default function ProCuratorProfile() {
         display_name: displayName,
         bio: bio,
         specialties: specialties,
-        hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
         portfolio_samples: portfolioSamples.filter(s => s.trim() !== ''),
         certification_status: 'pending'
       };
@@ -113,7 +110,6 @@ export default function ProCuratorProfile() {
           display_name: displayName,
           bio: bio,
           specialties: specialties,
-          hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
           portfolio_samples: portfolioSamples.filter(s => s.trim() !== '')
         })
         .eq('user_id', user.id);
@@ -223,25 +219,6 @@ export default function ProCuratorProfile() {
               </div>
             </div>
 
-            {/* Hourly Rate */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hourly Rate (Optional)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  placeholder="50"
-                  min="0"
-                  step="1"
-                />
-              </div>
-            </div>
-
             {/* Portfolio Samples */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -342,8 +319,8 @@ export default function ProCuratorProfile() {
             <div className="text-sm text-gray-600">Total Earned</div>
           </div>
           <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-900">${curatorProfile.hourly_rate || 'N/A'}</div>
-            <div className="text-sm text-gray-600">Hourly Rate</div>
+            <div className="text-2xl font-bold text-gray-900">40%</div>
+            <div className="text-sm text-gray-600">Revenue Share</div>
           </div>
         </div>
 
@@ -384,21 +361,6 @@ export default function ProCuratorProfile() {
                     <span className="text-sm text-gray-700">{specialty.replace(/_/g, ' ')}</span>
                   </label>
                 ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate</label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  min="0"
-                  step="1"
-                />
               </div>
             </div>
 
@@ -446,7 +408,6 @@ export default function ProCuratorProfile() {
                   setDisplayName(curatorProfile.display_name || '');
                   setBio(curatorProfile.bio || '');
                   setSpecialties(curatorProfile.specialties || []);
-                  setHourlyRate(curatorProfile.hourly_rate?.toString() || '');
                   setPortfolioSamples(curatorProfile.portfolio_samples || ['']);
                 }}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50"
