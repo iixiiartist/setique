@@ -26,6 +26,7 @@ function HomePage() {
 
   // Modal state
   const [selected, setSelected] = useState(null)
+  const [selectedBounty, setSelectedBounty] = useState(null)
   const [checkoutIdx, setCheckoutIdx] = useState(null)
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
@@ -1036,10 +1037,11 @@ function HomePage() {
             </h4>
             <div className="space-y-4">
               {bounties.length > 0 ? (
-                bounties.map((bounty) => (
+                bounties.map((bounty, idx) => (
                   <div
                     key={bounty.id}
-                    className="bg-white/50 border-2 border-black rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+                    onClick={() => setSelectedBounty(idx)}
+                    className="bg-white/50 border-2 border-black rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer hover:bg-yellow-200/50 transition"
                   >
                     <div>
                       <span className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-cyan-200 uppercase">
@@ -1238,6 +1240,153 @@ function HomePage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Bounty Detail Modal */}
+      {selectedBounty !== null && bounties[selectedBounty] && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="modal-backdrop absolute inset-0 bg-black/50"
+            onClick={() => setSelectedBounty(null)}
+          />
+          <div className="modal-panel relative bg-gradient-to-br from-yellow-200 via-pink-200 to-cyan-200 text-black max-w-2xl w-full border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] p-6 z-10 max-h-[90vh] overflow-y-auto">
+            <button
+              className="absolute top-3 right-3 border-2 border-black rounded-full p-1 bg-yellow-300 active:scale-95 hover:bg-yellow-400 transition"
+              onClick={() => setSelectedBounty(null)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            
+            {/* Bounty Header */}
+            <div className="mb-4">
+              <span className="text-xs font-extrabold px-3 py-1 border-2 border-black rounded-full bg-cyan-300 uppercase inline-block mb-3">
+                {bounties[selectedBounty].modality} Bounty
+              </span>
+              <h4 className="text-3xl font-extrabold mb-2">
+                {bounties[selectedBounty].title}
+              </h4>
+              <div className="flex items-center gap-2 text-sm font-semibold text-black/70">
+                <span>
+                  Posted by {bounties[selectedBounty].profiles?.username || 'Anonymous'}
+                </span>
+                <span>•</span>
+                <span>
+                  {new Date(bounties[selectedBounty].created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Budget Display */}
+            <div className="bg-white border-2 border-black rounded-xl p-4 mb-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm font-bold text-black/60 uppercase">Total Budget</div>
+                  <div className="text-4xl font-extrabold">${bounties[selectedBounty].budget}</div>
+                </div>
+                {bounties[selectedBounty].quantity && (
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-black/60 uppercase">Quantity</div>
+                    <div className="text-2xl font-extrabold">{bounties[selectedBounty].quantity}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-4">
+              <h5 className="font-extrabold text-lg mb-2">📋 Description</h5>
+              <div className="bg-white/80 border-2 border-black rounded-xl p-4">
+                <p className="font-semibold text-black/80 whitespace-pre-wrap">
+                  {bounties[selectedBounty].description}
+                </p>
+              </div>
+            </div>
+
+            {/* Tags */}
+            {bounties[selectedBounty].tags && bounties[selectedBounty].tags.length > 0 && (
+              <div className="mb-4">
+                <h5 className="font-extrabold text-lg mb-2">🏷️ Tags</h5>
+                <div className="flex flex-wrap gap-2">
+                  {bounties[selectedBounty].tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs font-extrabold px-3 py-1 border-2 border-black rounded-full bg-pink-200"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Deadline */}
+            {bounties[selectedBounty].deadline && (
+              <div className="mb-4">
+                <h5 className="font-extrabold text-lg mb-2">⏰ Deadline</h5>
+                <div className="bg-white/80 border-2 border-black rounded-xl p-3">
+                  <p className="font-bold">
+                    {new Date(bounties[selectedBounty].deadline).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Requirements */}
+            <div className="mb-6">
+              <h5 className="font-extrabold text-lg mb-2">✅ Requirements</h5>
+              <div className="bg-white/80 border-2 border-black rounded-xl p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">📦</span>
+                  <span className="font-semibold text-sm">
+                    Data Type: <strong>{bounties[selectedBounty].modality}</strong>
+                  </span>
+                </div>
+                {bounties[selectedBounty].quantity && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">📊</span>
+                    <span className="font-semibold text-sm">
+                      Quantity: <strong>{bounties[selectedBounty].quantity}</strong>
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-start gap-2">
+                  <span className="text-lg">💰</span>
+                  <span className="font-semibold text-sm">
+                    Payment: <strong>${bounties[selectedBounty].budget} upon approval</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setSelectedBounty(null)
+                    setSignInOpen(true)
+                    return
+                  }
+                  alert('Bounty submission coming soon! For now, contact the poster directly.')
+                }}
+                className="flex-1 bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 active:scale-95 transition"
+              >
+                Submit Your Dataset
+              </button>
+              <button
+                onClick={() => setSelectedBounty(null)}
+                className="border-2 border-black bg-white text-black font-bold rounded-full px-6 py-3 hover:bg-gray-100 active:scale-95 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
