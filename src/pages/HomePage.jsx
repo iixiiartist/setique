@@ -36,8 +36,15 @@ function HomePage() {
   const [newPrice, setNewPrice] = useState('')
   const [newModality, setNewModality] = useState('vision')
   const [newTags, setNewTags] = useState([])
+  
+  // File upload state
+  const [uploadFile, setUploadFile] = useState(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadError, setUploadError] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  
   const isCreatorFormValid =
-    newTitle.trim() !== '' && newDesc.trim() !== '' && newPrice > 0
+    newTitle.trim() !== '' && newDesc.trim() !== '' && newPrice > 0 && uploadFile !== null
 
   // Bounty form state
   const [bountyTitle, setBountyTitle] = useState('')
@@ -156,13 +163,78 @@ function HomePage() {
     }
   }, [selected, checkoutIdx, isSignInOpen])
 
+  // Validate file type based on modality
+  const validateFile = (file, modality) => {
+    const allowedTypes = {
+      vision: ['image/jpeg', 'image/png', 'application/zip', 'application/x-tar', 'application/gzip'],
+      audio: ['audio/mpeg', 'audio/wav', 'audio/flac', 'application/zip'],
+      text: ['text/csv', 'application/json', 'application/zip', 'text/plain'],
+      video: ['video/mp4', 'video/quicktime', 'application/zip'],
+      nlp: ['text/csv', 'application/json', 'application/zip']
+    }
+    
+    const allowed = allowedTypes[modality] || []
+    const maxSize = 500 * 1024 * 1024 // 500MB
+    
+    if (!allowed.includes(file.type) && file.type !== '') {
+      return `Invalid file type for ${modality}. Allowed: ${allowed.join(', ')}`
+    }
+    
+    if (file.size > maxSize) {
+      return `File too large. Maximum size is 500MB. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+    }
+    
+    return null
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    const error = validateFile(file, newModality)
+    if (error) {
+      setUploadError(error)
+      setUploadFile(null)
+      return
+    }
+    
+    setUploadFile(file)
+    setUploadError('')
+  }
+
   const handlePublish = async () => {
     if (!user) {
       setSignInOpen(true)
       return
     }
 
+    if (!uploadFile) {
+      alert('Please select a file to upload')
+      return
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+    
     try {
+      // Upload file to Supabase Storage
+      const fileExt = uploadFile.name.split('.').pop()
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('datasets')
+        .upload(fileName, uploadFile, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress) => {
+            const percentage = (progress.loaded / progress.total) * 100
+            setUploadProgress(Math.round(percentage))
+          }
+        })
+
+      if (uploadError) throw uploadError
+
+      // Create dataset record with storage path
       const { data, error } = await supabase.from('datasets').insert([
         {
           creator_id: user.id,
@@ -172,6 +244,8 @@ function HomePage() {
           modality: newModality,
           tags: newTags,
           accent_color: getAccentColor(newModality),
+          download_url: uploadData.path,
+          file_size: uploadFile.size,
         },
       ])
 
@@ -180,14 +254,21 @@ function HomePage() {
       alert(
         `Published "${newTitle}"! Your dataset is now live on the marketplace.`
       )
+      
+      // Reset form
       setNewTitle('')
       setNewDesc('')
       setNewPrice('')
       setNewTags([])
+      setUploadFile(null)
+      setUploadProgress(0)
+      
       fetchDatasets()
     } catch (error) {
       console.error('Error publishing dataset:', error)
       alert('Error publishing dataset: ' + error.message)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -446,12 +527,46 @@ function HomePage() {
                 <label className="font-bold mb-2 block">Tags</label>
                 <TagInput tags={newTags} setTags={setNewTags} />
               </div>
+              
+              {/* File Upload */}
+              <div>
+                <label className="font-bold mb-2 block">Dataset File</label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
+                  accept=".csv,.json,.zip,.tar,.gz,.mp3,.wav,.flac,.mp4,.mov,.jpg,.jpeg,.png,.txt"
+                />
+                {uploadFile && (
+                  <p className="text-sm mt-2 font-semibold">
+                    Selected: {uploadFile.name} ({(uploadFile.size / (1024 * 1024)).toFixed(2)}MB)
+                  </p>
+                )}
+                {uploadError && (
+                  <p className="text-sm mt-2 font-bold text-red-600">
+                    ⚠️ {uploadError}
+                  </p>
+                )}
+                {isUploading && (
+                  <div className="mt-3">
+                    <div className="w-full bg-white border-2 border-black rounded-full h-6 overflow-hidden">
+                      <div
+                        className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] h-full transition-all duration-300 flex items-center justify-center text-xs font-bold"
+                        style={{ width: `${uploadProgress}%` }}
+                      >
+                        {uploadProgress}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <button
                 onClick={handlePublish}
-                disabled={!isCreatorFormValid}
+                disabled={!isCreatorFormValid || isUploading}
                 className="w-full bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold py-4 rounded-full border-4 border-black hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 active:scale-100"
               >
-                Publish to Marketplace
+                {isUploading ? `Uploading... ${uploadProgress}%` : 'Publish to Marketplace'}
               </button>
             </div>
           </div>
