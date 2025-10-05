@@ -76,6 +76,7 @@ function HomePage() {
   const [datasets, setDatasets] = useState([])
   const [bounties, setBounties] = useState([])
   const [topCurators, setTopCurators] = useState([])
+  const [userPurchases, setUserPurchases] = useState([])
   const [loading, setLoading] = useState(true)
 
   // Fetch datasets
@@ -83,7 +84,31 @@ function HomePage() {
     fetchDatasets()
     fetchBounties()
     fetchTopCurators()
-  }, [])
+    if (user) {
+      fetchUserPurchases()
+    }
+  }, [user])
+
+  const fetchUserPurchases = async () => {
+    if (!user) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('purchases')
+        .select('dataset_id')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+      
+      if (error) throw error
+      setUserPurchases(data.map(p => p.dataset_id))
+    } catch (error) {
+      console.error('Error fetching user purchases:', error)
+    }
+  }
+
+  const userOwnsDataset = (datasetId) => {
+    return userPurchases.includes(datasetId)
+  }
 
   const fetchDatasets = async () => {
     try {
@@ -308,6 +333,21 @@ function HomePage() {
     try {
       const dataset = datasets[checkoutIdx]
 
+      // Check if user already owns this dataset
+      const { data: existingPurchase } = await supabase
+        .from('purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('dataset_id', dataset.id)
+        .single()
+
+      if (existingPurchase) {
+        alert('You already own this dataset! Check your dashboard to download it.')
+        setCheckoutIdx(null)
+        setProcessing(false)
+        return
+      }
+
       // Handle free datasets differently
       if (dataset.price === 0) {
         // Create purchase record directly for free datasets
@@ -323,7 +363,15 @@ function HomePage() {
           ])
 
         if (purchaseError) {
-          throw new Error(purchaseError.message)
+          // Handle duplicate purchase error specifically
+          if (purchaseError.code === '23505') {
+            alert('You already own this dataset! Check your dashboard to download it.')
+          } else {
+            throw new Error(purchaseError.message)
+          }
+          setCheckoutIdx(null)
+          setProcessing(false)
+          return
         }
 
         // Show success message and refresh
@@ -337,6 +385,9 @@ function HomePage() {
           .select('*, profiles(username)')
           .order('created_at', { ascending: false })
         if (newDatasets) setDatasets(newDatasets)
+        
+        // Refresh user purchases to update UI
+        fetchUserPurchases()
 
         return
       }
@@ -1002,8 +1053,15 @@ function HomePage() {
                       ))}
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-auto">
-                      <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow">
-                        {d.price === 0 ? 'FREE' : `$${d.price}`}
+                      <div className="flex items-center gap-2">
+                        <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow">
+                          {d.price === 0 ? 'FREE' : `$${d.price}`}
+                        </div>
+                        {userOwnsDataset(d.id) && (
+                          <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
+                            ✓ Owned
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -1012,12 +1070,21 @@ function HomePage() {
                         >
                           Details
                         </button>
-                        <button
-                          onClick={() => setCheckoutIdx(datasets.indexOf(d))}
-                          className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
-                        >
-                          {d.price === 0 ? 'Get Free' : 'Buy Now'}
-                        </button>
+                        {userOwnsDataset(d.id) ? (
+                          <button
+                            onClick={() => navigate('/dashboard')}
+                            className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95"
+                          >
+                            View in Library
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setCheckoutIdx(datasets.indexOf(d))}
+                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
+                          >
+                            {d.price === 0 ? 'Get Free' : 'Buy Now'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1333,18 +1400,37 @@ function HomePage() {
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
-                    {datasets[selected].price === 0 ? 'FREE' : `$${datasets[selected].price}`}
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
+                      {datasets[selected].price === 0 ? 'FREE' : `$${datasets[selected].price}`}
+                    </div>
+                    {userOwnsDataset(datasets[selected].id) && (
+                      <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm">
+                        ✓ You own this
+                      </div>
+                    )}
                   </div>
-                  <button
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-2 active:scale-95"
-                    onClick={() => {
-                      setSelected(null)
-                      setCheckoutIdx(selected)
-                    }}
-                  >
-                    {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
-                  </button>
+                  {userOwnsDataset(datasets[selected].id) ? (
+                    <button
+                      className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-6 py-2 hover:bg-green-300 active:scale-95"
+                      onClick={() => {
+                        setSelected(null)
+                        navigate('/dashboard')
+                      }}
+                    >
+                      View in Library
+                    </button>
+                  ) : (
+                    <button
+                      className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-2 active:scale-95"
+                      onClick={() => {
+                        setSelected(null)
+                        setCheckoutIdx(selected)
+                      }}
+                    >
+                      {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
