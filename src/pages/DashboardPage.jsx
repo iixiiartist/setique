@@ -174,7 +174,7 @@ function DashboardPage() {
         .from('admins')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       
       if (!adminError && adminData) {
         setIsAdmin(true)

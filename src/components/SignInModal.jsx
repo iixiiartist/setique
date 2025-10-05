@@ -88,6 +88,7 @@ export const SignInModal = ({ isOpen, onClose }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
+            autoComplete="current-password"
             required
             minLength={6}
           />

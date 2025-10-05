@@ -66,9 +66,9 @@ export default function ProCuratorProfile() {
         .from('pro_curators')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+      if (error) { // maybeSingle returns null instead of error when no rows
         console.error('Error fetching curator profile:', error);
         // If table doesn't exist (406 error), just skip loading
         if (error.code === 'PGRST106' || error.message?.includes('406')) {
@@ -127,17 +127,18 @@ export default function ProCuratorProfile() {
       const { data, error } = await supabase
         .from('pro_curators')
         .insert([profileData])
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Supabase error details:', error);
         throw error;
       }
+      
+      const createdProfile = data?.[0] || data;
 
-      console.log('Profile created successfully:', data);
+      console.log('Profile created successfully:', createdProfile);
 
-      setCuratorProfile(data);
+      setCuratorProfile(createdProfile);
       setIsEditing(false);
       
       // Clear localStorage draft after successful submission
