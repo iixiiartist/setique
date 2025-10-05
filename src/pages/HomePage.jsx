@@ -23,7 +23,6 @@ function HomePage() {
   // General state
   const [query, setQuery] = useState('')
   const [modality, setModality] = useState('all')
-  const [maxPrice, setMaxPrice] = useState(200)
 
   // Modal state
   const [selected, setSelected] = useState(null)
@@ -144,10 +143,9 @@ function HomePage() {
           (d.title + d.description + d.tags.join(' '))
             .toLowerCase()
             .includes(query.toLowerCase()) &&
-          (modality === 'all' || d.tags.some((tag) => tag === modality)) &&
-          d.price <= maxPrice
+          (modality === 'all' || d.tags.some((tag) => tag === modality))
       ),
-    [datasets, query, modality, maxPrice]
+    [datasets, query, modality]
   )
 
   useEffect(() => {
@@ -527,21 +525,6 @@ function HomePage() {
                 <option value="architecture">Architecture</option>
                 <option value="subculture">Subculture</option>
               </select>
-            </div>
-            <div className="md:col-span-3">
-              <div className="bg-white border-2 border-black rounded-2xl px-4 py-3">
-                <label className="block text-xs font-extrabold mb-1">
-                  Max Price: ${maxPrice}
-                </label>
-                <input
-                  type="range"
-                  min={10}
-                  max={200}
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                  className="w-full accent-black"
-                />
-              </div>
             </div>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
