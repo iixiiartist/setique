@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
+import { DatasetUploadModal } from '../components/DatasetUploadModal'
 import {
   Database,
   ShoppingBag,
@@ -47,6 +48,7 @@ function DashboardPage() {
   const [editingDataset, setEditingDataset] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -597,7 +599,7 @@ function DashboardPage() {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-extrabold">My Datasets</h3>
                 <button
-                  onClick={() => navigate('/#curator-form')}
+                  onClick={() => setUploadModalOpen(true)}
                   className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
                 >
                   <Upload className="h-4 w-4" />
@@ -699,7 +701,7 @@ function DashboardPage() {
                     You haven&apos;t created any datasets yet
                   </p>
                   <button
-                    onClick={() => navigate('/#curator-form')}
+                    onClick={() => setUploadModalOpen(true)}
                     className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
                   >
                     Create Your First Dataset
@@ -1276,6 +1278,13 @@ function DashboardPage() {
           </div>
         </div>
       )}
+      
+      {/* Upload Dataset Modal */}
+      <DatasetUploadModal 
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onSuccess={fetchDashboardData}
+      />
     </div>
   )
 }
