@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY // Use service role for elevated permissions
 )
 
 exports.handler = async (event) => {
@@ -130,6 +130,37 @@ exports.handler = async (event) => {
       return {
         statusCode: 500,
         body: JSON.stringify({ error: 'Failed to update purchase' }),
+      }
+    }
+  }
+
+  // Handle Stripe Connect account updates
+  if (stripeEvent.type === 'account.updated') {
+    const account = stripeEvent.data.object
+    const creatorId = account.metadata?.creator_id
+
+    if (creatorId) {
+      try {
+        // Update payout account status
+        const { error: updateError } = await supabase
+          .from('creator_payout_accounts')
+          .update({
+            account_status: account.charges_enabled && account.payouts_enabled ? 'active' : 'incomplete',
+            onboarding_completed: account.details_submitted || false,
+            payouts_enabled: account.payouts_enabled || false,
+            charges_enabled: account.charges_enabled || false,
+          })
+          .eq('stripe_connect_account_id', account.id)
+
+        if (updateError) throw updateError
+
+        console.log('Connect account updated:', { accountId: account.id, creatorId })
+      } catch (error) {
+        console.error('Error updating connect account:', error)
+        return {
+          statusCode: 500,
+          body: JSON.stringify({ error: 'Failed to update connect account' }),
+        }
       }
     }
   }

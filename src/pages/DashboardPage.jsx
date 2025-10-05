@@ -26,6 +26,10 @@ function DashboardPage() {
   
   // Buyer data
   const [myPurchases, setMyPurchases] = useState([])
+  
+  // Stripe Connect state
+  const [connectingStripe, setConnectingStripe] = useState(false)
+  const [connectError, setConnectError] = useState(null)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -95,6 +99,29 @@ function DashboardPage() {
     }
     
     fetchDashboardData()
+    
+    // Check for Stripe onboarding completion
+    const urlParams = new URLSearchParams(window.location.search)
+    const onboardingStatus = urlParams.get('onboarding')
+    const tabParam = urlParams.get('tab')
+    
+    if (onboardingStatus === 'complete') {
+      alert('✅ Stripe account connected successfully! Your payout account is now set up.')
+      // Switch to earnings tab if not already there
+      if (tabParam === 'earnings') {
+        setActiveTab('earnings')
+      }
+      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard')
+      // Refresh data to show updated payout account
+      setTimeout(() => fetchDashboardData(), 1000)
+    } else if (onboardingStatus === 'refresh') {
+      alert('⚠️ Stripe onboarding was interrupted. Please try again.')
+      if (tabParam === 'earnings') {
+        setActiveTab('earnings')
+      }
+      window.history.replaceState({}, '', '/dashboard')
+    }
   }, [user, navigate, fetchDashboardData])
 
   const handleDownload = async (datasetId) => {
@@ -124,6 +151,39 @@ function DashboardPage() {
     } catch (error) {
       console.error('Download error:', error)
       alert('Error: ' + error.message)
+    }
+  }
+
+  const handleConnectStripe = async () => {
+    setConnectingStripe(true)
+    setConnectError(null)
+    
+    try {
+      const response = await fetch('/.netlify/functions/connect-onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creatorId: user.id,
+          email: profile?.email || user.email,
+          returnUrl: `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`,
+          refreshUrl: `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create Stripe Connect link')
+      }
+
+      // Redirect to Stripe onboarding
+      window.location.href = data.url
+    } catch (error) {
+      console.error('Stripe Connect error:', error)
+      setConnectError(error.message)
+      setConnectingStripe(false)
     }
   }
 
@@ -493,8 +553,17 @@ function DashboardPage() {
                   <p className="text-sm font-semibold mb-3">
                     Connect your Stripe account to receive payouts
                   </p>
-                  <button className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition">
-                    Connect Stripe Account
+                  {connectError && (
+                    <div className="bg-red-100 border-2 border-red-500 rounded-lg p-3 mb-3">
+                      <p className="text-sm font-bold text-red-800">❌ {connectError}</p>
+                    </div>
+                  )}
+                  <button 
+                    onClick={handleConnectStripe}
+                    disabled={connectingStripe}
+                    className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {connectingStripe ? 'Connecting...' : 'Connect Stripe Account'}
                   </button>
                 </div>
               )}
