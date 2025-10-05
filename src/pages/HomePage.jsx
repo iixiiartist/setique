@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
@@ -19,6 +20,7 @@ import {
 
 function HomePage() {
   const { user, profile, signOut } = useAuth()
+  const navigate = useNavigate()
 
   // General state
   const [query, setQuery] = useState('')
