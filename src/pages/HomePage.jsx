@@ -67,8 +67,10 @@ function HomePage() {
     setShowBetaBanner(false)
   }
   
+  // Allow price = 0 for demo datasets
+  const numericNewPrice = newPrice === '' ? NaN : parseFloat(newPrice)
   const isCreatorFormValid =
-    newTitle.trim() !== '' && newDesc.trim() !== '' && newPrice > 0 && uploadFile !== null
+    newTitle.trim() !== '' && newDesc.trim() !== '' && !isNaN(numericNewPrice) && numericNewPrice >= 0 && uploadFile !== null
 
   // Bounty form state
   const [bountyTitle, setBountyTitle] = useState('')
@@ -318,12 +320,13 @@ function HomePage() {
           creator_id: user.id,
           title: newTitle,
           description: newDesc,
-          price: parseFloat(newPrice),
+          price: isNaN(numericNewPrice) ? 0 : numericNewPrice,
           modality: newModality,
           tags: newTags,
           accent_color: getAccentColor(newModality),
           download_url: uploadData.path,
           file_size: uploadFile.size,
+          is_active: true,
         },
       ])
 
