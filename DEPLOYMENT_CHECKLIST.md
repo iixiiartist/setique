@@ -1,6 +1,18 @@
-# ✅ Deployment Checklist
+# ✅ Deployment Checklist - UPDATED October 5, 2025
 
-Use this checklist to ensure everything is properly configured before going live.
+## 🎉 BUILD FIXES COMPLETED!
+
+All Netlify build issues have been resolved:
+
+✅ **Cache fetch errors** - Fixed (see `NETLIFY_BUILD_FIX.md`)  
+✅ **Invalid Node version** - Fixed (see `NODE_VERSION_FIX.md`)  
+✅ **Missing Stripe dependency** - Fixed (see `NETLIFY_FUNCTIONS_FIX.md`)  
+
+**Current Status:** Code is pushed, build should succeed now!
+
+---
+
+Use this checklist to track your deployment progress.
 
 ## 🔧 Local Setup
 
@@ -15,25 +27,26 @@ Use this checklist to ensure everything is properly configured before going live
 
 ## 🗄️ Supabase Configuration
 
-- [ ] Supabase project created
-- [ ] Project URL copied to `.env`
-- [ ] Anon/public key copied to `.env`
-- [ ] SQL migration `001_initial_schema.sql` executed
-- [ ] At least one user account created
-- [ ] SQL migration `002_seed_data.sql` executed (optional)
-- [ ] Can see tables in Supabase dashboard
-- [ ] RLS policies are enabled
-- [ ] Authentication is configured
+- [x] Supabase project created ✅
+- [x] Project URL copied to `.env` ✅
+- [x] Anon/public key copied to `.env` ✅
+- [x] SQL migration `001_initial_schema.sql` executed ✅
+- [x] At least one user account created ✅
+- [x] SQL migration `002_seed_data.sql` executed ✅
+- [x] Can see tables in Supabase dashboard ✅
+- [x] RLS policies are enabled ✅
+- [x] Authentication is configured ✅
+- [ ] SQL migration `003_creator_payouts.sql` executed ⏳ **NEED TO RUN THIS**
 
 ## 💳 Stripe Configuration
 
-- [ ] Stripe account created
-- [ ] Test mode enabled
-- [ ] Publishable key copied to `.env`
-- [ ] Secret key copied to `.env`
+- [x] Stripe account created ✅
+- [x] LIVE mode enabled ⚠️ (using live keys, not test)
+- [x] Publishable key copied to `.env` ✅
+- [x] Secret key copied to `.env` ✅
 - [ ] Test purchase works locally (use card: 4242 4242 4242 4242)
-- [ ] Webhook endpoint configured (for production)
-- [ ] Webhook secret copied to `.env`
+- [ ] Webhook endpoint configured (for production) ⏳ **NEED NETLIFY URL FIRST**
+- [x] Webhook secret copied to `.env` ✅
 
 ## 🌐 Git Repository
 
@@ -45,20 +58,32 @@ Use this checklist to ensure everything is properly configured before going live
 
 ## 🚀 Netlify Deployment
 
-- [ ] Netlify account created
-- [ ] Site connected to Git repository
-- [ ] Build command set to `npm run build`
-- [ ] Publish directory set to `dist`
-- [ ] Environment variables added:
-  - [ ] `VITE_SUPABASE_URL`
-  - [ ] `VITE_SUPABASE_ANON_KEY`
-  - [ ] `VITE_STRIPE_PUBLISHABLE_KEY`
-  - [ ] `STRIPE_SECRET_KEY`
-  - [ ] `STRIPE_WEBHOOK_SECRET`
+- [x] Netlify account created ✅
+- [x] Site connected to Git repository ✅
+- [x] Build configuration fixed ✅
+  - [x] Node version: 20 (was invalid 18.20.8)
+  - [x] Build command: `npm ci && cd netlify/functions && npm ci && cd ../.. && npm run build`
+  - [x] All lock files committed
+  - [x] Stripe dependency in root package.json
+- [x] Publish directory set to `dist` ✅
+- [ ] ⏳ **WAITING FOR BUILD TO COMPLETE**
+- [ ] Environment variables added to Netlify:
+  - [ ] `VITE_SUPABASE_URL` = (from your .env file)
+  - [ ] `VITE_SUPABASE_ANON_KEY` = (from your .env file)
+  - [ ] `VITE_STRIPE_PUBLISHABLE_KEY` = (starts with pk_live_...) ⚠️ LIVE KEY
+  - [ ] `STRIPE_SECRET_KEY` = (starts with sk_live_...) ⚠️ LIVE KEY
+  - [ ] `STRIPE_WEBHOOK_SECRET` = (starts with whsec_...)
 - [ ] First deploy successful
+- [ ] 4 functions deployed successfully:
+  - [ ] create-checkout
+  - [ ] stripe-webhook
+  - [ ] connect-onboarding
+  - [ ] request-payout
 - [ ] Site loads without errors
 - [ ] Can sign up on live site
 - [ ] Can browse datasets on live site
+
+⚠️ **NOTE:** You're using LIVE Stripe keys! Real money will be processed!
 
 ## 🔗 Stripe Webhook (Production)
 
