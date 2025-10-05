@@ -590,10 +590,10 @@ function HomePage() {
             </button>
           )}
           <a
-            href="#curator-form"
+            href="#pro-curator"
             className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-bold hover:opacity-90 transition px-5 py-2 rounded-full shadow-lg border-2 border-black text-sm active:scale-95"
           >
-            Become a Curator
+            Pro Curator
           </a>
         </nav>
       </header>
@@ -880,6 +880,179 @@ function HomePage() {
                 >
                   Ready to Create Your Dataset →
                 </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pro Curator Program Section */}
+        <section id="pro-curator" className="max-w-6xl mx-auto mb-24 pt-10">
+          <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-500 p-8 border-b-4 border-black text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Star className="h-10 w-10 text-yellow-300 fill-yellow-300" />
+                <h3 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[3px_3px_0_#000]">
+                  Pro Curator Program
+                </h3>
+                <Star className="h-10 w-10 text-yellow-300 fill-yellow-300" />
+              </div>
+              <p className="text-xl font-bold text-white/90 max-w-3xl mx-auto">
+                Partner with data owners, apply your expertise, and earn 50/50 revenue splits on professionally curated datasets
+              </p>
+            </div>
+
+            <div className="p-8">
+              {/* Value Proposition Cards */}
+              <div className="grid md:grid-cols-3 gap-6 mb-10">
+                <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0_#000]">
+                  <div className="text-4xl mb-3">🎯</div>
+                  <h4 className="text-xl font-extrabold mb-2 text-black">Expert Recognition</h4>
+                  <p className="font-semibold text-black/70 text-sm">
+                    Get certified as a Pro Curator. Earn badges (Verified → Expert → Master) as you complete projects and build your reputation.
+                  </p>
+                </div>
+                <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0_#000]">
+                  <div className="text-4xl mb-3">💰</div>
+                  <h4 className="text-xl font-extrabold mb-2 text-black">Fair Revenue Split</h4>
+                  <p className="font-semibold text-black/70 text-sm">
+                    Earn 40% of every dataset sale (50/50 split of the creator share). No upfront costs, no hourly limits—just passive income from quality work.
+                  </p>
+                </div>
+                <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0_#000]">
+                  <div className="text-4xl mb-3">🤝</div>
+                  <h4 className="text-xl font-extrabold mb-2 text-black">Choose Your Projects</h4>
+                  <p className="font-semibold text-black/70 text-sm">
+                    Browse curation requests, submit proposals, and partner with data owners who need your specific expertise.
+                  </p>
+                </div>
+              </div>
+
+              {/* How It Works */}
+              <div className="bg-white border-3 border-black rounded-2xl p-8 mb-8 shadow-[4px_4px_0_#000]">
+                <h4 className="text-2xl font-extrabold mb-6 text-center text-black">How It Works</h4>
+                <div className="grid md:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="bg-indigo-100 border-2 border-black rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 font-extrabold text-2xl text-indigo-600">
+                      1
+                    </div>
+                    <h5 className="font-extrabold text-sm mb-2">Apply for Certification</h5>
+                    <p className="text-xs font-semibold text-black/70">
+                      Submit your profile with specialties, bio, and portfolio samples
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-pink-100 border-2 border-black rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 font-extrabold text-2xl text-pink-600">
+                      2
+                    </div>
+                    <h5 className="font-extrabold text-sm mb-2">Browse Opportunities</h5>
+                    <p className="text-xs font-semibold text-black/70">
+                      View curation requests from data owners who need help
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-yellow-100 border-2 border-black rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 font-extrabold text-2xl text-yellow-600">
+                      3
+                    </div>
+                    <h5 className="font-extrabold text-sm mb-2">Submit Proposals</h5>
+                    <p className="text-xs font-semibold text-black/70">
+                      Pitch your approach, timeline, and pricing for projects
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-green-100 border-2 border-black rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 font-extrabold text-2xl text-green-600">
+                      4
+                    </div>
+                    <h5 className="font-extrabold text-sm mb-2">Earn Passively</h5>
+                    <p className="text-xs font-semibold text-black/70">
+                      Get 40% of every sale automatically—forever
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specialties */}
+              <div className="bg-gradient-to-r from-cyan-50 to-pink-50 border-3 border-black rounded-2xl p-6 mb-8">
+                <h4 className="text-xl font-extrabold mb-4 text-black">Specialties We Need:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">✍️</div>
+                    <div className="text-xs font-extrabold">Handwritten Text</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">🎵</div>
+                    <div className="text-xs font-extrabold">Audio Transcription</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">🎬</div>
+                    <div className="text-xs font-extrabold">Video Annotation</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">🖼️</div>
+                    <div className="text-xs font-extrabold">Image Labeling</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">📝</div>
+                    <div className="text-xs font-extrabold">Text Classification</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">📡</div>
+                    <div className="text-xs font-extrabold">Sensor Data</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">💹</div>
+                    <div className="text-xs font-extrabold">Financial Data</div>
+                  </div>
+                  <div className="bg-white border-2 border-black rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">🏥</div>
+                    <div className="text-xs font-extrabold">Medical Imaging</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {user ? (
+                  <>
+                    <button
+                      onClick={() => navigate('/dashboard?tab=pro-curator')}
+                      className="bg-indigo-600 text-white font-extrabold px-8 py-4 rounded-full border-3 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition text-lg"
+                    >
+                      Apply to Become a Pro Curator
+                    </button>
+                    <button
+                      onClick={() => navigate('/marketplace')}
+                      className="bg-white text-black font-extrabold px-8 py-4 rounded-full border-3 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition text-lg"
+                    >
+                      Browse Curation Requests
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setSignInOpen(true)}
+                    className="bg-indigo-600 text-white font-extrabold px-8 py-4 rounded-full border-3 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition text-lg"
+                  >
+                    Sign In to Apply
+                  </button>
+                )}
+              </div>
+
+              {/* Stats Teaser */}
+              <div className="mt-8 pt-6 border-t-2 border-black/20">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-3xl font-extrabold text-purple-600">50%</div>
+                    <div className="text-xs font-bold text-black/70">Revenue Split</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-extrabold text-pink-600">∞</div>
+                    <div className="text-xs font-bold text-black/70">Passive Income</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-extrabold text-yellow-600">3</div>
+                    <div className="text-xs font-bold text-black/70">Badge Levels</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

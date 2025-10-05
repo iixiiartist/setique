@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
 import { DatasetUploadModal } from '../components/DatasetUploadModal'
+import ProCuratorProfile from '../components/ProCuratorProfile'
+import CurationRequestModal from '../components/CurationRequestModal'
 import {
   Database,
   ShoppingBag,
@@ -34,6 +36,12 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   
+  // Upload modal state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  
+  // Curation request modal state
+  const [curationRequestModalOpen, setCurationRequestModalOpen] = useState(false)
+  
   // Curator data
   const [myDatasets, setMyDatasets] = useState([])
   const [earnings, setEarnings] = useState(null)
@@ -55,7 +63,6 @@ function DashboardPage() {
   const [editingDataset, setEditingDataset] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
-  const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -534,6 +541,17 @@ function DashboardPage() {
             }`}
           >
             My Submissions ({mySubmissions.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('pro-curator')}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition flex items-center gap-2 ${
+              activeTab === 'pro-curator'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            <Star className="h-4 w-4 fill-current" />
+            Pro Curator
           </button>
         </div>
 
@@ -1198,6 +1216,28 @@ function DashboardPage() {
               )}
             </div>
           )}
+
+          {/* Pro Curator Tab */}
+          {activeTab === 'pro-curator' && (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-2xl font-extrabold mb-2">Pro Curator Dashboard</h3>
+                  <p className="text-sm text-black/70">
+                    Apply for certification, manage partnerships, and browse curation requests
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCurationRequestModalOpen(true)}
+                  className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
+                >
+                  Request Curation Help
+                </button>
+              </div>
+              
+              <ProCuratorProfile />
+            </div>
+          )}
         </div>
       </main>
       
@@ -1307,6 +1347,13 @@ function DashboardPage() {
       <DatasetUploadModal 
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
+        onSuccess={fetchDashboardData}
+      />
+      
+      {/* Curation Request Modal */}
+      <CurationRequestModal 
+        isOpen={curationRequestModalOpen}
+        onClose={() => setCurationRequestModalOpen(false)}
         onSuccess={fetchDashboardData}
       />
     </div>
