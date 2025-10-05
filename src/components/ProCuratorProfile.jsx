@@ -70,6 +70,10 @@ export default function ProCuratorProfile() {
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
         console.error('Error fetching curator profile:', error);
+        // If table doesn't exist (406 error), just skip loading
+        if (error.code === 'PGRST106' || error.message?.includes('406')) {
+          console.warn('pro_curators table may not exist. Please run the migration.');
+        }
       }
 
       if (data) {
@@ -118,13 +122,20 @@ export default function ProCuratorProfile() {
         certification_status: 'pending'
       };
 
+      console.log('Submitting pro curator profile:', profileData);
+
       const { data, error } = await supabase
         .from('pro_curators')
         .insert([profileData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
+
+      console.log('Profile created successfully:', data);
 
       setCuratorProfile(data);
       setIsEditing(false);
@@ -138,7 +149,9 @@ export default function ProCuratorProfile() {
       alert('Certification application submitted! We\'ll review your profile and get back to you soon.');
     } catch (error) {
       console.error('Error applying for certification:', error);
-      alert('Failed to submit application. Please try again.');
+      // Show detailed error message
+      const errorMessage = error.message || error.hint || 'Unknown error occurred';
+      alert(`Failed to submit application: ${errorMessage}\n\nPlease check the console for details.`);
     } finally {
       setSaving(false);
     }
