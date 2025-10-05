@@ -3,99 +3,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { useLocation } from 'react-router-dom'
 import { X, Send, MessageCircle, Sparkles } from './Icons'
 
-// AI Assistant Knowledge Base
-const ASSISTANT_KNOWLEDGE = {
-  // Platform overview
-  platform: {
-    name: "SETIQUE",
-    purpose: "Premium marketplace for curated datasets",
-    features: ["Buy datasets", "Sell datasets", "Post bounties", "Earn with Stripe Connect", "Pro Curator partnerships"],
-  },
-  
-  // Pro Curator System
-  proCurator: {
-    overview: "Partner with expert curators to improve your datasets and earn together",
-    forCreators: [
-      "Post curation requests describing what help you need",
-      "Review proposals from verified Pro Curators",
-      "Choose a curator and split revenue 50/50 on your 80% share",
-      "Your dataset gets improved, curator gets ongoing income"
-    ],
-    forCurators: [
-      "Apply to become a Pro Curator in your Dashboard",
-      "Browse curation requests in the Marketplace",
-      "Submit proposals with your approach and pricing",
-      "Earn 50% of creator's revenue share (40% of total sales)",
-      "Build reputation and earn badges: verified → expert → master"
-    ],
-    badges: {
-      verified: "Newly approved Pro Curator, ready to take on projects",
-      expert: "10+ completed projects, 4.5+ star rating",
-      master: "50+ completed projects, 4.8+ star rating - elite tier"
-    },
-    earnings: "Creator gets 40% of sales, Curator gets 40%, Platform gets 20%"
-  },
-  
-  // Data curation best practices
-  curation: {
-    quality: [
-      "Ensure data is clean, well-structured, and properly formatted",
-      "Include comprehensive metadata and documentation",
-      "Remove duplicates and handle missing values appropriately",
-      "Validate data accuracy and consistency",
-      "Provide clear schema documentation"
-    ],
-    pricing: [
-      "Research similar datasets to benchmark pricing",
-      "Consider data quality, uniqueness, and market demand",
-      "Price demo datasets at $0 to showcase your work",
-      "Factor in collection effort and data freshness",
-      "Adjust pricing based on dataset size and complexity"
-    ],
-    presentation: [
-      "Write clear, descriptive titles that explain what the data contains",
-      "Create compelling descriptions highlighting use cases and value",
-      "Use relevant tags to improve discoverability",
-      "Specify the data modality accurately (vision, audio, text, etc.)",
-      "Include sample data or previews when possible"
-    ]
-  },
-  
-  // Bounty system
-  bounties: {
-    posting: [
-      "Write specific, detailed requirements for the data you need",
-      "Set realistic budgets based on data complexity",
-      "Specify the modality, quantity, and quality standards",
-      "Include deadline if time-sensitive",
-      "Use clear language to attract quality submissions"
-    ],
-    submitting: [
-      "Read bounty requirements carefully before submitting",
-      "Add notes explaining how your dataset meets the needs",
-      "Price competitively while valuing your work",
-      "Only submit high-quality, relevant datasets",
-      "You can submit multiple datasets to one bounty"
-    ]
-  },
-  
-  // Platform navigation
-  navigation: {
-    homepage: "Browse datasets and bounties, upload new datasets, post bounties",
-    dashboard: "View your datasets, purchases, earnings, bounties, and submissions",
-    earnings: "Track your income from dataset sales via Stripe Connect",
-  },
-  
-  // Stripe Connect
-  payments: {
-    setup: "Connect your Stripe account to receive 80% of sales (platform takes 20%)",
-    payouts: "Automatic payouts when earnings reach minimum threshold",
-    demo: "Demo datasets are free ($0) to showcase your work"
-  }
-}
-
 // AI Response Generator with conversation memory
-const generateResponse = (userMessage, context, conversationHistory = []) => {
+// options: { usePersonalName: boolean }
+const generateResponse = (userMessage, context, conversationHistory = [], options = { usePersonalName: true }) => {
   const msg = userMessage.toLowerCase()
   const lastMessages = conversationHistory.slice(-5) // Last 5 messages for context
   
@@ -125,9 +35,18 @@ const generateResponse = (userMessage, context, conversationHistory = []) => {
   
   // Greeting responses
   if (msg.match(/^(hi|hello|hey|greetings)/)) {
-    return context.user 
-      ? `Hello ${context.user.email?.split('@')[0]}! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
-      : "Hello! Welcome to SETIQUE, the premium marketplace for curated datasets. I'm here to help you navigate the platform, learn best practices, and maximize your success. What would you like to know?"
+    if (context.user) {
+      const namePart = context.user.email?.split('@')[0]
+      return options.usePersonalName && namePart
+        ? `Hello ${namePart}! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
+        : `Hello! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
+    }
+    return "Hello! Welcome to SETIQUE, the premium marketplace for curated datasets. I'm here to help you navigate the platform, learn best practices, and maximize your success. What would you like to know?"
+  }
+
+  // Privacy / name origin question
+  if (msg.includes('how do you know my name') || msg.includes('how do you know my username')) {
+    return `I only use the part before the @ in the email you signed in with (for example alex@example.com → alex). I don't look up anything external. If you'd rather I not personalize, just say "don't use my name" and I'll switch to generic greetings. Say "you can use my name" to re-enable it.`
   }
   
   // Pro Curator questions
@@ -746,6 +665,17 @@ export function AIAssistant() {
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
+  const [usePersonalName, setUsePersonalName] = useState(() => {
+    try {
+      const stored = localStorage.getItem('assistant_use_name')
+      if (stored === 'false') return false
+      return true
+    } catch { return true }
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem('assistant_use_name', usePersonalName ? 'true' : 'false') } catch { /* ignore persistence errors */ }
+  }, [usePersonalName])
   
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -759,8 +689,11 @@ export function AIAssistant() {
   // Welcome message when opened
   useEffect(() => {
     if (isOpen && messages.length === 0) {
+      const userName = user?.email?.split('@')[0]
       const welcomeMsg = user
-        ? `Hello! I'm your SETIQUE assistant. I can help you with data curation, pricing strategies, bounties, and navigating the platform. What would you like to know?`
+        ? (usePersonalName && userName
+            ? `Hello ${userName}! I'm your SETIQUE assistant. I can help you with data curation, pricing strategies, bounties, and navigating the platform. What would you like to know?`
+            : `Hello! I'm your SETIQUE assistant. I can help you with data curation, pricing strategies, bounties, and navigating the platform. What would you like to know?`)
         : `Welcome to SETIQUE! I'm here to help you get the most out of our premium dataset marketplace. Feel free to ask about data curation, pricing, bounties, or how to get started!`
       
       setMessages([{
@@ -770,7 +703,7 @@ export function AIAssistant() {
         timestamp: new Date()
       }])
     }
-  }, [isOpen, user, messages.length])
+  }, [isOpen, user, messages.length, usePersonalName])
   
   // Focus input when opened
   useEffect(() => {
@@ -802,9 +735,16 @@ export function AIAssistant() {
       hasDatasets: false, // Could fetch this from dashboard
     }
     
+    // Preference control commands (update state before generating response)
+    if (/don't use my name|stop using my name|no name|generic greeting/i.test(userMsg.text)) {
+      setUsePersonalName(false)
+    } else if (/you can use my name|it's ok to use my name|use my name|personalize greeting/i.test(userMsg.text)) {
+      setUsePersonalName(true)
+    }
+
     // Pass conversation history for context-aware responses
-  let response = generateResponse(userMsg.text, context, messages)
-  response = refineResponse(response, userMsg.text, messages)
+    let response = generateResponse(userMsg.text, context, messages, { usePersonalName })
+    response = refineResponse(response, userMsg.text, messages)
     
     const assistantMsg = {
       id: Date.now() + 1,
