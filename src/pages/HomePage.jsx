@@ -523,28 +523,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Feedback Widget - Floating Button */}
-      <button
-        onClick={() => {
-          const email = 'joseph@anconsulting.us'
-          const subject = 'Setique Beta Feedback'
-          const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}`
-          
-          // Try to open mailto link
-          window.location.href = mailtoLink
-          
-          // Also show alert with email address as backup
-          setTimeout(() => {
-            alert(`Send feedback to: ${email}\n\nSubject: ${subject}\n\nIf your email client didn't open, please email us directly at the address above.`)
-          }, 500)
-        }}
-        className="fixed bottom-6 right-6 bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-6 py-3 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:shadow-[8px_8px_0_#000] hover:scale-110 transition-all z-50 flex items-center gap-2 cursor-pointer"
-        aria-label="Send beta feedback"
-      >
-        <span className="text-xl">💬</span>
-        <span className="hidden sm:inline">Beta Feedback</span>
-      </button>
-
       <header className="flex flex-col sm:flex-row items-center justify-between mb-12">
         <a
           href="#"
@@ -590,6 +568,26 @@ function HomePage() {
               Sign In
             </button>
           )}
+          <button
+            onClick={() => {
+              const email = 'joseph@anconsulting.us'
+              const subject = 'Setique Beta Feedback'
+              const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}`
+              
+              // Try to open mailto link
+              window.location.href = mailtoLink
+              
+              // Also show alert with email address as backup
+              setTimeout(() => {
+                alert(`Send feedback to: ${email}\n\nSubject: ${subject}\n\nIf your email client didn't open, please email us directly at the address above.`)
+              }, 500)
+            }}
+            className="bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-4 py-2 rounded-full border-2 border-black shadow-[3px_3px_0_#000] hover:shadow-[4px_4px_0_#000] transition-all text-sm flex items-center gap-2"
+            aria-label="Send beta feedback"
+          >
+            <span className="text-lg">💬</span>
+            <span className="hidden sm:inline">Feedback</span>
+          </button>
           <a
             href="#pro-curator"
             className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-bold hover:opacity-90 transition px-5 py-2 rounded-full shadow-lg border-2 border-black text-sm active:scale-95"
