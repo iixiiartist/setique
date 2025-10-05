@@ -17,6 +17,12 @@ export default function AdminDashboard() {
   
   // Datasets
   const [allDatasets, setAllDatasets] = useState([]);
+  const [selectedDataset, setSelectedDataset] = useState(null);
+  const [showDatasetModal, setShowDatasetModal] = useState(false);
+  
+  // Users
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
   
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
@@ -260,14 +266,19 @@ export default function AdminDashboard() {
   };
 
   const handleViewUserDetails = (userId) => {
-    // Open user's datasets in a new window or navigate
-    const userDatasets = allDatasets.filter(d => d.creator_id === userId);
-    alert(`User has ${userDatasets.length} dataset(s).\n\nUser ID: ${userId}\n\nImplement full user detail view as needed.`);
+    const userProfile = allUsers.find(u => u.id === userId);
+    if (userProfile) {
+      setSelectedUser(userProfile);
+      setShowUserModal(true);
+    }
   };
 
   const handleViewDataset = (datasetId) => {
-    // Navigate to dataset detail or open in marketplace
-    window.open(`/?dataset=${datasetId}`, '_blank');
+    const dataset = allDatasets.find(d => d.id === datasetId);
+    if (dataset) {
+      setSelectedDataset(dataset);
+      setShowDatasetModal(true);
+    }
   };
 
   const handleDeleteDataset = async (datasetId, datasetTitle) => {
@@ -758,6 +769,216 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Dataset Details Modal */}
+      {showDatasetModal && selectedDataset && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowDatasetModal(false)}>
+          <div className="bg-white rounded-xl border-2 border-black max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <h2 className="text-3xl font-extrabold mb-2">{selectedDataset.title}</h2>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="px-3 py-1 bg-purple-200 rounded-full font-bold">{selectedDataset.modality}</span>
+                    <span className="text-2xl font-extrabold text-green-600">${selectedDataset.price}</span>
+                    {selectedDataset.is_featured && (
+                      <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
+                        ⭐ FEATURED
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDatasetModal(false)}
+                  className="bg-red-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Description */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-2">Description</h3>
+                <p className="text-gray-700">{selectedDataset.description}</p>
+              </div>
+
+              {/* Tags */}
+              {selectedDataset.tags && selectedDataset.tags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDataset.tags.map((tag, idx) => (
+                      <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">Creator</div>
+                  <div className="font-bold">{selectedDataset.profiles?.username || 'Unknown'}</div>
+                  <div className="text-xs text-gray-500">{selectedDataset.profiles?.email || ''}</div>
+                </div>
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">File Size</div>
+                  <div className="font-bold">{selectedDataset.file_size ? (selectedDataset.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}</div>
+                </div>
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">Purchases</div>
+                  <div className="font-bold">{selectedDataset.purchase_count || 0}</div>
+                </div>
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">Status</div>
+                  <div className="font-bold">{selectedDataset.is_active ? '✅ Active' : '❌ Inactive'}</div>
+                </div>
+              </div>
+
+              {/* Download URL */}
+              {selectedDataset.download_url && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-2">Storage Path</h3>
+                  <div className="bg-gray-100 p-3 rounded-lg border border-gray-300 font-mono text-sm break-all">
+                    {selectedDataset.download_url}
+                  </div>
+                </div>
+              )}
+
+              {/* Dates */}
+              <div className="flex gap-4 text-sm text-gray-600 mb-6">
+                <div>
+                  <span className="font-bold">Created:</span> {new Date(selectedDataset.created_at).toLocaleString()}
+                </div>
+                {selectedDataset.updated_at && (
+                  <div>
+                    <span className="font-bold">Updated:</span> {new Date(selectedDataset.updated_at).toLocaleString()}
+                  </div>
+                )}
+              </div>
+
+              {/* Admin Actions */}
+              <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+                <button
+                  onClick={() => {
+                    handleToggleFeatured(selectedDataset.id);
+                    setShowDatasetModal(false);
+                  }}
+                  className="bg-blue-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  {selectedDataset.is_featured ? '⭐ Unfeature' : '⭐ Feature'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDatasetModal(false);
+                    handleDeleteDataset(selectedDataset.id, selectedDataset.title);
+                  }}
+                  className="bg-red-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  🗑️ Delete
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedDataset.id);
+                    alert('Dataset ID copied to clipboard!');
+                  }}
+                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  📋 Copy ID
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowUserModal(false)}>
+          <div className="bg-white rounded-xl border-2 border-black max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-3xl font-extrabold mb-2">{selectedUser.username || 'Anonymous User'}</h2>
+                  <p className="text-gray-600">{selectedUser.email || 'No email'}</p>
+                </div>
+                <button
+                  onClick={() => setShowUserModal(false)}
+                  className="bg-red-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* User Info */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">User ID</div>
+                  <div className="font-mono text-sm break-all">{selectedUser.id}</div>
+                </div>
+                <div className="border-2 border-black rounded-lg p-4">
+                  <div className="text-sm font-bold text-gray-600 mb-1">Joined</div>
+                  <div className="font-bold">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'Unknown'}</div>
+                </div>
+              </div>
+
+              {/* User's Datasets */}
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-3">Datasets Created</h3>
+                {allDatasets.filter(d => d.creator_id === selectedUser.id).length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No datasets created yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {allDatasets.filter(d => d.creator_id === selectedUser.id).map((dataset) => (
+                      <div key={dataset.id} className="border border-gray-300 rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
+                        <div>
+                          <div className="font-bold">{dataset.title}</div>
+                          <div className="text-sm text-gray-600">${dataset.price} • {dataset.purchase_count || 0} purchases</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowUserModal(false);
+                            handleViewDataset(dataset.id);
+                          }}
+                          className="bg-blue-400 text-black font-bold px-3 py-1 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                        >
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Admin Actions */}
+              <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedUser.id);
+                    alert('User ID copied to clipboard!');
+                  }}
+                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  📋 Copy User ID
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedUser.email || '');
+                    alert('Email copied to clipboard!');
+                  }}
+                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  📧 Copy Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
