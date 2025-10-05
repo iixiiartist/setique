@@ -526,6 +526,7 @@ function HomePage() {
           userId: user.id,
           price: dataset.price,
           title: dataset.title,
+          creatorId: dataset.creator_id, // Pass creator ID for Stripe Connect
         }),
       })
 

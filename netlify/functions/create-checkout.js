@@ -16,7 +16,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { datasetId, userId, price, title } = JSON.parse(event.body)
+    const { datasetId, userId, price, title, creatorId } = JSON.parse(event.body)
 
     // Validate inputs
     if (!datasetId || !userId || !price || !title) {
@@ -41,8 +41,12 @@ exports.handler = async (event) => {
       }
     }
 
-    // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    // Calculate platform fee (20%)
+    const PLATFORM_FEE_PERCENTAGE = 0.20
+    const platformFeeAmount = Math.round(price * 100 * PLATFORM_FEE_PERCENTAGE) // in cents
+    
+    // Get creator's Stripe Connect account if it exists
+    let sessionConfig = {
       payment_method_types: ['card'],
       line_items: [
         {
@@ -63,8 +67,31 @@ exports.handler = async (event) => {
       metadata: {
         datasetId,
         userId,
+        creatorId: creatorId || '',
       },
-    })
+    }
+
+    // If creator has connected Stripe account, use destination charge
+    if (creatorId) {
+      const { data: payoutAccount } = await supabase
+        .from('creator_payout_accounts')
+        .select('stripe_connect_account_id, payouts_enabled')
+        .eq('creator_id', creatorId)
+        .single()
+
+      if (payoutAccount && payoutAccount.stripe_connect_account_id && payoutAccount.payouts_enabled) {
+        // Use destination charge - money goes to connected account, we take platform fee
+        sessionConfig.payment_intent_data = {
+          application_fee_amount: platformFeeAmount,
+          transfer_data: {
+            destination: payoutAccount.stripe_connect_account_id,
+          },
+        }
+      }
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create(sessionConfig)
 
     // Create pending purchase record
     await supabase.from('purchases').insert([
