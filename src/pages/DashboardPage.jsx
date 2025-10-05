@@ -345,37 +345,22 @@ function DashboardPage() {
         }
       }
       
-      // Get dataset info for storage cleanup
-      const { data: dataset } = await supabase
-        .from('datasets')
-        .select('download_url')
-        .eq('id', datasetId)
-        .single()
-      
-      // Delete purchases first (to avoid foreign key constraint)
-      if (purchases && purchases.length > 0) {
-        const { error: purchaseDeleteError } = await supabase
-          .from('purchases')
-          .delete()
-          .eq('dataset_id', datasetId)
-        
-        if (purchaseDeleteError) throw purchaseDeleteError
-      }
-      
-      // Delete the dataset
-      const { error } = await supabase
-        .from('datasets')
-        .delete()
-        .eq('id', datasetId)
-        .eq('creator_id', user.id)
-      
-      if (error) throw error
-      
-      // Delete storage file if it exists
-      if (dataset?.download_url) {
-        await supabase.storage
-          .from('datasets')
-          .remove([dataset.download_url])
+      // Call Netlify function to delete (bypasses RLS)
+      const response = await fetch('/.netlify/functions/delete-dataset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          datasetId: datasetId,
+          userId: user.id
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete dataset')
       }
       
       // Update local state
