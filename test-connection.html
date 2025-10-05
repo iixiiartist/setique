@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .loading { background: #fff3cd; color: #856404; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔌 Supabase Connection Test</h1>
+        <p>This will test your Supabase connection and show you what needs to be set up.</p>
+        
+        <div id="status" class="status loading">⏳ Testing connection...</div>
+        
+        <div id="results"></div>
+        
+        <div id="actions" style="display:none;">
+            <h2>Quick Actions</h2>
+            <button onclick="createTables()">📊 Create Database Tables</button>
+            <button onclick="testAgain()">🔄 Test Again</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Get env variables
+        const SUPABASE_URL = 'https://jevrieeonwegqjydmhgm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpldnJpZWVvbndlZ3FqeWRtaGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MzA2MjgsImV4cCI6MjA3NTIwNjYyOH0.Q1QkV209AxubB_w_a7yMEUN2yRoRZpF74DjHHj1Osx0';
+
+        // Import Supabase
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        const actionsDiv = document.getElementById('actions');
+
+        async function testConnection() {
+            let html = '<h2>📋 Test Results</h2>';
+            let allGood = true;
+
+            try {
+                // Test 1: Basic connection
+                html += '<h3>1. Connection Test</h3>';
+                const { data: pingData, error: pingError } = await supabase.from('profiles').select('count');
+                
+                if (pingError) {
+                    if (pingError.message.includes('relation') || pingError.message.includes('does not exist')) {
+                        html += '<div class="status error">⚠️ Connected but tables not created yet!</div>';
+                        html += '<p><strong>Action needed:</strong> Run the SQL migration in Supabase</p>';
+                        allGood = false;
+                    } else {
+                        throw pingError;
+                    }
+                } else {
+                    html += '<div class="status success">✅ Connected to Supabase!</div>';
+                }
+
+                // Test 2: Check tables
+                html += '<h3>2. Database Tables</h3>';
+                const tables = ['profiles', 'datasets', 'purchases', 'bounties', 'bounty_submissions'];
+                const tableStatus = {};
+                
+                for (const table of tables) {
+                    try {
+                        const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
+                        if (error) throw error;
+                        tableStatus[table] = { exists: true, count: count || 0 };
+                        html += `<div class="status success">✅ Table '${table}' exists (${count || 0} rows)</div>`;
+                    } catch (err) {
+                        tableStatus[table] = { exists: false };
+                        html += `<div class="status error">❌ Table '${table}' not found</div>`;
+                        allGood = false;
+                    }
+                }
+
+                // Test 3: Check auth
+                html += '<h3>3. Authentication</h3>';
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    html += `<div class="status success">✅ Signed in as: ${session.user.email}</div>`;
+                } else {
+                    html += '<div class="status loading">ℹ️ Not signed in (this is OK)</div>';
+                }
+
+                // Final status
+                if (allGood) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Everything is working! Your app is ready to use.';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '⚠️ Setup incomplete - follow the instructions below';
+                    actionsDiv.style.display = 'block';
+                    
+                    html += '<h2>🔧 What to do next:</h2>';
+                    html += '<ol style="line-height: 2;">';
+                    html += '<li>Go to <a href="https://supabase.com/dashboard/project/jevrieeonwegqjydmhgm" target="_blank">your Supabase project</a></li>';
+                    html += '<li>Click <strong>SQL Editor</strong> in the left sidebar</li>';
+                    html += '<li>Click <strong>"+ New query"</strong></li>';
+                    html += '<li>Copy ALL the SQL from <code>supabase/migrations/001_initial_schema.sql</code></li>';
+                    html += '<li>Paste it and click <strong>Run</strong></li>';
+                    html += '<li>Refresh this page to test again</li>';
+                    html += '</ol>';
+                }
+
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Connection failed!';
+                html += '<div class="status error"><strong>Error:</strong> ' + error.message + '</div>';
+                html += '<pre>' + JSON.stringify(error, null, 2) + '</pre>';
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Run test on load
+        testConnection();
+
+        // Global functions for buttons
+        window.testAgain = () => {
+            statusDiv.className = 'status loading';
+            statusDiv.innerHTML = '⏳ Testing connection...';
+            resultsDiv.innerHTML = '';
+            testConnection();
+        };
+
+        window.createTables = () => {
+            alert('Please follow these steps:\n\n1. Go to https://supabase.com\n2. Open SQL Editor\n3. Copy the SQL from: supabase/migrations/001_initial_schema.sql\n4. Run it in the SQL Editor\n5. Come back and click "Test Again"');
+        };
+    </script>
+</body>
+</html>
