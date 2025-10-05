@@ -352,7 +352,17 @@ function DashboardPage() {
         .eq('id', datasetId)
         .single()
       
-      // Delete the dataset (cascade will delete purchases, partnerships, etc.)
+      // Delete purchases first (to avoid foreign key constraint)
+      if (purchases && purchases.length > 0) {
+        const { error: purchaseDeleteError } = await supabase
+          .from('purchases')
+          .delete()
+          .eq('dataset_id', datasetId)
+        
+        if (purchaseDeleteError) throw purchaseDeleteError
+      }
+      
+      // Delete the dataset
       const { error } = await supabase
         .from('datasets')
         .delete()
