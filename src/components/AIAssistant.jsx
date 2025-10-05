@@ -661,41 +661,80 @@ function getDatasetSpecificAdvice(dataType, userMessage, recentContext) {
   
   // If recently discussing pricing, focus on pricing advice
   if (recentContext.includes('pric')) {
-    return `Nice! ${info.title.replace('/','/')} data. Let me break down pricing for you:
+    return `${info.title} pricing snapshot:
 
-Demo ($0): ${info.pricing.demo} - Great for showcasing quality
-Standard (${info.pricing.standard.split(' - ')[0]}): ${info.pricing.standard.split(' - ')[1]}
-Premium (${info.pricing.premium.split(' - ')[0]}): ${info.pricing.premium.split(' - ')[1]}
+Demo (${info.pricing.demo}) → Just enough to prove quality.
+Standard (${info.pricing.standard}) → Solid core pack for most buyers.
+Premium (${info.pricing.premium}) → Highest value: differentiation, labeling, preparation.
 
-What makes your data valuable? ${info.unique}
+Why people pay: ${info.unique}.
 
-Quick tips:
-${info.tips.map(tip => `- ${tip}`).join('\n')}
+Tips:
+${info.tips.map(tip => `• ${tip}`).join('\n')}
 
-My advice: Start with a free demo pack to show what you've got. Once people see the quality, price your full collection based on ${info.unique.split(',')[0].toLowerCase()}. You can always adjust based on what buyers tell you.
-
-Want help with the actual curation process?`
+Practical next step: ship a small free demo, price the main pack around the midpoint of Standard unless it's unusually rare. Want curation or positioning help next?`
   }
   
-  // Default: comprehensive advice
-  return `Great! You've got ${info.title.toLowerCase()} to sell. Here's the complete rundown:
+  // Default: comprehensive advice (more conversational, less listy opener)
+  return `${info.title}: here's how to make it sell well.
 
-Curation tips:
+Curation:
 ${info.curation.map((tip, i) => `${i + 1}. ${tip.replace(/\*\*/g, '')}`).join('\n')}
 
-Pricing guidance:
-Demo: ${info.pricing.demo}
-Standard: ${info.pricing.standard}
-Premium: ${info.pricing.premium}
+Pricing:
+Demo → ${info.pricing.demo}
+Standard → ${info.pricing.standard}
+Premium → ${info.pricing.premium}
 
-What makes it valuable: ${info.unique}
+Value drivers: ${info.unique}.
 
-Pro tips:
-${info.tips.map(tip => `- ${tip}`).join('\n')}
+Extra angles:
+${info.tips.map(tip => `• ${tip}`).join('\n')}
 
-Start with a free demo to showcase quality, then price based on ${info.unique.split(',')[0].toLowerCase()}. You can always adjust after getting feedback from buyers.
+Launch playbook: publish a clean demo, gather a few early downloads, then anchor Standard pricing and iterate if conversion lags. Want to dive deeper on pricing, metadata, or bundling?`
+}
 
-Want more specific help with any part of this?`
+// Post-processing layer to make responses feel more natural and less templated
+function refineResponse(raw, userMessage, history) {
+  let text = raw.trim()
+
+  // Remove leftover double asterisks from prior markdown fragments
+  text = text.replace(/\*\*(.*?)\*\*/g, '$1')
+
+  // Reduce repeated generic openings
+  text = text.replace(/^I'm here to help with whatever you need!\n\n/i, '')
+
+  // Light variation injections based on simple heuristics
+  const softeners = ['Sure', 'Alright', 'Got it', 'Understood', 'Sounds good']
+  const followUps = [
+    'Anything specific you want to optimize?',
+    'Want to explore pricing next?',
+    'Should we talk positioning?',
+    'Need help writing the description?',
+    'Want a quick checklist version?'
+  ]
+
+  // If response is long and lacks a question, append a follow-up
+  if (!/[?]\s*$/.test(text) && text.split(/\n|\. /).length > 6) {
+    const f = followUps[(history.length + text.length) % followUps.length]
+    text = text + '\n\n' + f
+  }
+
+  // Avoid repeating same first 6 words as previous assistant message
+  const lastAssistant = [...history].reverse().find(m => m.type === 'assistant')
+  if (lastAssistant) {
+    const firstChunk = text.split(/\s+/).slice(0,6).join(' ').toLowerCase()
+    const lastFirstChunk = lastAssistant.text.split(/\s+/).slice(0,6).join(' ').toLowerCase()
+    if (firstChunk === lastFirstChunk) {
+      const softener = softeners[history.length % softeners.length]
+      text = softener + '. ' + text
+    }
+  }
+
+  // Tone tweaks: collapse multiple blank lines
+  text = text.replace(/\n{3,}/g, '\n\n')
+
+  return text
 }
 
 export function AIAssistant() {
@@ -764,7 +803,8 @@ export function AIAssistant() {
     }
     
     // Pass conversation history for context-aware responses
-    const response = generateResponse(userMsg.text, context, messages)
+  let response = generateResponse(userMsg.text, context, messages)
+  response = refineResponse(response, userMsg.text, messages)
     
     const assistantMsg = {
       id: Date.now() + 1,

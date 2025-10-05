@@ -53,18 +53,16 @@
   - sensor_data
   - financial_data
   - medical_imaging
-- Hourly Rate (optional, number input)
 - Portfolio Samples (dynamic URL inputs with add/remove)
 - "Apply for Certification" button → Submits with `pending` status
 
 ##### For Existing Curators (Certified):
 **Profile Dashboard:**
 - Header with badge (Verified/Expert/Master) and certification status
-- **Stats Grid** (4 boxes):
+- **Stats Grid** (3 boxes):
   - Total Projects
   - Rating (1-5 stars)
   - Total Earnings ($)
-  - Hourly Rate ($/hr)
 - **Edit Profile** button (top right)
 - **Specialties** (colored tags)
 - **Portfolio** (clickable links)
@@ -140,8 +138,8 @@
    - If not signed in: redirected to sign in modal
    - If signed in: taken to Dashboard Pro Curator tab
 4. **Fill application:**
-   - Professional name, bio, specialties
-   - Optional: hourly rate, portfolio links
+  - Professional name, bio, specialties
+  - Portfolio links (optional)
 5. **Submit** → `certification_status = 'pending'`
 6. **Wait for admin approval** in Supabase
 7. **Admin approves** → `certification_status = 'approved'`
@@ -314,13 +312,11 @@ Master:   Yellow background, yellow text, yellow border
 ```sql
 INSERT INTO pro_curators (
   user_id, display_name, bio, specialties, 
-  hourly_rate, portfolio_samples, 
-  certification_status, badge_level
+  portfolio_samples, certification_status, badge_level
 ) VALUES (
   'user-uuid', 'John Doe', 'Expert in audio...', 
-  ARRAY['audio_transcription'], 50, 
-  ARRAY['https://portfolio.com'], 
-  'pending', 'verified'
+  ARRAY['audio_transcription'], 
+  ARRAY['https://portfolio.com'], 'pending', 'verified'
 );
 ```
 

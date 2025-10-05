@@ -16,12 +16,11 @@ Stores professional curator profiles and certification status.
 - `display_name` (text) - Public curator name
 - `bio` (text) - Professional background
 - `specialties` (text[]) - Array of expertise areas
-- `hourly_rate` (decimal) - Optional hourly rate
 - `certification_status` ('pending', 'approved', 'rejected')
 - `badge_level` ('verified', 'expert', 'master')
 - `rating` (decimal) - Average rating from partnerships
 - `total_projects` (integer) - Completed partnerships count
-- `total_earnings` (decimal) - Lifetime curator earnings
+- `total_earnings` (decimal) - Lifetime curator earnings (from 40% share)
 - `portfolio_samples` (text[]) - URLs to previous work
 - `created_at`, `updated_at` (timestamps)
 
@@ -247,11 +246,10 @@ if (partnership) {
 **Features:**
 - **Application Form:** New curators apply for certification
   - Display name, bio, specialties (checkboxes)
-  - Hourly rate (optional)
   - Portfolio samples (dynamic array)
 - **Profile View:** Shows badge, stats, specialties, portfolio
 - **Edit Mode:** Update profile fields (approved curators only)
-- **Stats Display:** Total projects, rating, earnings, hourly rate
+- **Stats Display:** Total projects, rating, earnings (lifetime 40% share)
 
 **States:**
 - `certification_status === null`: Show application form
