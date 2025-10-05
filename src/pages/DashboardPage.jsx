@@ -530,9 +530,9 @@ function DashboardPage() {
               {/* Payout Account Status */}
               {payoutAccount ? (
                 <div className="bg-white border-2 border-black rounded-xl p-4 mb-6">
-                  <h4 className="font-extrabold mb-2">Payout Account</h4>
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-start mb-3">
                     <div>
+                      <h4 className="font-extrabold mb-2">Payout Account</h4>
                       <p className="text-sm font-semibold">
                         Status: <span className="font-extrabold">{payoutAccount.account_status}</span>
                       </p>
@@ -540,12 +540,20 @@ function DashboardPage() {
                         Payouts {payoutAccount.payouts_enabled ? 'Enabled ✅' : 'Disabled ❌'}
                       </p>
                     </div>
-                    {payoutAccount.current_balance >= payoutAccount.minimum_payout_threshold && (
-                      <button className="bg-green-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition">
-                        Request Payout
-                      </button>
-                    )}
+                    <a
+                      href="https://dashboard.stripe.com/dashboard"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-purple-200 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                    >
+                      Manage on Stripe →
+                    </a>
                   </div>
+                  {payoutAccount.current_balance >= payoutAccount.minimum_payout_threshold && (
+                    <button className="bg-green-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition w-full">
+                      Request Payout (${payoutAccount.current_balance.toFixed(2)} available)
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-yellow-100 border-2 border-black rounded-xl p-4 mb-6">
