@@ -449,7 +449,7 @@ function HomePage() {
               We believe the future of AI shouldn't be built on sterile,
               mass-produced data. It should be built on the rich, diverse, and
               wonderfully specific realities captured by passionate people. We are
-              democratizing data by empowering the experts: **you**.
+              democratizing data by empowering the experts: <strong>you</strong>.
             </p>
           </div>
         </section>
