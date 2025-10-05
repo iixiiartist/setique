@@ -68,46 +68,159 @@ exports.handler = async (event) => {
       const creatorNet = totalAmount - platformFee
       const creatorId = purchase.datasets.creator_id
 
-      // Record creator earnings
-      const { error: earningsError } = await supabase
-        .from('creator_earnings')
-        .insert([{
-          creator_id: creatorId,
-          dataset_id: datasetId,
-          purchase_id: purchase.id,
-          amount: totalAmount,
-          platform_fee: platformFee,
-          creator_net: creatorNet,
-          status: 'pending'
-        }])
-
-      if (earningsError) throw earningsError
-
-      // Create or update creator payout account
-      const { data: existingAccount } = await supabase
-        .from('creator_payout_accounts')
+      // Check for active partnership
+      const { data: partnership } = await supabase
+        .from('dataset_partnerships')
         .select('*')
-        .eq('creator_id', creatorId)
+        .eq('dataset_id', datasetId)
+        .eq('status', 'active')
         .single()
 
-      if (!existingAccount) {
-        // Create new payout account
-        await supabase
+      if (partnership) {
+        // Split earnings 50/50 between owner and curator
+        const splitPercentage = partnership.split_percentage / 100 // Default 50%
+        const ownerNet = creatorNet * splitPercentage
+        const curatorNet = creatorNet * (1 - splitPercentage)
+
+        // Record owner earnings
+        const { error: ownerEarningsError } = await supabase
+          .from('creator_earnings')
+          .insert([{
+            creator_id: partnership.owner_id,
+            dataset_id: datasetId,
+            purchase_id: purchase.id,
+            amount: totalAmount,
+            platform_fee: platformFee,
+            creator_net: ownerNet,
+            status: 'pending',
+            partnership_id: partnership.id,
+            is_partnership_split: true,
+            split_role: 'owner'
+          }])
+
+        if (ownerEarningsError) throw ownerEarningsError
+
+        // Record curator earnings
+        const { error: curatorEarningsError } = await supabase
+          .from('creator_earnings')
+          .insert([{
+            creator_id: partnership.curator_user_id,
+            dataset_id: datasetId,
+            purchase_id: purchase.id,
+            amount: totalAmount,
+            platform_fee: platformFee,
+            creator_net: curatorNet,
+            status: 'pending',
+            partnership_id: partnership.id,
+            is_partnership_split: true,
+            split_role: 'curator'
+          }])
+
+        if (curatorEarningsError) throw curatorEarningsError
+
+        // Update owner payout account
+        const { data: ownerAccount } = await supabase
           .from('creator_payout_accounts')
+          .select('*')
+          .eq('creator_id', partnership.owner_id)
+          .single()
+
+        if (!ownerAccount) {
+          await supabase
+            .from('creator_payout_accounts')
+            .insert([{
+              creator_id: partnership.owner_id,
+              current_balance: ownerNet,
+              total_earned: ownerNet
+            }])
+        } else {
+          await supabase
+            .from('creator_payout_accounts')
+            .update({
+              current_balance: parseFloat(ownerAccount.current_balance) + ownerNet,
+              total_earned: parseFloat(ownerAccount.total_earned) + ownerNet
+            })
+            .eq('creator_id', partnership.owner_id)
+        }
+
+        // Update curator payout account
+        const { data: curatorAccount } = await supabase
+          .from('creator_payout_accounts')
+          .select('*')
+          .eq('creator_id', partnership.curator_user_id)
+          .single()
+
+        if (!curatorAccount) {
+          await supabase
+            .from('creator_payout_accounts')
+            .insert([{
+              creator_id: partnership.curator_user_id,
+              current_balance: curatorNet,
+              total_earned: curatorNet
+            }])
+        } else {
+          await supabase
+            .from('creator_payout_accounts')
+            .update({
+              current_balance: parseFloat(curatorAccount.current_balance) + curatorNet,
+              total_earned: parseFloat(curatorAccount.total_earned) + curatorNet
+            })
+            .eq('creator_id', partnership.curator_user_id)
+        }
+
+        // Update partnership earnings stats
+        await supabase
+          .from('dataset_partnerships')
+          .update({
+            total_sales: (partnership.total_sales || 0) + 1,
+            owner_earnings: parseFloat(partnership.owner_earnings || 0) + ownerNet,
+            curator_earnings: parseFloat(partnership.curator_earnings || 0) + curatorNet
+          })
+          .eq('id', partnership.id)
+
+      } else {
+        // No partnership - original flow (single creator gets full 80%)
+        // Record creator earnings
+        const { error: earningsError } = await supabase
+          .from('creator_earnings')
           .insert([{
             creator_id: creatorId,
-            current_balance: creatorNet,
-            total_earned: creatorNet
+            dataset_id: datasetId,
+            purchase_id: purchase.id,
+            amount: totalAmount,
+            platform_fee: platformFee,
+            creator_net: creatorNet,
+            status: 'pending'
           }])
-      } else {
-        // Update existing account
-        await supabase
+
+        if (earningsError) throw earningsError
+
+        // Create or update creator payout account
+        const { data: existingAccount } = await supabase
           .from('creator_payout_accounts')
-          .update({
-            current_balance: parseFloat(existingAccount.current_balance) + creatorNet,
-            total_earned: parseFloat(existingAccount.total_earned) + creatorNet
-          })
+          .select('*')
           .eq('creator_id', creatorId)
+          .single()
+
+        if (!existingAccount) {
+          // Create new payout account
+          await supabase
+            .from('creator_payout_accounts')
+            .insert([{
+              creator_id: creatorId,
+              current_balance: creatorNet,
+              total_earned: creatorNet
+            }])
+        } else {
+          // Update existing account
+          await supabase
+            .from('creator_payout_accounts')
+            .update({
+              current_balance: parseFloat(existingAccount.current_balance) + creatorNet,
+              total_earned: parseFloat(existingAccount.total_earned) + creatorNet
+            })
+            .eq('creator_id', creatorId)
+        }
       }
 
       // Increment purchase count for the dataset
