@@ -75,6 +75,30 @@ const generateResponse = (userMessage, context, conversationHistory = []) => {
   const msg = userMessage.toLowerCase()
   const lastMessages = conversationHistory.slice(-5) // Last 5 messages for context
   
+  // Domain detection patterns (check early for specific data types)
+  const datasetTypes = {
+    handwritten: /handwrit|notebook|journal|note|manuscrip/i,
+    audio: /audio|sound|music|voice|speech|podcast|beat|track|song|instrumental|loop|sample/i,
+    video: /video|footage|film|movie|clip|recording/i,
+    images: /image|photo|picture|pic|screenshot|scan/i,
+    text: /text|document|article|book|writing|essay|paper/i,
+    sensor: /sensor|iot|temperature|data point|measur|telemetry/i,
+    financial: /financ|stock|market|trading|price|ticker|crypto/i,
+    medical: /medical|health|patient|clinical|diagnos|xray|mri/i
+  }
+  
+  // Check for domain-specific data mentions FIRST (before generic patterns)
+  for (const [type, pattern] of Object.entries(datasetTypes)) {
+    if (pattern.test(userMessage)) {
+      const recentTopics = lastMessages
+        .filter(m => m.type === 'assistant')
+        .slice(-2)
+        .map(m => m.text.toLowerCase())
+        .join(' ')
+      return getDatasetSpecificAdvice(type, userMessage, recentTopics)
+    }
+  }
+  
   // Greeting responses
   if (msg.match(/^(hi|hello|hey|greetings)/)) {
     return context.user 
@@ -345,25 +369,6 @@ What are you trying to do?`
     .map(m => m.text.toLowerCase())
     .join(' ')
   
-  // Detect specific dataset types for tailored advice
-  const datasetTypes = {
-    handwritten: /handwrit|notebook|journal|note|manuscrip/i,
-    audio: /audio|sound|music|voice|speech|podcast/i,
-    video: /video|footage|film|movie|visual/i,
-    images: /image|photo|picture|visual|scan/i,
-    text: /text|document|article|book|writing/i,
-    sensor: /sensor|iot|temperature|data point|measur/i,
-    financial: /financ|stock|market|trading|price/i,
-    medical: /medical|health|patient|clinical|diagnos/i
-  }
-  
-  // Provide domain-specific advice if user mentioned a dataset type
-  for (const [type, pattern] of Object.entries(datasetTypes)) {
-    if (pattern.test(userMessage)) {
-      return getDatasetSpecificAdvice(type, userMessage, recentTopics)
-    }
-  }
-  
   // If discussing pricing recently, provide contextual pricing help
   if (recentTopics.includes('pricing') || recentTopics.includes('price')) {
     if (msg.match(/yeah|yes|sure|ok|i (have|do|am)|my|specific/)) {
@@ -472,21 +477,23 @@ function getDatasetSpecificAdvice(dataType, userMessage, recentContext) {
       title: "Audio/Sound Datasets",
       curation: [
         "Use consistent audio format (WAV/FLAC for quality, MP3 for size)",
-        "Remove background noise and normalize volume",
-        "Include transcripts if speech/dialogue",
-        "Tag by category, language, speaker, environment",
-        "Provide sample rate and bit depth specifications"
+        "Normalize volume levels across all tracks",
+        "Tag by BPM, key, genre, mood for music/beats",
+        "Include stems or loops separately if applicable",
+        "Provide technical specs (sample rate, bit depth, format)"
       ],
       pricing: {
-        demo: "$0 - 5-10 sample clips (30-60 sec each)",
-        standard: "$25-75 - Collection of 50-500 clips, categorized",
-        premium: "$100-300 - Professionally recorded, transcribed, labeled"
+        demo: "$0 - 5-10 sample clips (30-60 sec each) or 3-5 full beats",
+        standard: "$25-75 - Pack of 20-100 beats/samples, organized by style",
+        premium: "$100-400 - Full production-ready packs with stems, loops, MIDI"
       },
-      unique: "Recording quality, diversity of sources, annotations",
+      unique: "Production quality, genre diversity, royalty status, uniqueness",
       tips: [
-        "Speech datasets need speaker diversity and transcripts",
-        "Ambient sounds should cover various environments",
-        "Music requires rights clearance - be transparent"
+        "Beats/instrumentals: Tag with BPM, key, genre, mood - producers search by these",
+        "Royalty-free or properly licensed music is essential - specify license clearly",
+        "Stems/loops add value - producers love customizable components",
+        "For speech: Include transcripts, speaker diversity, and clear audio",
+        "Demo packs work great - 3-5 free beats showcase your style"
       ]
     },
     images: {
