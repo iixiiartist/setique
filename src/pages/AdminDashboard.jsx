@@ -674,7 +674,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
                               <span>By: <span className="font-bold">{dataset.profiles?.username || 'Unknown'}</span></span>
                               <span>•</span>
-                              <span className="px-2 py-1 bg-purple-100 rounded">{dataset.dataset_type}</span>
+                              <span className="px-2 py-1 bg-purple-100 rounded">{dataset.modality || dataset.dataset_type || 'Unknown'}</span>
                               <span>•</span>
                               <span className="font-bold text-green-600">${dataset.price}</span>
                             </div>
@@ -696,10 +696,10 @@ export default function AdminDashboard() {
                         <p className="text-gray-700 text-sm line-clamp-2 mb-3">{dataset.description}</p>
                         <div className="flex items-center gap-4 text-sm pt-3 border-t border-gray-200 flex-wrap">
                           <span className="font-bold">Size:</span>
-                          <span>{(dataset.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
+                          <span>{dataset.file_size ? (dataset.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}</span>
                           <span>•</span>
                           <span className="font-bold">Purchases:</span>
-                          <span>{dataset.purchases?.[0]?.count || 0}</span>
+                          <span>{dataset.purchase_count || 0}</span>
                           <span>•</span>
                           <span className="text-xs text-gray-500">
                             Created: {new Date(dataset.created_at).toLocaleDateString()}

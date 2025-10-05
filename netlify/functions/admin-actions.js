@@ -96,27 +96,38 @@ exports.handler = async (event) => {
           .from('datasets')
           .select(`
             *,
-            profiles:creator_id(username, email),
-            purchases:dataset_purchases(count)
+            profiles!datasets_creator_id_fkey(username, email)
           `)
           .order('created_at', { ascending: false })
+        
+        // Get purchase counts separately since it's a separate table
+        if (result.data) {
+          for (const dataset of result.data) {
+            const { count } = await supabase
+              .from('purchases')
+              .select('*', { count: 'exact', head: true })
+              .eq('dataset_id', dataset.id)
+            dataset.purchase_count = count || 0
+          }
+        }
         break
 
       case 'get_revenue_stats':
-        // Get all purchases with dataset info
+        // Get all purchases with dataset info (using 'purchases' table, not 'dataset_purchases')
         const { data: purchases } = await supabase
-          .from('dataset_purchases')
-          .select('*, datasets(price)')
+          .from('purchases')
+          .select('amount, status')
+          .eq('status', 'succeeded')
         
         let totalRevenue = 0
         let platformRevenue = 0
         let creatorRevenue = 0
 
         purchases?.forEach(purchase => {
-          const price = purchase.datasets?.price || 0
-          totalRevenue += price
-          platformRevenue += price * 0.2  // 20% platform fee
-          creatorRevenue += price * 0.8   // 80% to creator
+          const amount = parseFloat(purchase.amount) || 0
+          totalRevenue += amount
+          platformRevenue += amount * 0.2  // 20% platform fee
+          creatorRevenue += amount * 0.8   // 80% to creator
         })
 
         result = {
@@ -164,9 +175,9 @@ exports.handler = async (event) => {
           .eq('creator_id', targetId)
         
         const { data: userPurchases } = await supabase
-          .from('dataset_purchases')
+          .from('purchases')
           .select('*, datasets(title, price)')
-          .eq('buyer_id', targetId)
+          .eq('user_id', targetId)
         
         result = {
           data: {
