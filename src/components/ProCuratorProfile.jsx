@@ -9,11 +9,21 @@ export default function ProCuratorProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setSaving] = useState(false);
   
-  // Form state
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [specialties, setSpecialties] = useState([]);
-  const [portfolioSamples, setPortfolioSamples] = useState(['', '', '']);
+  // Form state with localStorage persistence
+  const [displayName, setDisplayName] = useState(() => {
+    return localStorage.getItem('draft_curator_display_name') || '';
+  });
+  const [bio, setBio] = useState(() => {
+    return localStorage.getItem('draft_curator_bio') || '';
+  });
+  const [specialties, setSpecialties] = useState(() => {
+    const saved = localStorage.getItem('draft_curator_specialties');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [portfolioSamples, setPortfolioSamples] = useState(() => {
+    const saved = localStorage.getItem('draft_curator_portfolio');
+    return saved ? JSON.parse(saved) : ['', '', ''];
+  });
   
   const specialtyOptions = [
     'handwritten_text',
@@ -25,6 +35,23 @@ export default function ProCuratorProfile() {
     'financial_data',
     'medical_imaging'
   ];
+
+  // Auto-save form data to localStorage
+  useEffect(() => {
+    localStorage.setItem('draft_curator_display_name', displayName);
+  }, [displayName]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_curator_bio', bio);
+  }, [bio]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_curator_specialties', JSON.stringify(specialties));
+  }, [specialties]);
+
+  useEffect(() => {
+    localStorage.setItem('draft_curator_portfolio', JSON.stringify(portfolioSamples));
+  }, [portfolioSamples]);
 
   const badgeColors = {
     verified: 'bg-blue-100 text-blue-800',
@@ -47,10 +74,19 @@ export default function ProCuratorProfile() {
 
       if (data) {
         setCuratorProfile(data);
-        setDisplayName(data.display_name || '');
-        setBio(data.bio || '');
-        setSpecialties(data.specialties || []);
-        setPortfolioSamples(data.portfolio_samples || ['']);
+        // Only update form fields if there's no draft in localStorage
+        if (!localStorage.getItem('draft_curator_display_name')) {
+          setDisplayName(data.display_name || '');
+        }
+        if (!localStorage.getItem('draft_curator_bio')) {
+          setBio(data.bio || '');
+        }
+        if (!localStorage.getItem('draft_curator_specialties')) {
+          setSpecialties(data.specialties || []);
+        }
+        if (!localStorage.getItem('draft_curator_portfolio')) {
+          setPortfolioSamples(data.portfolio_samples || ['']);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -92,6 +128,13 @@ export default function ProCuratorProfile() {
 
       setCuratorProfile(data);
       setIsEditing(false);
+      
+      // Clear localStorage draft after successful submission
+      localStorage.removeItem('draft_curator_display_name');
+      localStorage.removeItem('draft_curator_bio');
+      localStorage.removeItem('draft_curator_specialties');
+      localStorage.removeItem('draft_curator_portfolio');
+      
       alert('Certification application submitted! We\'ll review your profile and get back to you soon.');
     } catch (error) {
       console.error('Error applying for certification:', error);
@@ -118,6 +161,13 @@ export default function ProCuratorProfile() {
 
       await fetchCuratorProfile();
       setIsEditing(false);
+      
+      // Clear localStorage draft after successful update
+      localStorage.removeItem('draft_curator_display_name');
+      localStorage.removeItem('draft_curator_bio');
+      localStorage.removeItem('draft_curator_specialties');
+      localStorage.removeItem('draft_curator_portfolio');
+      
       alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
