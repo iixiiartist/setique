@@ -127,13 +127,54 @@ Video clips, annotated sequences for:
 
 ### Who Uses Setique?
 
-**AI Researchers**: Finding niche datasets for academic research  
-**Startups**: Training custom models without expensive data collection  
-**ML Engineers**: Supplementing existing datasets with specific data  
-**Computer Vision Teams**: Diverse image datasets for robust models  
-**NLP Developers**: Text corpora for language model fine-tuning  
-**Robotics Labs**: Video and sensor data for embodied AI  
-**Data Scientists**: Specialized datasets for specific industries  
+**For Data Buyers (AI/ML Practitioners):**  
+- **AI Researchers**: Finding niche datasets for academic research  
+- **Startups**: Training custom models without expensive data collection  
+- **ML Engineers**: Supplementing existing datasets with specific data  
+- **Computer Vision Teams**: Diverse image datasets for robust models  
+- **NLP Developers**: Text corpora for language model fine-tuning  
+- **Robotics Labs**: Video and sensor data for embodied AI  
+- **Data Scientists**: Specialized datasets for specific industries  
+
+**For Data Sellers (Creators & Curators):**  
+- **Photographers & Visual Artists**: Monetize photo archives, art collections, niche visual datasets  
+- **Writers & Content Creators**: Sell text datasets, transcripts, dialogue, domain-specific writing samples  
+- **Musicians & Audio Engineers**: Audio sample libraries, ambient recordings, speech datasets  
+- **Hobbyists & Enthusiasts**: Turn specialized knowledge into income (collectors, enthusiasts, domain experts)  
+- **Domain Experts**: Monetize professional expertise (medical, legal, technical, industry-specific data)  
+- **Gig Workers & Freelancers**: Flexible side hustle creating and curating datasets on your schedule  
+- **Students & Researchers**: Share research data and earn passive income  
+- **Pro Curators**: Partner with dataset owners, earn 40% ongoing revenue from sales  
+
+### Income Opportunities for Creators
+
+**Direct Dataset Sales (80% Revenue Share):**  
+- Upload unique datasets from your existing collections or expertise
+- Set your own prices (typically $49-$500+)
+- Earn passive income from every sale
+- No upfront costs, instant Stripe payouts
+
+**Pro Curator Partnerships (40% Ongoing Revenue):**  
+- Browse curation requests from dataset owners
+- Submit proposals to improve data quality (cleaning, labeling, formatting)
+- When accepted, earn 40% of all future sales forever
+- Build reputation with badges: Verified → Expert → Master
+- Perfect for data professionals, researchers, and technical creators
+
+**Bounty System (Coming Soon):**  
+- Respond to specific data requests from buyers
+- Get paid to create custom datasets
+- Earn rewards for fulfilling bounty requirements
+
+### Perfect for Side Hustles & Gig Work
+
+Setique is ideal for creators seeking flexible income:
+- **Work Remotely**: Upload and sell from anywhere
+- **Set Your Schedule**: Create datasets on your own time
+- **No Commitments**: Upload once, earn forever
+- **Low Barrier**: No technical skills required for basic datasets
+- **Passive Income**: Datasets continue earning after initial upload
+- **Scale Gradually**: Start with one dataset, build a portfolio over time  
 
 ### Common Applications
 - Training computer vision models for specific objects
@@ -232,8 +273,12 @@ Video clips, annotated sequences for:
 
 ## Keywords for Discovery
 
-artificial intelligence datasets, machine learning training data, computer vision datasets, NLP corpora, audio datasets for ML, video datasets, curated data marketplace, AI training data platform, dataset marketplace, buy datasets online, sell datasets, data curation, training data for AI models, deep learning datasets, supervised learning data, labeled datasets, annotated data, image datasets, text datasets, speech datasets, action recognition data, object detection datasets, sentiment analysis data, custom datasets, niche datasets, specialized training data
+**For AI/ML Practitioners:**  
+artificial intelligence datasets, machine learning training data, computer vision datasets, NLP corpora, audio datasets for ML, video datasets, curated data marketplace, AI training data platform, dataset marketplace, buy datasets online, training data for AI models, deep learning datasets, supervised learning data, labeled datasets, annotated data, image datasets, text datasets, speech datasets, action recognition data, object detection datasets, sentiment analysis data, custom datasets, niche datasets, specialized training data
+
+**For Data Creators & Sellers:**  
+sell datasets online, monetize data, earn passive income, data curation jobs, freelance data curator, gig work data science, side hustle AI, creator economy datasets, domain expert income, sell photos online, sell audio samples, sell text datasets, monetize expertise, Pro Curator program, dataset partnerships, revenue sharing marketplace, flexible income creators, work from home datasets, hobbyist income, artist monetization, writer passive income, photographer income, musician revenue, handwriting datasets, niche data monetization, specialized knowledge income, become a data curator, data seller platform
 
 ---
 
-**Setique** - Where unique datasets meet AI innovation.
+**Setique** - Where unique datasets meet AI innovation. Turn your expertise into passive income.

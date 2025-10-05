@@ -1,6 +1,27 @@
-# SETIQUE - The Niche Data Marketplace
+# SETIQUE - Curated Dataset Marketplace for AI Training Data
 
-A fully functional niche data marketplace built with React, Supabase, Stripe Connect, and Netlify. Browse datasets, purchase with Stripe, and creators receive automated payouts through Stripe Connect.
+**Turn your unique data into passive income.** Sell curated datasets to AI researchers, data scientists, and ML engineers. Perfect for creators, writers, artists, photographers, musicians, hobbyists, and domain experts.
+
+A fully functional dataset marketplace built with React, Supabase, Stripe Connect, and Netlify. Creators earn 80% per sale + 40% ongoing revenue as Pro Curators. Buyers discover niche datasets for computer vision, NLP, audio ML, and video understanding.
+
+## 🎯 For Data Creators & Sellers
+
+✅ **Monetize Your Expertise**: Turn photos, audio, text, videos into income  
+✅ **80% Revenue Share**: Keep most of what you earn (20% platform fee)  
+✅ **Passive Income**: Upload once, earn forever  
+✅ **Pro Curator Program**: Partner with dataset owners, earn 40% ongoing  
+✅ **No Upfront Costs**: Free to list datasets  
+✅ **Instant Payouts**: Stripe Connect automated transfers  
+✅ **Work Remotely**: Perfect side hustle for gig workers and freelancers
+
+## 🤖 For AI/ML Practitioners
+
+✅ **Niche Datasets**: Unique vision, audio, text, video datasets  
+✅ **Expert Curated**: Quality data from domain specialists  
+✅ **Instant Download**: Secure 24-hour signed URLs  
+✅ **No Subscriptions**: Pay per dataset, no recurring fees  
+✅ **Bounty System**: Request custom datasets  
+✅ **Pro Curator Badge**: Verified expert curation
 
 ## 🎯 Project Status
 
