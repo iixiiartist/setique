@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -27,7 +27,9 @@ function DashboardPage() {
   // Buyer data
   const [myPurchases, setMyPurchases] = useState([])
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) return
+    
     setLoading(true)
     try {
       // Fetch user's created datasets
@@ -84,7 +86,7 @@ function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   useEffect(() => {
     if (!user) {
