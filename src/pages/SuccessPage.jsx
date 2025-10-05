@@ -8,6 +8,8 @@ function SuccessPage() {
   const { user } = useAuth()
   const [dataset, setDataset] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
 
   useEffect(() => {
     const verifyPurchase = async () => {
@@ -46,6 +48,42 @@ function SuccessPage() {
 
     verifyPurchase()
   }, [user, navigate])
+
+  const handleDownload = async () => {
+    if (!dataset || !user) return
+
+    setDownloading(true)
+    setDownloadError('')
+
+    try {
+      const response = await fetch('/.netlify/functions/generate-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          datasetId: dataset.id,
+          userId: user.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate download link')
+      }
+
+      // Open download link in new tab
+      window.open(data.downloadUrl, '_blank')
+
+      alert(`Download started! Link expires in 24 hours.`)
+    } catch (error) {
+      console.error('Download error:', error)
+      setDownloadError(error.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -105,6 +143,32 @@ function SuccessPage() {
                 <p className="text-sm font-semibold">{dataset.description}</p>
                 <p className="text-lg font-extrabold mt-3">
                   Price: ${dataset.price}
+                </p>
+              </div>
+
+              {/* Download Button */}
+              <div className="mb-6">
+                <button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="w-full bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold text-lg px-8 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 active:scale-100"
+                >
+                  {downloading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
+                      Generating Download Link...
+                    </span>
+                  ) : (
+                    <span>📥 Download Dataset Now</span>
+                  )}
+                </button>
+                {downloadError && (
+                  <p className="text-sm mt-2 font-bold text-red-600">
+                    ⚠️ {downloadError}
+                  </p>
+                )}
+                <p className="text-xs mt-2 font-semibold text-black/60">
+                  Secure download link expires in 24 hours
                 </p>
               </div>
             </>
