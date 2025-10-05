@@ -399,10 +399,13 @@ function HomePage() {
           </a>
           {user ? (
             <>
-              <div className="flex items-center gap-2 font-bold text-black">
-                <User className="h-5 w-5" />
-                {profile?.username || user.email}
-              </div>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1"
+              >
+                <User className="h-4 w-4" />
+                Dashboard
+              </button>
               <button
                 onClick={handleSignOut}
                 className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1"
