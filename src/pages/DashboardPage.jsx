@@ -74,17 +74,17 @@ function DashboardPage() {
         .from('datasets')
         .select(`
           *,
-          dataset_partnerships!dataset_partnerships_dataset_id_fkey (
+          dataset_partnerships (
             id,
+            status,
             curator_user_id,
-            pro_curators!dataset_partnerships_curator_user_id_fkey (
+            pro_curators (
               display_name,
               badge_level
             )
           )
         `)
         .eq('creator_id', user.id)
-        .eq('dataset_partnerships.status', 'active')
         .order('created_at', { ascending: false })
       
       setMyDatasets(datasets || [])
