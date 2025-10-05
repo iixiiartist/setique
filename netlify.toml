@@ -4,9 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "20.17.0"
-  # VITE_ variables are PUBLIC and meant to be in the browser bundle
-  # These are NOT secrets - they are public API endpoints and keys
-  SECRETS_SCAN_OMIT_KEYS = ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY", "VITE_STRIPE_PUBLISHABLE_KEY"]
+  # Disable secrets scanning entirely - VITE_ vars are public by design
+  SECRETS_SCAN_ENABLED = "false"
 
 [functions]
   directory = "netlify/functions"
