@@ -188,7 +188,7 @@ const [showBetaBanner, setShowBetaBanner] = useState(() => {
 - ✅ Committed: `c350983`
 - ✅ Pushed to GitHub
 - ✅ Netlify auto-deploy triggered (2-3 min)
-- ✅ Live at: https://setique.netlify.app
+- ✅ Live at: https://setique.com
 
 ### **First Visit Experience:**
 1. User lands on homepage

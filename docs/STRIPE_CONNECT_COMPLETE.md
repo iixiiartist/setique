@@ -84,7 +84,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ... (for elevated permissions)
    - Set branding (logo, colors, business name)
 
 2. **Configure Webhooks**
-   - Add webhook endpoint: `https://setique.netlify.app/.netlify/functions/stripe-webhook`
+   - Add webhook endpoint: `https://setique.com/.netlify/functions/stripe-webhook`
    - Select events:
      - `checkout.session.completed` (existing)
      - `account.updated` (NEW - for Connect status tracking)

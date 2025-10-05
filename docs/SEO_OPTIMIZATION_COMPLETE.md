@@ -470,14 +470,14 @@ View page source (Ctrl+U) and check:
 
 ### **3. Validate Structured Data**
 - Google Rich Results Test: https://search.google.com/test/rich-results
-- Paste URL: https://setique.netlify.app (or setique.com when live)
+- Paste URL: https://setique.com
 
 ### **4. Check Robots.txt**
-Visit: https://setique.netlify.app/robots.txt
+Visit: https://setique.com/robots.txt
 Should see AI crawler permissions
 
 ### **5. Verify Sitemap**
-Visit: https://setique.netlify.app/sitemap.xml
+Visit: https://setique.com/sitemap.xml
 Should see all URLs listed
 
 ---

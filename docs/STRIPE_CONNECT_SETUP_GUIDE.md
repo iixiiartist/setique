@@ -71,7 +71,7 @@ Platform automatically takes $20 fee → Creator gets $80
 3. Fill out platform information:
    - Platform name: **Setique**
    - Platform type: **Marketplace**
-   - Website: **setique.netlify.app**
+   - Website: **setique.com**
 
 ### Step 2: Select Payment Collection
 1. Choose: **"Separate charges and transfers"**
@@ -95,7 +95,7 @@ Platform automatically takes $20 fee → Creator gets $80
 
 ### Step 6: Configure Webhooks
 1. Go to: https://dashboard.stripe.com/webhooks
-2. Add endpoint: `https://setique.netlify.app/.netlify/functions/stripe-webhook`
+2. Add endpoint: `https://setique.com/.netlify/functions/stripe-webhook`
 3. Select events:
    - ✅ `checkout.session.completed`
    - ✅ `account.updated`
