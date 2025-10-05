@@ -1,0 +1,36 @@
+# Robots.txt for Setique - Dataset Marketplace
+# Allow all crawlers to index the site for maximum visibility
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://setique.com/sitemap.xml
+
+# Optional: Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Allow specific AI crawlers explicitly
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: Omgilibot
+Allow: /

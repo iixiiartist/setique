@@ -3,10 +3,172 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Setique - The Niche Data Marketplace</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Setique - Curated Dataset Marketplace for AI & Machine Learning Training</title>
+    <meta name="title" content="Setique - Curated Dataset Marketplace for AI & Machine Learning Training" />
+    <meta name="description" content="Buy and sell unique, curated datasets for AI training. Find niche vision, audio, text, and video datasets from expert curators. 20% platform fee, secure downloads, instant payouts." />
+    <meta name="keywords" content="dataset marketplace, AI training data, machine learning datasets, curated data, computer vision datasets, audio datasets, NLP datasets, training data for AI, buy datasets, sell datasets, data curation, ML training data" />
+    <meta name="author" content="Setique" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://setique.com" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://setique.com" />
+    <meta property="og:title" content="Setique - Curated Dataset Marketplace for AI & Machine Learning" />
+    <meta property="og:description" content="The marketplace for unique, curated datasets. Buy high-quality training data for computer vision, NLP, audio ML, and more. Created by experts, verified by Stripe." />
+    <meta property="og:image" content="https://setique.com/og-image.png" />
+    <meta property="og:site_name" content="Setique" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://setique.com" />
+    <meta name="twitter:title" content="Setique - Curated Dataset Marketplace for AI Training" />
+    <meta name="twitter:description" content="Buy and sell unique, curated datasets for AI/ML. Vision, audio, text, video datasets from expert curators." />
+    <meta name="twitter:image" content="https://setique.com/og-image.png" />
+    
+    <!-- Structured Data for LLM Understanding -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Setique",
+      "url": "https://setique.com",
+      "description": "Setique is a curated dataset marketplace connecting data curators with businesses and researchers who need high-quality training data for artificial intelligence and machine learning projects.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://setique.com/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Setique",
+        "description": "Marketplace for curated AI training datasets"
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "@id": "https://setique.com/#marketplace",
+      "name": "Setique Dataset Marketplace",
+      "description": "A marketplace platform where data curators sell unique, curated datasets for AI and machine learning training. Datasets include computer vision images, audio recordings, text corpora, video clips, and specialized niche data. All transactions secured by Stripe Connect with instant digital delivery.",
+      "category": "Software",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": ["AI researchers", "Machine learning engineers", "Data scientists", "Computer vision developers", "NLP researchers", "Robotics engineers"]
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "USD",
+        "lowPrice": "49",
+        "highPrice": "500",
+        "offerCount": "6+"
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Setique?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Setique is a marketplace for buying and selling curated datasets for AI and machine learning training. Data curators upload unique datasets (images, audio, text, video) and buyers purchase secure download access. Setique charges a 20% platform fee and handles payments via Stripe Connect."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What types of datasets can I find on Setique?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Setique offers four modalities of datasets: Vision (images for computer vision, object detection, classification), Audio (sound recordings for speech recognition, audio ML), Text (corpora for NLP, sentiment analysis, language models), and Video (clips for action recognition, video understanding, robotics). Datasets are curated by experts and cover niche topics like architecture photography, mechanical keyboard sounds, skateboarding slang, street signs, food images, and household actions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I sell datasets on Setique?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "To sell on Setique: 1) Create an account, 2) Upload your dataset file (up to 500MB), 3) Fill out the curator form with title, description, price, tags, and metadata, 4) Publish your listing, 5) Connect your Stripe account to receive payouts. When someone purchases, you earn 80% (Setique takes 20% platform fee). Payouts are automatic via Stripe Connect."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does it cost to use Setique?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For buyers: Pay the listed dataset price (typically $49-$500). No subscription or membership fees. For sellers: Setique takes a 20% platform fee on each sale. You keep 80% of the sale price. Stripe payment processing fees (~2.9% + 30¢) apply. No upfront costs to list datasets."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are downloads secure and how long do download links last?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, all downloads are secure. After purchase, Setique generates a cryptographically signed URL that expires in 24 hours. Only verified purchasers can access download links. All downloads are logged for security. Files are stored in encrypted Supabase Storage buckets with 500MB size limits and MIME type validation."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What file formats are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Setique supports multiple formats by modality: Vision (JPG, PNG, ZIP), Audio (MP3, WAV, FLAC), Text (CSV, JSON), Video (MP4, MOV), and Archives (ZIP, TAR, GZIP). Maximum file size is 500MB per dataset. Files are validated on upload to ensure compatibility."
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://jevrieeonwegqjydmhgm.supabase.co" />
+    <link rel="dns-prefetch" href="https://js.stripe.com" />
 </head>
 <body>
-    <div id="root"></div>
+    <!-- Semantic HTML for better LLM understanding -->
+    <div id="root" role="main" aria-label="Setique Dataset Marketplace Application"></div>
+    
+    <!-- Noscript fallback with key information for crawlers -->
+    <noscript>
+        <h1>Setique - Curated Dataset Marketplace for AI & Machine Learning</h1>
+        <p>
+            Setique is the premier marketplace for buying and selling curated datasets for artificial intelligence 
+            and machine learning training. Our platform connects expert data curators with researchers, engineers, 
+            and businesses who need high-quality training data.
+        </p>
+        <h2>Available Dataset Types</h2>
+        <ul>
+            <li><strong>Computer Vision Datasets:</strong> Images for object detection, classification, segmentation</li>
+            <li><strong>Audio & Speech Datasets:</strong> Sound recordings for speech recognition, audio ML</li>
+            <li><strong>Text & NLP Datasets:</strong> Corpora for natural language processing, sentiment analysis</li>
+            <li><strong>Video Datasets:</strong> Clips for action recognition, video understanding, robotics</li>
+        </ul>
+        <h2>How It Works</h2>
+        <p>
+            <strong>For Buyers:</strong> Browse curated datasets, purchase with secure Stripe checkout, 
+            download via 24-hour signed URLs. Instant access to high-quality training data.
+        </p>
+        <p>
+            <strong>For Sellers:</strong> Upload datasets (up to 500MB), set your price, connect Stripe account. 
+            Earn 80% of each sale with automatic payouts. 20% platform fee covers hosting, security, and payments.
+        </p>
+        <h2>Featured Datasets</h2>
+        <p>Brutalist Architecture Photos, Mechanical Keyboard Audio Library, 1980s Skateboarder Slang Lexicon, 
+           Urban Street Sign Detection, Diner Pancake Encyclopedia, Household Action Videos</p>
+        <p><a href="https://setique.com">Enable JavaScript to access the full marketplace</a></p>
+    </noscript>
+    
     <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

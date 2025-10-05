@@ -1,0 +1,11 @@
+# Netlify redirects for SPA routing
+/*    /index.html   200
+
+# Redirect about page to serve markdown
+/about    /about.md    200
+
+# SEO-friendly redirects
+/datasets    /    301
+/marketplace    /    301
+/buy    /    301
+/sell    /    301
