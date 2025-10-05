@@ -121,17 +121,18 @@ function HomePage() {
 
   const fetchDatasets = async () => {
     try {
-      const { data, error } = await supabase
+      // Try with partnerships first
+      let { data, error } = await supabase
         .from('datasets')
         .select(
           `
           *,
           profiles:creator_id (username, full_name),
-          dataset_partnerships!dataset_partnerships_dataset_id_fkey (
+          dataset_partnerships (
             id,
             curator_user_id,
             status,
-            pro_curators!dataset_partnerships_curator_user_id_fkey (
+            pro_curators (
               display_name,
               badge_level
             )
@@ -140,6 +141,24 @@ function HomePage() {
         )
         .eq('is_active', true)
         .order('created_at', { ascending: false })
+
+      // If partnership query fails (table doesn't exist), try without it
+      if (error) {
+        console.warn('⚠️ Partnership query failed, trying without partnerships:', error.message)
+        const simpleQuery = await supabase
+          .from('datasets')
+          .select(
+            `
+            *,
+            profiles:creator_id (username, full_name)
+          `
+          )
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+        
+        data = simpleQuery.data
+        error = simpleQuery.error
+      }
 
       if (error) throw error
       console.log('📦 Fetched datasets:', data?.length || 0, 'datasets')
