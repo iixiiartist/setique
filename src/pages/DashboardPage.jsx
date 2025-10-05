@@ -335,13 +335,24 @@ function DashboardPage() {
       if (purchaseError) throw purchaseError
       
       if (purchases && purchases.length > 0) {
-        alert('Cannot delete dataset that has been purchased. Consider deactivating it instead.')
-        setDeleteConfirm(null)
-        setActionLoading(false)
-        return
+        const confirmHardDelete = window.confirm(
+          'This dataset has purchases! Deleting it will break download access for buyers. Are you absolutely sure you want to delete it permanently?'
+        )
+        if (!confirmHardDelete) {
+          setDeleteConfirm(null)
+          setActionLoading(false)
+          return
+        }
       }
       
-      // Delete the dataset
+      // Get dataset info for storage cleanup
+      const { data: dataset } = await supabase
+        .from('datasets')
+        .select('download_url')
+        .eq('id', datasetId)
+        .single()
+      
+      // Delete the dataset (cascade will delete purchases, partnerships, etc.)
       const { error } = await supabase
         .from('datasets')
         .delete()
@@ -350,13 +361,20 @@ function DashboardPage() {
       
       if (error) throw error
       
+      // Delete storage file if it exists
+      if (dataset?.download_url) {
+        await supabase.storage
+          .from('datasets')
+          .remove([dataset.download_url])
+      }
+      
       // Update local state
       setMyDatasets(prev => prev.filter(d => d.id !== datasetId))
       setDeleteConfirm(null)
       alert('Dataset deleted successfully!')
     } catch (error) {
       console.error('Error deleting dataset:', error)
-      alert('Failed to delete dataset')
+      alert('Failed to delete dataset: ' + error.message)
     } finally {
       setActionLoading(false)
     }
