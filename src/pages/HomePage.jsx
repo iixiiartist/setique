@@ -46,6 +46,18 @@ function HomePage() {
   const [uploadError, setUploadError] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   
+  // Beta banner state
+  const [showBetaBanner, setShowBetaBanner] = useState(() => {
+    // Check localStorage to see if user dismissed banner
+    const dismissed = localStorage.getItem('betaBannerDismissed')
+    return dismissed !== 'true'
+  })
+  
+  const dismissBetaBanner = () => {
+    localStorage.setItem('betaBannerDismissed', 'true')
+    setShowBetaBanner(false)
+  }
+  
   const isCreatorFormValid =
     newTitle.trim() !== '' && newDesc.trim() !== '' && newPrice > 0 && uploadFile !== null
 
@@ -378,6 +390,46 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-pink-400 to-cyan-300 text-black font-sans p-4 sm:p-8 overflow-x-hidden relative">
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white,transparent_70%)] animate-pulse pointer-events-none -z-10" />
+
+      {/* Beta Banner */}
+      {showBetaBanner && (
+        <div className="bg-gradient-to-r from-yellow-300 to-pink-300 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-4 mb-6 max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">🚧</span>
+                <span className="font-extrabold text-lg">BETA VERSION</span>
+              </div>
+              <p className="text-sm font-semibold">
+                Platform in active development. All transactions in test mode. 
+                <a 
+                  href="mailto:feedback@setique.com" 
+                  className="underline ml-1 hover:text-cyan-600 transition"
+                >
+                  Report issues or share feedback
+                </a>
+              </p>
+            </div>
+            <button
+              onClick={dismissBetaBanner}
+              className="bg-white hover:bg-gray-100 border-2 border-black rounded-full p-2 transition hover:scale-110 flex-shrink-0"
+              aria-label="Dismiss beta banner"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Widget - Floating Button */}
+      <a
+        href="mailto:feedback@setique.com?subject=Setique Beta Feedback"
+        className="fixed bottom-6 right-6 bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-6 py-3 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:shadow-[8px_8px_0_#000] hover:scale-110 transition-all z-50 flex items-center gap-2"
+        aria-label="Send beta feedback"
+      >
+        <span className="text-xl">💬</span>
+        <span className="hidden sm:inline">Beta Feedback</span>
+      </a>
 
       <header className="flex flex-col sm:flex-row items-center justify-between mb-12">
         <a
