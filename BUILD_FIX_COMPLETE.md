@@ -98,15 +98,16 @@ You should see:
 3. Go to **Site configuration > Environment variables**
 4. Add these variables:
 
+Copy all values from your local .env file:
 ```
 VITE_SUPABASE_URL
-https://jevrieeonwegqjydmhgm.supabase.co
+<your_supabase_project_url>
 
 VITE_SUPABASE_ANON_KEY
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpldnJpZWVvbndlZ3FqeWRtaGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MzA2MjgsImV4cCI6MjA3NTIwNjYyOH0.Q1QkV209AxubB_w_a7yMEUN2yRoRZpF74DjHHj1Osx0
+<your_anon_key>
 
 VITE_STRIPE_PUBLISHABLE_KEY
-pk_test_placeholder
+<your_stripe_publishable_key>
 
 STRIPE_SECRET_KEY
 sk_test_placeholder

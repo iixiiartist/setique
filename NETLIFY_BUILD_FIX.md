@@ -81,13 +81,13 @@ fund=false
 1. **Add Environment Variables** (Critical!)
    Go to Netlify Dashboard → Your Site → Site Settings → Environment Variables
    
-   Add these variables:
+   Add these variables (use your actual values from .env file):
    ```
-   VITE_SUPABASE_URL=https://jevrieeonwegqjydmhgm.supabase.co
+   VITE_SUPABASE_URL=<your_supabase_url>
    VITE_SUPABASE_ANON_KEY=<your_anon_key>
-   VITE_STRIPE_PUBLISHABLE_KEY=<your_pk_test_key>
-   STRIPE_SECRET_KEY=<your_sk_test_key>
-   STRIPE_WEBHOOK_SECRET=<your_whsec_key>
+   VITE_STRIPE_PUBLISHABLE_KEY=<your_stripe_pk_key>
+   STRIPE_SECRET_KEY=<your_stripe_sk_key>
+   STRIPE_WEBHOOK_SECRET=<your_webhook_secret>
    ```
 
 2. **Deploy to Netlify**

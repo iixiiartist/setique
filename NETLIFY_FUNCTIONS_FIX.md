@@ -178,12 +178,13 @@ Many developers think function dependencies only need to be in `netlify/function
 2. **Add Environment Variables** (if not done):
    Go to Netlify Dashboard → Site Settings → Environment Variables
    
+   Copy all values from your local .env file:
    ```
-   VITE_SUPABASE_URL=https://jevrieeonwegqjydmhgm.supabase.co
+   VITE_SUPABASE_URL=<your_supabase_url>
    VITE_SUPABASE_ANON_KEY=<your_anon_key>
-   VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
-   STRIPE_SECRET_KEY=sk_live_...
-   STRIPE_WEBHOOK_SECRET=whsec_...
+   VITE_STRIPE_PUBLISHABLE_KEY=<your_stripe_key>
+   STRIPE_SECRET_KEY=<your_stripe_secret>
+   STRIPE_WEBHOOK_SECRET=<your_webhook_secret>
    ```
 
 3. **Test Functions After Deploy:**

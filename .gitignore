@@ -29,5 +29,9 @@ dist-ssr
 .env.production.local
 .env.development.local
 
+# Test files with hardcoded values
+test-connection.html
+check-database.js
+
 # Netlify
 .netlify

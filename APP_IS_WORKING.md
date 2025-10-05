@@ -129,11 +129,11 @@ npm run preview
 
 - **Local**: http://localhost:3001
 - **GitHub**: https://github.com/iixiiartist/setique
-- **Supabase Dashboard**: https://supabase.com/dashboard/project/jevrieeonwegqjydmhgm
+- **Supabase Dashboard**: https://supabase.com/dashboard (your project)
 
 ## 📊 Monitor Your Database
 
-1. Go to your [Supabase dashboard](https://supabase.com/dashboard/project/jevrieeonwegqjydmhgm)
+1. Go to your [Supabase dashboard](https://supabase.com/dashboard)
 2. Click **"Table Editor"**
 3. See all your data in real-time:
    - **profiles**: User accounts

@@ -36,13 +36,13 @@ Netlify will auto-deploy!
 **IMPORTANT:** Before deploying, add these in Netlify:
 
 1. Go to: **Site Settings > Environment Variables**
-2. Add each variable:
+2. Add each variable (copy from your local .env file):
 
 ```
-VITE_SUPABASE_URL=https://jevrieeonwegqjydmhgm.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpldnJpZWVvbndlZ3FqeWRtaGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MzA2MjgsImV4cCI6MjA3NTIwNjYyOH0.Q1QkV209AxubB_w_a7yMEUN2yRoRZpF74DjHHj1Osx0
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
-STRIPE_SECRET_KEY=sk_test_placeholder
+VITE_SUPABASE_URL=<your_supabase_project_url>
+VITE_SUPABASE_ANON_KEY=<your_anon_key>
+VITE_STRIPE_PUBLISHABLE_KEY=<your_stripe_pk>
+STRIPE_SECRET_KEY=<your_stripe_sk>
 STRIPE_WEBHOOK_SECRET=whsec_placeholder
 ```
 
