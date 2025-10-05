@@ -13,18 +13,21 @@ Attempting to download and install Node version 18.20.8
 
 ## ✅ The Solution
 
-### Changed Node Version: `18.20.8` → `20` → `20.18.0`
+### Changed Node Version: `18.20.8` → `20` → `20.18.0` → `20.17.0`
 
-**Update (October 5, 2025):** The generic `20` caused issues with Netlify's version detection. Updated to specific version `20.18.0`.
+**Update (October 5, 2025):** 
+- The generic `20` caused issues with Netlify's version detection
+- Updated to `20.18.0` but that version doesn't exist yet
+- **Final fix:** Updated to `20.17.0` (latest stable Node 20 LTS)
 
 Node.js uses semantic versioning (major.minor.patch). Valid LTS versions include:
-- Node 18 (18.x.x) - Current LTS
-- Node 20 (20.x.x) - Active LTS ✅ **Using this**
-- Node 22 (22.x.x) - Latest
+- Node 18 (18.x.x) - Maintenance LTS
+- Node 20 (20.x.x) - Active LTS ✅ **Using 20.17.0**
+- Node 22 (22.x.x) - Current
 
-We're now using **Node 20** which is:
+We're now using **Node 20.17.0** which is:
 - ✅ Fully supported by Netlify
-- ✅ Latest stable LTS (Long Term Support)
+- ✅ Latest stable Node 20 LTS release
 - ✅ Compatible with all your dependencies
 - ✅ Better performance than Node 18
 
@@ -36,16 +39,16 @@ We're now using **Node 20** which is:
 
 ```toml
 [build.environment]
-  NODE_VERSION = "20.18.0"  # Changed from "18.20.8" → "20" → "20.18.0"
+  NODE_VERSION = "20.17.0"  # Changed from "18.20.8" → "20" → "20.18.0" → "20.17.0"
 ```
 
 ### 2. Created `.nvmrc` file
 
 ```
-20.18.0
+20.17.0
 ```
 
-This file tells Netlify (and other tools) which Node version to use. Now using specific version `20.18.0` instead of generic `20`.
+This file tells Netlify (and other tools) which Node version to use. Now using specific version `20.17.0` (latest stable Node 20 LTS).
 
 ### 3. Updated `package.json`
 ```json
