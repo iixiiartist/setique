@@ -59,13 +59,125 @@ export const handler = async (event) => {
     // 2. Get dataset file path
     const { data: dataset, error: datasetError } = await supabase
       .from('datasets')
-      .select('download_url, title')
+      .select('download_url, title, description, schema_fields, sample_data, notes')
       .eq('id', datasetId)
       .single()
 
-    if (datasetError || !dataset || !dataset.download_url) {
+    if (datasetError || !dataset) {
       console.error('Dataset fetch failed:', datasetError)
       
+      await supabase.from('download_logs').insert({
+        user_id: userId,
+        dataset_id: datasetId,
+        purchase_id: purchase.id,
+        success: false,
+        error_message: 'Dataset not found',
+        ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
+        user_agent: event.headers['user-agent']
+      })
+
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Dataset not found' })
+      }
+    }
+
+    // Check if this is a demo dataset
+    const isDemoDataset = dataset.title.includes('(DEMO)')
+
+    if (isDemoDataset) {
+      // Generate a sample README as data URL for demo datasets
+      const readmeContent = `
+# ${dataset.title}
+## Demo Dataset Sample
+
+Thank you for trying out Setique! 🎉
+
+This is a **DEMO dataset** to showcase our platform's functionality. If this were a real dataset purchase, you would receive the actual data files here.
+
+---
+
+### About This Dataset
+${dataset.description}
+
+### What Would Be Included (If Real):
+${dataset.schema_fields ? `
+**Data Schema:**
+${dataset.schema_fields.map(field => `- ${field}`).join('\n')}
+` : ''}
+${dataset.sample_data ? `
+**Sample Data Format:**
+\`\`\`
+${dataset.sample_data}
+\`\`\`
+` : ''}
+${dataset.notes ? `
+**Additional Notes:**
+${dataset.notes}
+` : ''}
+
+---
+
+### How Setique Works:
+
+1. **Browse**: Discover unique, niche datasets curated by experts
+2. **Purchase**: Securely buy datasets that fit your needs
+3. **Download**: Get instant access to high-quality data files
+4. **Build**: Train better AI models with specialized data
+
+### Ready to Create Real Datasets?
+
+Become a data curator and earn by sharing your unique datasets with the AI community!
+
+- **20% Platform Fee**: Keep 80% of your earnings
+- **Instant Payouts**: Via Stripe Connect
+- **Full Control**: Set your own prices
+- **Global Reach**: Sell to AI researchers and developers worldwide
+
+Visit **setique.com** to start creating and selling real datasets today!
+
+---
+
+### Need Help?
+
+- 📧 Email: joseph@anconsulting.us
+- 🌐 Website: https://setique.com
+- 💬 Feedback: Click the beta feedback button on our site
+
+---
+
+*This is a sample file for demonstration purposes. Real dataset purchases include actual data files in formats like CSV, JSON, ZIP, audio files, video files, or image archives depending on the dataset type.*
+
+© ${new Date().getFullYear()} Setique - The Niche Data Economy
+`.trim()
+
+      // Encode as base64 data URL
+      const base64Content = Buffer.from(readmeContent).toString('base64')
+      const dataUrl = `data:text/plain;base64,${base64Content}`
+
+      // Log successful demo download
+      await supabase.from('download_logs').insert({
+        user_id: userId,
+        dataset_id: datasetId,
+        purchase_id: purchase.id,
+        success: true,
+        ip_address: event.headers['x-forwarded-for'] || event.headers['client-ip'],
+        user_agent: event.headers['user-agent']
+      })
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          downloadUrl: dataUrl,
+          expiresIn: 86400,
+          fileName: `${dataset.title.replace(/[^a-z0-9]/gi, '_')}_DEMO_README.txt`,
+          isDemo: true
+        })
+      }
+    }
+
+    // For real datasets, continue with normal flow
+    if (!dataset.download_url) {
       await supabase.from('download_logs').insert({
         user_id: userId,
         dataset_id: datasetId,

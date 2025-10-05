@@ -73,10 +73,22 @@ function SuccessPage() {
         throw new Error(data.error || 'Failed to generate download link')
       }
 
-      // Open download link in new tab
-      window.open(data.downloadUrl, '_blank')
-
-      alert(`Download started! Link expires in 24 hours.`)
+      // Handle demo datasets with data URLs
+      if (data.isDemo && data.downloadUrl.startsWith('data:')) {
+        // Create a download link for the data URL
+        const link = document.createElement('a')
+        link.href = data.downloadUrl
+        link.download = data.fileName || 'DEMO_README.txt'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        alert(`📝 Demo dataset info downloaded! This is a sample to showcase how Setique works. Real datasets include actual data files.`)
+      } else {
+        // For real datasets, open in new tab
+        window.open(data.downloadUrl, '_blank')
+        alert(`Download started! Link expires in 24 hours.`)
+      }
     } catch (error) {
       console.error('Download error:', error)
       setDownloadError(error.message)
