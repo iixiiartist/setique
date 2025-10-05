@@ -1,11 +1,15 @@
 [build]
-  command = "npm ci && npm run build"
+  command = "npm ci && cd netlify/functions && npm ci && cd ../.. && npm run build"
   publish = "dist"
   functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_USE_PRODUCTION = "false"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["stripe", "@supabase/supabase-js"]
 
 [[redirects]]
   from = "/*"
