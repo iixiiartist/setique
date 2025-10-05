@@ -5,9 +5,8 @@
 
 [build.environment]
   NODE_VERSION = "20.17.0"
-  NPM_USE_PRODUCTION = "false"
-  # Skip secret scanning for these variable names (they're just references, not actual secrets)
-  SECRETS_SCAN_OMIT_KEYS = "STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,SUPABASE_ANON_KEY,VITE_SUPABASE_ANON_KEY"
+  # Correct format for omitting secret keys: an array of strings
+  SECRETS_SCAN_OMIT_KEYS = ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]
 
 [functions]
   node_bundler = "esbuild"
