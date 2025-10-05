@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
+import { AIAssistant } from '../components/AIAssistant'
 import { TagInput } from '../components/TagInput'
 import {
   Star,
@@ -1797,6 +1798,9 @@ function HomePage() {
           fetchBounties()
         }}
       />
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   )
 }

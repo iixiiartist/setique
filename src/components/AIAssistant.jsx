@@ -9,7 +9,31 @@ const ASSISTANT_KNOWLEDGE = {
   platform: {
     name: "SETIQUE",
     purpose: "Premium marketplace for curated datasets",
-    features: ["Buy datasets", "Sell datasets", "Post bounties", "Earn with Stripe Connect"],
+    features: ["Buy datasets", "Sell datasets", "Post bounties", "Earn with Stripe Connect", "Pro Curator partnerships"],
+  },
+  
+  // Pro Curator System
+  proCurator: {
+    overview: "Partner with expert curators to improve your datasets and earn together",
+    forCreators: [
+      "Post curation requests describing what help you need",
+      "Review proposals from verified Pro Curators",
+      "Choose a curator and split revenue 50/50 on your 80% share",
+      "Your dataset gets improved, curator gets ongoing income"
+    ],
+    forCurators: [
+      "Apply to become a Pro Curator in your Dashboard",
+      "Browse curation requests in the Marketplace",
+      "Submit proposals with your approach and pricing",
+      "Earn 50% of creator's revenue share (40% of total sales)",
+      "Build reputation and earn badges: verified → expert → master"
+    ],
+    badges: {
+      verified: "Newly approved Pro Curator, ready to take on projects",
+      expert: "10+ completed projects, 4.5+ star rating",
+      master: "50+ completed projects, 4.8+ star rating - elite tier"
+    },
+    earnings: "Creator gets 40% of sales, Curator gets 40%, Platform gets 20%"
   },
   
   // Data curation best practices
@@ -102,8 +126,74 @@ const generateResponse = (userMessage, context, conversationHistory = []) => {
   // Greeting responses
   if (msg.match(/^(hi|hello|hey|greetings)/)) {
     return context.user 
-      ? `Hello ${context.user.email?.split('@')[0]}! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, or navigating the platform.`
+      ? `Hello ${context.user.email?.split('@')[0]}! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
       : "Hello! Welcome to SETIQUE, the premium marketplace for curated datasets. I'm here to help you navigate the platform, learn best practices, and maximize your success. What would you like to know?"
+  }
+  
+  // Pro Curator questions
+  if (msg.match(/pro curator|curator|partnership|improve.*dataset|help.*curat/)) {
+    if (msg.match(/become|apply|how to be|sign up/)) {
+      return `**Becoming a Pro Curator:**
+
+${ASSISTANT_KNOWLEDGE.proCurator.forCurators.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+
+**Badge Progression:**
+• 🔵 **Verified**: Newly approved, ready to work
+• 🟣 **Expert**: 10+ projects, 4.5+ rating
+• 🟡 **Master**: 50+ projects, 4.8+ rating
+
+**To Apply:** Go to Dashboard → Pro Curator tab → Fill out application
+
+**Earnings:** You earn 40% of sales, creator gets 40%, platform gets 20%
+
+Ready to apply?`
+    } else if (msg.match(/request|need help|hire|find/)) {
+      return `**Hiring a Pro Curator:**
+
+${ASSISTANT_KNOWLEDGE.proCurator.forCreators.map((tip, i) => `${i + 1}. ${tip}`).join('\n')}
+
+**How It Works:**
+1. Click "Request Curation Help" in your Dashboard
+2. Describe your dataset and what improvements you need
+3. Set your budget range
+4. Review proposals from Pro Curators
+5. Accept a proposal and work together!
+
+**Revenue Split:** You get 40% of sales, curator gets 40%, platform 20%
+
+**Example:** $100 sale → You earn $40, Curator earns $40, Platform $20
+
+**Why Partner?**
+• Professional data cleaning and formatting
+• Better metadata and documentation
+• Higher quality = higher prices
+• Share the work, share the income
+
+Want to post a curation request?`
+    } else {
+      return `**Pro Curator System:**
+
+${ASSISTANT_KNOWLEDGE.proCurator.overview}
+
+**For Dataset Creators:**
+• Get expert help improving your datasets
+• Split revenue 50/50 with your curator
+• Higher quality data sells better
+• Post requests, review proposals, collaborate
+
+**For Pro Curators:**
+• Earn money improving datasets
+• 40% of ongoing sales revenue
+• Build reputation with badges
+• Work on diverse projects
+
+**Access:**
+• Browse requests: Homepage → Marketplace button
+• Become a curator: Dashboard → Pro Curator tab
+• Post requests: Dashboard → Request Curation Help
+
+What would you like to know more about?`
+    }
   }
   
   // Data curation questions
@@ -182,6 +272,7 @@ Your dashboard has several tabs:
 • **Earnings**: Track your income from sales
 • **My Bounties**: Bounties you posted (with submissions)
 • **My Submissions**: Datasets you submitted to bounties
+• **★ Pro Curator**: Apply to become a curator or manage your profile
 
 Access it by clicking your email in the top right → Dashboard`
     } else {
@@ -285,11 +376,17 @@ Looking for a specific type of data?`
 2. Set competitive pricing
 3. Connect Stripe to receive payments
 4. Submit datasets to bounties for extra income
+5. Request Pro Curator help to improve your data
 
 **Bounty System:**
 • Post bounties to request specific data
 • Submit your datasets to relevant bounties
 • Earn money when approved
+
+**Pro Curator System:**
+• Partner with expert curators to improve datasets
+• Become a curator and earn ongoing revenue
+• Browse marketplace for curation opportunities
 
 **Pro Tips:**
 • Start with demo datasets ($0) to build reputation
@@ -435,6 +532,11 @@ Want help with a specific bounty?`
 • Posting effective bounty requests
 • Submitting winning proposals
 • Understanding the approval process
+
+**⭐ Pro Curator System**
+• Becoming a Pro Curator and earning revenue
+• Hiring curators to improve your datasets
+• Partnership revenue splits and badges
 
 **🗺️ Platform Navigation**
 • Finding datasets and bounties
@@ -873,7 +975,7 @@ export function AIAssistant() {
               </button>
             </div>
             <p className="text-xs text-black/50 mt-2 text-center font-semibold">
-              💡 Ask about curation, pricing, bounties, or navigation
+              💡 Ask about curation, pricing, bounties, Pro Curators, or navigation
             </p>
           </div>
         </div>
