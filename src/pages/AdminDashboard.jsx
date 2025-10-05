@@ -39,12 +39,6 @@ export default function AdminDashboard() {
     totalTransactions: 0
   });
 
-  useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user]);
-
   const checkAdminStatus = async () => {
     try {
       const { data, error } = await supabase
@@ -71,6 +65,13 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      checkAdminStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const fetchAdminData = async () => {
     try {

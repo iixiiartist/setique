@@ -27,7 +27,7 @@ const badgeColors = {
 };
 
 function HomePage() {
-  const { user, profile, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
   // General state
@@ -175,6 +175,7 @@ function HomePage() {
     if (user) {
       fetchUserPurchases()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const fetchUserPurchases = async () => {
@@ -392,7 +393,7 @@ function HomePage() {
       if (uploadError) throw uploadError
 
       // Create dataset record with storage path
-      const { data, error } = await supabase.from('datasets').insert([
+      const { error } = await supabase.from('datasets').insert([
         {
           creator_id: user.id,
           title: newTitle,
@@ -560,7 +561,7 @@ function HomePage() {
     }
 
     try {
-      const { data, error } = await supabase.from('bounties').insert([
+      const { error } = await supabase.from('bounties').insert([
         {
           creator_id: user.id,
           title: bountyTitle,
