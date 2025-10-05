@@ -308,7 +308,40 @@ function HomePage() {
     try {
       const dataset = datasets[checkoutIdx]
 
-      // Call our Netlify function to create Stripe checkout session
+      // Handle free datasets differently
+      if (dataset.price === 0) {
+        // Create purchase record directly for free datasets
+        const { error: purchaseError } = await supabase
+          .from('purchases')
+          .insert([
+            {
+              user_id: user.id,
+              dataset_id: dataset.id,
+              amount: 0,
+              status: 'completed',
+            },
+          ])
+
+        if (purchaseError) {
+          throw new Error(purchaseError.message)
+        }
+
+        // Show success message and refresh
+        alert(`✅ ${dataset.title} added to your library!`)
+        setCheckoutIdx(null)
+        setProcessing(false)
+        
+        // Reload datasets and purchases
+        const { data: newDatasets } = await supabase
+          .from('datasets')
+          .select('*, profiles(username)')
+          .order('created_at', { ascending: false })
+        if (newDatasets) setDatasets(newDatasets)
+
+        return
+      }
+
+      // For paid datasets, use Stripe checkout
       const response = await fetch('/.netlify/functions/create-checkout', {
         method: 'POST',
         headers: {
@@ -970,7 +1003,7 @@ function HomePage() {
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-auto">
                       <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow">
-                        ${d.price}
+                        {d.price === 0 ? 'FREE' : `$${d.price}`}
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -983,7 +1016,7 @@ function HomePage() {
                           onClick={() => setCheckoutIdx(datasets.indexOf(d))}
                           className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
                         >
-                          Buy Now
+                          {d.price === 0 ? 'Get Free' : 'Buy Now'}
                         </button>
                       </div>
                     </div>
@@ -1212,11 +1245,15 @@ function HomePage() {
             >
               <X className="h-5 w-5" />
             </button>
-            <h4 className="text-2xl font-extrabold mb-2">Checkout</h4>
+            <h4 className="text-2xl font-extrabold mb-2">
+              {datasets[checkoutIdx].price === 0 ? 'Get Free Dataset' : 'Checkout'}
+            </h4>
             {isProcessing ? (
               <div className="text-center py-10">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-black mx-auto"></div>
-                <p className="font-bold mt-4">Processing Payment...</p>
+                <p className="font-bold mt-4">
+                  {datasets[checkoutIdx].price === 0 ? 'Adding to your library...' : 'Processing Payment...'}
+                </p>
               </div>
             ) : (
               <div>
@@ -1224,9 +1261,11 @@ function HomePage() {
                   {datasets[checkoutIdx].title}
                 </p>
                 <div className="flex items-center justify-between mb-6">
-                  <span className="font-extrabold">Total</span>
                   <span className="font-extrabold">
-                    ${datasets[checkoutIdx].price}
+                    {datasets[checkoutIdx].price === 0 ? 'Price' : 'Total'}
+                  </span>
+                  <span className="font-extrabold">
+                    {datasets[checkoutIdx].price === 0 ? 'FREE' : `$${datasets[checkoutIdx].price}`}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -1234,7 +1273,7 @@ function HomePage() {
                     className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-2 active:scale-95"
                     onClick={handleCheckout}
                   >
-                    Pay ${datasets[checkoutIdx].price}
+                    {datasets[checkoutIdx].price === 0 ? 'Get Free Dataset' : `Pay $${datasets[checkoutIdx].price}`}
                   </button>
                   <button
                     className="border-2 border-black bg-yellow-200 text-black font-bold rounded-full px-6 py-2 active:scale-95"
@@ -1295,7 +1334,7 @@ function HomePage() {
                 )}
                 <div className="flex items-center justify-between">
                   <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
-                    ${datasets[selected].price}
+                    {datasets[selected].price === 0 ? 'FREE' : `$${datasets[selected].price}`}
                   </div>
                   <button
                     className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-2 active:scale-95"
@@ -1304,7 +1343,7 @@ function HomePage() {
                       setCheckoutIdx(selected)
                     }}
                   >
-                    Buy Now
+                    {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
                   </button>
                 </div>
               </div>
