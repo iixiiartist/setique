@@ -6,11 +6,17 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState('curators');
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Curator applications
   const [pendingCurators, setPendingCurators] = useState([]);
   const [allCurators, setAllCurators] = useState([]);
+  
+  // Users
+  const [allUsers, setAllUsers] = useState([]);
+  
+  // Datasets
+  const [allDatasets, setAllDatasets] = useState([]);
   
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
@@ -21,7 +27,10 @@ export default function AdminDashboard() {
     totalDatasets: 0,
     totalCurators: 0,
     pendingCurators: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    platformRevenue: 0,
+    creatorRevenue: 0,
+    totalTransactions: 0
   });
 
   useEffect(() => {
@@ -59,36 +68,56 @@ export default function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      // Use admin function to fetch curator data (bypasses RLS)
-      const response = await fetch('/.netlify/functions/admin-actions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          action: 'get_all_curators'
+      // Use admin function to fetch all data (bypasses RLS)
+      const [curatorsRes, usersRes, datasetsRes, revenueRes, activityRes] = await Promise.all([
+        fetch('/.netlify/functions/admin-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, action: 'get_all_curators' })
+        }),
+        fetch('/.netlify/functions/admin-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, action: 'get_all_users' })
+        }),
+        fetch('/.netlify/functions/admin-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, action: 'get_all_datasets' })
+        }),
+        fetch('/.netlify/functions/admin-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, action: 'get_revenue_stats' })
+        }),
+        fetch('/.netlify/functions/admin-actions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, action: 'get_activity_log' })
         })
-      });
+      ]);
 
-      const { data: curators } = await response.json();
+      const curators = await curatorsRes.json();
+      const users = await usersRes.json();
+      const datasets = await datasetsRes.json();
+      const revenue = await revenueRes.json();
+      const activity = await activityRes.json();
 
-      setAllCurators(curators || []);
-      setPendingCurators(curators?.filter(c => c.certification_status === 'pending') || []);
-
-      // Fetch stats
-      const { count: userCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: datasetCount } = await supabase
-        .from('datasets')
-        .select('*', { count: 'exact', head: true });
+      setAllCurators(curators.data || []);
+      setPendingCurators(curators.data?.filter(c => c.certification_status === 'pending') || []);
+      setAllUsers(users.data || []);
+      setAllDatasets(datasets.data || []);
+      setActivityLog(activity.data || []);
 
       setStats({
-        totalUsers: userCount || 0,
-        totalDatasets: datasetCount || 0,
-        totalCurators: curators?.length || 0,
-        pendingCurators: pendingCurators.length,
-        totalRevenue: 0
+        totalUsers: users.data?.length || 0,
+        totalDatasets: datasets.data?.length || 0,
+        totalCurators: curators.data?.length || 0,
+        pendingCurators: curators.data?.filter(c => c.certification_status === 'pending').length || 0,
+        totalRevenue: revenue.data?.totalRevenue || 0,
+        platformRevenue: revenue.data?.platformRevenue || 0,
+        creatorRevenue: revenue.data?.creatorRevenue || 0,
+        totalTransactions: revenue.data?.totalTransactions || 0
       });
 
     } catch (error) {
@@ -187,6 +216,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleFeatured = async (datasetId) => {
+    try {
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'toggle_dataset_featured',
+          targetId: datasetId,
+          targetType: 'dataset',
+          details: { action: 'toggle_featured' }
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to toggle featured status');
+      }
+
+      alert('✅ Featured status updated!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
+      alert('Failed to update featured status: ' + error.message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -199,7 +256,7 @@ export default function AdminDashboard() {
     return (
       <div className="max-w-2xl mx-auto mt-20 p-8 bg-red-100 border-2 border-red-500 rounded-xl">
         <h2 className="text-2xl font-bold text-red-800 mb-2">🚫 Access Denied</h2>
-        <p className="text-red-700">You don't have permission to access the admin dashboard.</p>
+        <p className="text-red-700">You do not have permission to access the admin dashboard.</p>
       </div>
     );
   }
@@ -214,7 +271,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-white border-2 border-black rounded-xl p-4">
             <div className="text-sm font-bold text-gray-600 mb-1">Total Users</div>
             <div className="text-3xl font-extrabold">{stats.totalUsers}</div>
@@ -228,23 +285,37 @@ export default function AdminDashboard() {
             <div className="text-3xl font-extrabold">{stats.totalCurators}</div>
           </div>
           <div className="bg-yellow-100 border-2 border-yellow-600 rounded-xl p-4">
-            <div className="text-sm font-bold text-yellow-800 mb-1">Pending Applications</div>
+            <div className="text-sm font-bold text-yellow-800 mb-1">Pending Apps</div>
             <div className="text-3xl font-extrabold text-yellow-800">{stats.pendingCurators}</div>
+          </div>
+          <div className="bg-green-100 border-2 border-green-600 rounded-xl p-4">
+            <div className="text-sm font-bold text-green-800 mb-1">Platform Revenue</div>
+            <div className="text-2xl font-extrabold text-green-800">${stats.platformRevenue}</div>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="bg-white border-2 border-black rounded-xl overflow-hidden">
-          <div className="flex border-b-2 border-black">
+          <div className="flex border-b-2 border-black overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'overview' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              📊 Overview
+            </button>
             <button
               onClick={() => setActiveTab('curators')}
-              className={`flex-1 px-6 py-4 font-bold transition ${
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
                 activeTab === 'curators' 
                   ? 'bg-yellow-300 border-r-2 border-black' 
                   : 'bg-white hover:bg-gray-50 border-r-2 border-black'
               }`}
             >
-              Pro Curator Applications
+              👥 Pro Curators
               {pendingCurators.length > 0 && (
                 <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                   {pendingCurators.length}
@@ -252,19 +323,104 @@ export default function AdminDashboard() {
               )}
             </button>
             <button
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'users' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              🔐 Users
+            </button>
+            <button
+              onClick={() => setActiveTab('datasets')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'datasets' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              📦 Datasets
+            </button>
+            <button
               onClick={() => setActiveTab('activity')}
-              className={`flex-1 px-6 py-4 font-bold transition ${
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
                 activeTab === 'activity' 
                   ? 'bg-yellow-300' 
                   : 'bg-white hover:bg-gray-50'
               }`}
             >
-              Activity Log
+              📋 Activity Log
             </button>
           </div>
 
           {/* Content */}
           <div className="p-6">
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-extrabold mb-4">Platform Overview</h2>
+                
+                {/* Revenue Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="border-2 border-green-500 rounded-xl p-6 bg-green-50">
+                    <div className="text-sm font-bold text-green-800 mb-1">Total Revenue</div>
+                    <div className="text-4xl font-extrabold text-green-900">${stats.totalRevenue}</div>
+                    <div className="text-sm text-green-700 mt-2">{stats.totalTransactions} transactions</div>
+                  </div>
+                  <div className="border-2 border-blue-500 rounded-xl p-6 bg-blue-50">
+                    <div className="text-sm font-bold text-blue-800 mb-1">Platform Revenue (20%)</div>
+                    <div className="text-4xl font-extrabold text-blue-900">${stats.platformRevenue}</div>
+                  </div>
+                  <div className="border-2 border-purple-500 rounded-xl p-6 bg-purple-50">
+                    <div className="text-sm font-bold text-purple-800 mb-1">Creator Revenue (80%)</div>
+                    <div className="text-4xl font-extrabold text-purple-900">${stats.creatorRevenue}</div>
+                  </div>
+                </div>
+
+                {/* Recent Activity Summary */}
+                <div>
+                  <h3 className="text-xl font-extrabold mb-3">Recent Activity</h3>
+                  <div className="space-y-2">
+                    {activityLog.slice(0, 5).map((log) => (
+                      <div key={log.id} className="border border-gray-200 rounded-lg p-3 text-sm">
+                        <span className="font-bold">{log.action_type.replace(/_/g, ' ').toUpperCase()}</span>
+                        <span className="text-gray-500 ml-2">
+                          {new Date(log.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div>
+                  <h3 className="text-xl font-extrabold mb-3">Quick Actions</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {pendingCurators.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('curators')}
+                        className="bg-yellow-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                      >
+                        Review {pendingCurators.length} Pending Curator{pendingCurators.length !== 1 ? 's' : ''}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setActiveTab('users')}
+                      className="bg-blue-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                    >
+                      Manage Users
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('datasets')}
+                      className="bg-green-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                    >
+                      Manage Datasets
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'curators' && (
               <div>
                 {pendingCurators.length === 0 ? (
@@ -375,6 +531,78 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'users' && (
+              <div>
+                <h2 className="text-2xl font-extrabold mb-4">User Management</h2>
+                <div className="space-y-3">
+                  {allUsers.map((user) => (
+                    <div key={user.id} className="border-2 border-black rounded-lg p-4 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-lg">{user.username || 'Anonymous'}</div>
+                        <div className="text-sm text-gray-600">{user.email}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-gray-600">Profile ID</div>
+                        <div className="text-xs text-gray-500 font-mono">{user.id.slice(0, 8)}...</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'datasets' && (
+              <div>
+                <h2 className="text-2xl font-extrabold mb-4">Dataset Management</h2>
+                <div className="space-y-4">
+                  {allDatasets.map((dataset) => (
+                    <div key={dataset.id} className="border-2 border-black rounded-xl p-6 bg-white">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-extrabold mb-2">{dataset.title}</h3>
+                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                            <span>By: {dataset.profiles?.username || 'Unknown'}</span>
+                            <span>•</span>
+                            <span>{dataset.dataset_type}</span>
+                            <span>•</span>
+                            <span className="font-bold text-green-600">${dataset.price}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {dataset.is_featured && (
+                            <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
+                              ⭐ FEATURED
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleToggleFeatured(dataset.id)}
+                            className="bg-blue-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                          >
+                            {dataset.is_featured ? 'Unfeature' : 'Feature'}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 text-sm line-clamp-2 mb-3">{dataset.description}</p>
+                      <div className="flex items-center gap-4 text-sm pt-3 border-t border-gray-200">
+                        <span className="font-bold">Size:</span>
+                        <span>{(dataset.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
+                        <span>•</span>
+                        <span className="font-bold">Purchases:</span>
+                        <span>{dataset.purchases?.[0]?.count || 0}</span>
+                        <span>•</span>
+                        <span className="text-xs text-gray-500">
+                          Created: {new Date(dataset.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
