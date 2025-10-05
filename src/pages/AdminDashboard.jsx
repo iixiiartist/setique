@@ -59,23 +59,20 @@ export default function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      // Fetch all curators
-      const { data: curators } = await supabase
-        .from('pro_curators')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use admin function to fetch curator data (bypasses RLS)
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'get_all_curators'
+        })
+      });
+
+      const { data: curators } = await response.json();
 
       setAllCurators(curators || []);
       setPendingCurators(curators?.filter(c => c.certification_status === 'pending') || []);
-
-      // Fetch activity log
-      const { data: activity } = await supabase
-        .from('admin_activity_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      setActivityLog(activity || []);
 
       // Fetch stats
       const { count: userCount } = await supabase
@@ -91,7 +88,7 @@ export default function AdminDashboard() {
         totalDatasets: datasetCount || 0,
         totalCurators: curators?.length || 0,
         pendingCurators: pendingCurators.length,
-        totalRevenue: 0 // Calculate from earnings table
+        totalRevenue: 0
       });
 
     } catch (error) {
@@ -103,23 +100,23 @@ export default function AdminDashboard() {
     if (!confirm('Approve this curator application?')) return;
 
     try {
-      const { error } = await supabase
-        .from('pro_curators')
-        .update({ certification_status: 'approved' })
-        .eq('id', curatorId);
-
-      if (error) throw error;
-
-      // Log activity
-      await supabase
-        .from('admin_activity_log')
-        .insert([{
-          admin_id: user.id,
-          action_type: 'approve_curator',
-          target_id: curatorId,
-          target_type: 'pro_curator',
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'approve_curator',
+          targetId: curatorId,
+          targetType: 'pro_curator',
           details: { status: 'approved' }
-        }]);
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to approve curator');
+      }
 
       alert('✅ Curator approved!');
       await fetchAdminData();
@@ -134,23 +131,23 @@ export default function AdminDashboard() {
     if (reason === null) return; // User cancelled
 
     try {
-      const { error } = await supabase
-        .from('pro_curators')
-        .update({ certification_status: 'rejected' })
-        .eq('id', curatorId);
-
-      if (error) throw error;
-
-      // Log activity
-      await supabase
-        .from('admin_activity_log')
-        .insert([{
-          admin_id: user.id,
-          action_type: 'reject_curator',
-          target_id: curatorId,
-          target_type: 'pro_curator',
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'reject_curator',
+          targetId: curatorId,
+          targetType: 'pro_curator',
           details: { status: 'rejected', reason }
-        }]);
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reject curator');
+      }
 
       alert('❌ Curator application rejected.');
       await fetchAdminData();
@@ -164,23 +161,23 @@ export default function AdminDashboard() {
     if (!confirm('Suspend this curator? They will be unable to accept new partnerships.')) return;
 
     try {
-      const { error } = await supabase
-        .from('pro_curators')
-        .update({ certification_status: 'suspended' })
-        .eq('id', curatorId);
-
-      if (error) throw error;
-
-      // Log activity
-      await supabase
-        .from('admin_activity_log')
-        .insert([{
-          admin_id: user.id,
-          action_type: 'suspend_curator',
-          target_id: curatorId,
-          target_type: 'pro_curator',
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'suspend_curator',
+          targetId: curatorId,
+          targetType: 'pro_curator',
           details: { status: 'suspended' }
-        }]);
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to suspend curator');
+      }
 
       alert('⚠️ Curator suspended.');
       await fetchAdminData();
