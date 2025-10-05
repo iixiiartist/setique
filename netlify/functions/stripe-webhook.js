@@ -39,8 +39,18 @@ exports.handler = async (event) => {
     const session = stripeEvent.data.object
 
     const { datasetId, userId } = session.metadata
+    const PLATFORM_FEE_PERCENTAGE = 0.20 // 20% platform fee
 
     try {
+      // Get purchase record
+      const { data: purchase, error: purchaseSelectError } = await supabase
+        .from('purchases')
+        .select('*, datasets!inner(creator_id)')
+        .eq('stripe_session_id', session.id)
+        .single()
+
+      if (purchaseSelectError) throw purchaseSelectError
+
       // Update purchase status
       const { error: purchaseError } = await supabase
         .from('purchases')
@@ -51,6 +61,54 @@ exports.handler = async (event) => {
         .eq('stripe_session_id', session.id)
 
       if (purchaseError) throw purchaseError
+
+      // Calculate creator earnings
+      const totalAmount = parseFloat(purchase.amount)
+      const platformFee = totalAmount * PLATFORM_FEE_PERCENTAGE
+      const creatorNet = totalAmount - platformFee
+      const creatorId = purchase.datasets.creator_id
+
+      // Record creator earnings
+      const { error: earningsError } = await supabase
+        .from('creator_earnings')
+        .insert([{
+          creator_id: creatorId,
+          dataset_id: datasetId,
+          purchase_id: purchase.id,
+          amount: totalAmount,
+          platform_fee: platformFee,
+          creator_net: creatorNet,
+          status: 'pending'
+        }])
+
+      if (earningsError) throw earningsError
+
+      // Create or update creator payout account
+      const { data: existingAccount } = await supabase
+        .from('creator_payout_accounts')
+        .select('*')
+        .eq('creator_id', creatorId)
+        .single()
+
+      if (!existingAccount) {
+        // Create new payout account
+        await supabase
+          .from('creator_payout_accounts')
+          .insert([{
+            creator_id: creatorId,
+            current_balance: creatorNet,
+            total_earned: creatorNet
+          }])
+      } else {
+        // Update existing account
+        await supabase
+          .from('creator_payout_accounts')
+          .update({
+            current_balance: parseFloat(existingAccount.current_balance) + creatorNet,
+            total_earned: parseFloat(existingAccount.total_earned) + creatorNet
+          })
+          .eq('creator_id', creatorId)
+      }
 
       // Increment purchase count for the dataset
       const { data: dataset } = await supabase
