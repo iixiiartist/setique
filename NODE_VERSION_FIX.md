@@ -13,7 +13,9 @@ Attempting to download and install Node version 18.20.8
 
 ## ✅ The Solution
 
-### Changed Node Version from `18.20.8` → `20`
+### Changed Node Version: `18.20.8` → `20` → `20.18.0`
+
+**Update (October 5, 2025):** The generic `20` caused issues with Netlify's version detection. Updated to specific version `20.18.0`.
 
 Node.js uses semantic versioning (major.minor.patch). Valid LTS versions include:
 - Node 18 (18.x.x) - Current LTS
@@ -31,16 +33,19 @@ We're now using **Node 20** which is:
 ## 🛠️ Changes Made
 
 ### 1. Updated `netlify.toml`
+
 ```toml
 [build.environment]
-  NODE_VERSION = "20"  # Changed from "18.20.8"
+  NODE_VERSION = "20.18.0"  # Changed from "18.20.8" → "20" → "20.18.0"
 ```
 
 ### 2. Created `.nvmrc` file
+
 ```
-20
+20.18.0
 ```
-This file tells Netlify (and other tools) which Node version to use. It's a backup method in case `netlify.toml` isn't read.
+
+This file tells Netlify (and other tools) which Node version to use. Now using specific version `20.18.0` instead of generic `20`.
 
 ### 3. Updated `package.json`
 ```json
