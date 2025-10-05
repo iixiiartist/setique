@@ -19,7 +19,14 @@ import {
   EyeOff,
   Upload,
   X,
+  Star,
 } from '../components/Icons'
+
+const badgeColors = {
+  verified: 'bg-blue-100 text-blue-800 border-blue-800',
+  expert: 'bg-purple-100 text-purple-800 border-purple-800',
+  master: 'bg-yellow-100 text-yellow-800 border-yellow-800'
+};
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -55,11 +62,22 @@ function DashboardPage() {
     
     setLoading(true)
     try {
-      // Fetch user's created datasets
+      // Fetch user's created datasets with partnership info
       const { data: datasets } = await supabase
         .from('datasets')
-        .select('*')
+        .select(`
+          *,
+          dataset_partnerships!dataset_partnerships_dataset_id_fkey (
+            id,
+            curator_user_id,
+            pro_curators!dataset_partnerships_curator_user_id_fkey (
+              display_name,
+              badge_level
+            )
+          )
+        `)
         .eq('creator_id', user.id)
+        .eq('dataset_partnerships.status', 'active')
         .order('created_at', { ascending: false })
       
       setMyDatasets(datasets || [])
@@ -618,6 +636,12 @@ function DashboardPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h4 className="text-xl font-extrabold">{dataset.title}</h4>
+                            {dataset.dataset_partnerships?.[0]?.pro_curators && (
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[dataset.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
+                                <Star className="w-3 h-3 mr-1 fill-current" />
+                                PRO
+                              </span>
+                            )}
                             <button
                               onClick={() => handleToggleActive(dataset.id, dataset.is_active)}
                               disabled={actionLoading}

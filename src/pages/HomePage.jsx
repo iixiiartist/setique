@@ -19,6 +19,12 @@ import {
   User,
 } from '../components/Icons'
 
+const badgeColors = {
+  verified: 'bg-blue-100 text-blue-800 border-blue-800',
+  expert: 'bg-purple-100 text-purple-800 border-purple-800',
+  master: 'bg-yellow-100 text-yellow-800 border-yellow-800'
+};
+
 function HomePage() {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
@@ -119,10 +125,19 @@ function HomePage() {
         .select(
           `
           *,
-          profiles:creator_id (username, full_name)
+          profiles:creator_id (username, full_name),
+          dataset_partnerships!dataset_partnerships_dataset_id_fkey (
+            id,
+            curator_user_id,
+            pro_curators!dataset_partnerships_curator_user_id_fkey (
+              display_name,
+              badge_level
+            )
+          )
         `
         )
         .eq('is_active', true)
+        .eq('dataset_partnerships.status', 'active')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -1038,6 +1053,17 @@ function HomePage() {
                     <h3 className="text-2xl font-extrabold text-black uppercase">
                       {d.title}
                     </h3>
+                    {d.dataset_partnerships?.[0]?.pro_curators && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
+                          <Star className="w-3 h-3 mr-1 fill-current" />
+                          PRO CURATOR
+                        </span>
+                        <span className="text-xs font-semibold text-black/70">
+                          by {d.dataset_partnerships[0].pro_curators.display_name}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-6 pt-2 flex flex-col flex-grow">
                     <p className="text-black/80 mb-4 text-sm leading-relaxed font-semibold flex-grow">
