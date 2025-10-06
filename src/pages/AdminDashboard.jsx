@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -45,6 +47,12 @@ export default function AdminDashboard() {
   });
 
   const checkAdminStatus = async () => {
+    // Redirect if no user
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('admins')
@@ -52,10 +60,12 @@ export default function AdminDashboard() {
         .eq('user_id', user.id)
         .single();
 
-      if (error) {
-        console.error('Not an admin:', error);
+      if (error || !data) {
+        console.error('Not an admin - redirecting');
         setIsAdmin(false);
         setLoading(false);
+        // Redirect unauthorized users
+        navigate('/');
         return;
       }
 
@@ -66,15 +76,20 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error checking admin status:', error);
       setIsAdmin(false);
-    } finally {
       setLoading(false);
+      // Redirect on error
+      navigate('/');
     }
   };
 
   useEffect(() => {
-    if (user) {
-      checkAdminStatus();
+    // Immediate redirect if not logged in
+    if (!user) {
+      navigate('/');
+      return;
     }
+    
+    checkAdminStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -408,19 +423,11 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || !user || !isAdmin) {
+    // Show nothing while checking/redirecting
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="max-w-2xl mx-auto mt-20 p-8 bg-red-100 border-2 border-red-500 rounded-xl">
-        <h2 className="text-2xl font-bold text-red-800 mb-2">🚫 Access Denied</h2>
-        <p className="text-red-700">You do not have permission to access the admin dashboard.</p>
       </div>
     );
   }
