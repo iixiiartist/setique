@@ -158,7 +158,7 @@ function DashboardPage() {
         .from('curation_requests')
         .select(`
           *,
-          profiles:requester_id (
+          profiles:creator_id (
             id,
             username,
             email
@@ -178,7 +178,7 @@ function DashboardPage() {
             )
           )
         `)
-        .eq('requester_id', user.id)
+        .eq('creator_id', user.id)
         .order('created_at', { ascending: false })
       
       console.log('💰 Bounties query result:', { bounties, bountiesError, userId: user.id })
@@ -612,7 +612,7 @@ function DashboardPage() {
         .from('curation_requests')
         .update({ status: 'closed' })
         .eq('id', bountyId)
-        .eq('requester_id', user.id) // Only allow closing own bounties
+        .eq('creator_id', user.id) // Only allow closing own bounties
 
       if (error) throw error
 

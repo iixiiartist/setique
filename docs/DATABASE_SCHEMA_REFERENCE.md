@@ -14,7 +14,7 @@ modality              TEXT
 budget_min            DECIMAL(10,2)
 budget_max            DECIMAL(10,2)
 status                TEXT (open, assigned, completed, closed)
-requester_id          UUID -> auth.users(id)  ⚠️ NOT creator_id!
+creator_id            UUID -> auth.users(id)  ⚠️ Was requester_id, renamed via migration 009
 created_at            TIMESTAMPTZ
 updated_at            TIMESTAMPTZ
 target_format         TEXT
@@ -24,13 +24,13 @@ sample_data_url       TEXT
 
 **Foreign Key Reference in Queries**:
 ```javascript
-// ✅ CORRECT
-.select('*, profiles:requester_id(id, username, email)')
-.eq('requester_id', user.id)
-
-// ❌ WRONG
+// ✅ CORRECT (after migration 009)
 .select('*, profiles:creator_id(id, username, email)')
 .eq('creator_id', user.id)
+
+// ❌ WRONG (old column name before migration)
+.select('*, profiles:requester_id(id, username, email)')
+.eq('requester_id', user.id)
 ```
 
 ### curation_proposals
