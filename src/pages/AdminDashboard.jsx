@@ -4,7 +4,9 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminDashboard() {
+  console.log('🔵 AdminDashboard component loaded');
   const { user } = useAuth();
+  console.log('🔵 User from AuthContext:', user);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
