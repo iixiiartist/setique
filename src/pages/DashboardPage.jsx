@@ -170,7 +170,7 @@ function DashboardPage() {
       if (bounties && bounties.length > 0) {
         const requestIds = bounties.map(b => b.id);
         const { data: proposalsData } = await supabase
-          .from('curation_proposals')
+          .from('curator_proposals')
           .select(`
             id,
             request_id,
@@ -200,12 +200,12 @@ function DashboardPage() {
           // Attach proposals to bounties
           const bountiesWithProposals = bounties.map(bounty => ({
             ...bounty,
-            curation_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
+            curator_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
           }));
           
           setMyBounties(bountiesWithProposals);
         } else {
-          setMyBounties(bounties.map(b => ({ ...b, curation_proposals: [] })));
+          setMyBounties(bounties.map(b => ({ ...b, curator_proposals: [] })));
         }
       } else {
         setMyBounties([]);
@@ -1355,7 +1355,7 @@ function DashboardPage() {
                               ${bounty.budget_min} - ${bounty.budget_max}
                             </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              {bounty.curation_proposals?.length || 0} proposals
+                              {bounty.curator_proposals?.length || 0} proposals
                             </span>
                             <span className={`bg-white border-2 border-black rounded-full px-3 py-1 ${
                               bounty.status === 'open' ? 'text-green-700' :
@@ -1387,8 +1387,8 @@ function DashboardPage() {
                       {/* Proposals (Expanded) */}
                       {expandedBounty === bounty.id && (
                         <div className="mt-4 space-y-3">
-                          {bounty.curation_proposals && bounty.curation_proposals.length > 0 ? (
-                            bounty.curation_proposals.map((proposal) => (
+                          {bounty.curator_proposals && bounty.curator_proposals.length > 0 ? (
+                            bounty.curator_proposals.map((proposal) => (
                               <div
                                 key={proposal.id}
                                 className="bg-white border-2 border-black rounded-xl p-4"

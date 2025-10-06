@@ -201,7 +201,7 @@ export default function AdminDashboard() {
         // Fetch proposal counts for each bounty
         const requestIds = bountiesData.map(b => b.id);
         const { data: proposalsData } = await supabase
-          .from('curation_proposals')
+          .from('curator_proposals')
           .select('request_id')
           .in('request_id', requestIds);
         
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
         const bountiesWithData = bountiesData.map(bounty => ({
           ...bounty,
           profiles: profilesData?.find(p => p.id === bounty.creator_id),
-          curation_proposals: proposalsData?.filter(p => p.request_id === bounty.id) || []
+          curator_proposals: proposalsData?.filter(p => p.request_id === bounty.id) || []
         }));
         
         console.log('📊 Setting bounties count:', bountiesWithData.length);
@@ -553,7 +553,7 @@ export default function AdminDashboard() {
     try {
       // Delete proposals first (foreign key constraint)
       const { error: proposalsError } = await supabase
-        .from('curation_proposals')
+        .from('curator_proposals')
         .delete()
         .eq('request_id', bountyId);
 
@@ -1087,7 +1087,7 @@ export default function AdminDashboard() {
                                       👤 {bounty.profiles?.username || 'Unknown'}
                                     </span>
                                     <span className="text-gray-600">
-                                      📝 {bounty.curation_proposals?.[0]?.count || 0} proposals
+                                      📝 {bounty.curator_proposals?.length || 0} proposals
                                     </span>
                                   </div>
                                 </div>
