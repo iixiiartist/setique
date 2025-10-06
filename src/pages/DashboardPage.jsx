@@ -1508,8 +1508,8 @@ function DashboardPage() {
 
           {/* Pro Curator Tab */}
           {activeTab === 'pro-curator' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
+            <div className="space-y-8">
+              <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-extrabold mb-2">Pro Curator Dashboard</h3>
                   <p className="text-sm text-black/70">
@@ -1523,6 +1523,85 @@ function DashboardPage() {
                   Request Curation Help
                 </button>
               </div>
+
+              {/* Open Curation Requests Marketplace */}
+              {curatorProfile && curatorProfile.certification_status === 'approved' && (
+                <div>
+                  <h4 className="text-xl font-extrabold mb-4">🔥 Open Curation Requests</h4>
+                  {openCurationRequests.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 border-2 border-black rounded-xl">
+                      <p className="text-lg font-bold text-black/60">
+                        No open requests at the moment
+                      </p>
+                      <p className="text-sm text-black/50 mt-2">
+                        Check back later for new opportunities
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {openCurationRequests.slice(0, 5).map((request) => (
+                        <div
+                          key={request.id}
+                          className="bg-white border-2 border-black rounded-xl p-6 hover:shadow-[4px_4px_0_#000] transition"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h5 className="text-lg font-extrabold mb-2">{request.title}</h5>
+                              <p className="text-sm text-black/70 line-clamp-2 mb-3">
+                                {request.description}
+                              </p>
+                              
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-yellow-100 text-yellow-800">
+                                  {request.target_quality.toUpperCase()}
+                                </span>
+                                {(request.budget_min || request.budget_max) && (
+                                  <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-green-100 text-green-800">
+                                    ${request.budget_min || '0'} - ${request.budget_max || '∞'}
+                                  </span>
+                                )}
+                              </div>
+
+                              {request.specialties_needed && request.specialties_needed.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {request.specialties_needed.map((spec, i) => (
+                                    <span
+                                      key={i}
+                                      className="px-2 py-0.5 text-xs font-semibold bg-gray-100 rounded"
+                                    >
+                                      {spec.replace(/_/g, ' ')}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setSelectedRequestForProposal(request)
+                                setProposalSubmissionOpen(true)
+                              }}
+                              className="ml-4 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition whitespace-nowrap"
+                            >
+                              Submit Proposal
+                            </button>
+                          </div>
+
+                          <p className="text-xs text-black/50 mt-2">
+                            Posted {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {openCurationRequests.length > 5 && (
+                    <p className="text-center text-sm text-black/60 mt-4">
+                      Showing 5 of {openCurationRequests.length} open requests
+                    </p>
+                  )}
+                </div>
+              )}
               
               <ProCuratorProfile />
             </div>
@@ -1655,6 +1734,18 @@ function DashboardPage() {
         }}
         request={selectedRequest}
         onAccept={fetchDashboardData}
+      />
+      
+      {/* Proposal Submission Modal */}
+      <ProposalSubmissionModal 
+        isOpen={proposalSubmissionOpen}
+        onClose={() => {
+          setProposalSubmissionOpen(false)
+          setSelectedRequestForProposal(null)
+        }}
+        request={selectedRequestForProposal}
+        curatorProfile={curatorProfile}
+        onSuccess={fetchDashboardData}
       />
     </div>
   )
