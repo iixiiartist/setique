@@ -38,7 +38,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
     try {
       const { error } = await supabase
         .from('curation_requests')
-        .insert([{
+        .insert({
           creator_id: user.id,
           title: title,
           description: description,
@@ -47,7 +47,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
           specialties_needed: specialtiesNeeded,
           status: 'open'
-        }]);
+        });
 
       if (error) throw error;
 

@@ -115,7 +115,7 @@ function DashboardPage() {
         .from('creator_payout_accounts')
         .select('*')
         .eq('creator_id', user.id)
-        .single()
+        .maybeSingle()
       
       setPayoutAccount(payout)
 
