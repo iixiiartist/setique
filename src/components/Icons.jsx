@@ -201,3 +201,10 @@ export const Upload = ({ className }) => (
     <line x1="12" x2="12" y1="3" y2="15" />
   </Icon>
 )
+
+export const Clock = ({ className }) => (
+  <Icon className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </Icon>
+)
