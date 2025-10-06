@@ -20,24 +20,7 @@ export default function ProposalsModal({ isOpen, onClose, request, onAccept }) {
 
     setAccepting(proposal.id);
     try {
-      // Create partnership
-      const { error: partnershipError } = await supabase
-        .from('dataset_partnerships')
-        .insert([{
-          dataset_id: request.dataset_id, // If request has a dataset
-          owner_id: request.creator_id,
-          curator_id: proposal.curator_id,
-          curator_user_id: proposal.pro_curators?.user_id,
-          split_percentage: 50,
-          status: 'active',
-          agreement_terms: `Curation request: ${request.title}`
-        }])
-        .select()
-        .single();
-
-      if (partnershipError) throw partnershipError;
-
-      // Update request status
+      // Update request status and assign curator
       const { error: requestError } = await supabase
         .from('curation_requests')
         .update({
@@ -70,7 +53,7 @@ export default function ProposalsModal({ isOpen, onClose, request, onAccept }) {
         if (rejectError) console.error('Error rejecting other proposals:', rejectError);
       }
 
-      alert('✅ Proposal accepted! Partnership created.');
+      alert('✅ Proposal accepted! The curator has been assigned to your request.');
       onAccept?.();
       onClose();
     } catch (error) {
