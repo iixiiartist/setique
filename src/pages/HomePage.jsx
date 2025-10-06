@@ -717,9 +717,9 @@ function HomePage() {
             <br /> Better AI.
           </h2>
           <p className="text-lg sm:text-2xl text-black/80 font-semibold mb-12">
-            Generic datasets create generic AI. The next leap in machine
-            intelligence will be powered by authentic, passionate, and beautifully
-            niche data—curated by you.
+            Discover expert-curated datasets across all domains. From agricultural
+            drone imagery to clinical trials, find the data that gives your AI the
+            edge. Browse, explore, and stumble upon datasets you didn&apos;t know existed.
           </p>
         </section>
 
@@ -729,10 +729,10 @@ function HomePage() {
               Our Philosophy
             </h3>
             <p className="text-center font-semibold text-xl text-black/80">
-              We believe the future of AI shouldn't be built on sterile,
-              mass-produced data. It should be built on the rich, diverse, and
-              wonderfully specific realities captured by passionate people. We are
-              democratizing data by empowering the experts: <strong>you</strong>.
+              The best AI isn&apos;t built from commodity data—it&apos;s built from unexpected
+              discoveries. Whether you&apos;re building no-code apps, training AI agents,
+              or automating workflows, the right dataset can make all the difference.
+              We&apos;re democratizing access to unique, expert-curated data <strong>for everyone</strong>.
             </p>
           </div>
         </section>
@@ -741,26 +741,26 @@ function HomePage() {
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <Archive className="h-16 w-16 text-pink-600 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">1. Curate Your World</h3>
+              <h3 className="text-2xl font-extrabold mb-2">1. Browse & Discover</h3>
               <p className="font-semibold text-black/70">
-                Package your unique expertise or collection, from photos of rare
-                sneakers to recordings of regional bird calls.
+                Explore datasets across all domains—agriculture, medical, creative,
+                financial, and more. Find unexpected data that sparks new ideas.
               </p>
             </div>
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <CircleDollarSign className="h-16 w-16 text-cyan-500 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">2. Define Its Value</h3>
+              <h3 className="text-2xl font-extrabold mb-2">2. Expert Curation</h3>
               <p className="font-semibold text-black/70">
-                You're the expert. You set the price for your collection, creating
-                a new market for authentic knowledge.
+                Every dataset is reviewed by domain experts. Pro Curators ensure
+                quality, documentation, and usability across all verticals.
               </p>
             </div>
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <BrainCircuit className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">3. Fuel the Future</h3>
+              <h3 className="text-2xl font-extrabold mb-2">3. Build Better AI</h3>
               <p className="font-semibold text-black/70">
-                Your niche dataset helps developers build smarter, more creative,
-                and less biased AI models.
+                Use unique, cross-domain datasets to train AI models that stand out.
+                Perfect for startups, no-code builders, and automation specialists.
               </p>
             </div>
           </div>
