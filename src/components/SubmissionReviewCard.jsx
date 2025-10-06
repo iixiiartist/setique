@@ -53,40 +53,35 @@ export default function SubmissionReviewCard({
     setReviewing(true);
     try {
       if (reviewAction === 'approve') {
-        // TODO: This will be implemented in the approval workflow step
-        // For now, just update submission status
-        const { error: submissionError } = await supabase
-          .from('curator_submissions')
-          .update({ 
-            status: 'approved',
-            reviewer_feedback: feedback || 'Work approved!',
-            reviewed_at: new Date().toISOString()
+        // Call approval workflow function
+        const response = await fetch('/.netlify/functions/approve-curator-submission', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            submissionId: submission.id,
+            requestId: request.id,
+            userId: request.creator_id
           })
-          .eq('id', submission.id);
+        });
 
-        if (submissionError) throw submissionError;
+        const result = await response.json();
 
-        // Update request status
-        const { error: requestError } = await supabase
-          .from('curation_requests')
-          .update({ 
-            status: 'completed',
-            reviewed_at: new Date().toISOString()
-          })
-          .eq('id', request.id);
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to approve submission');
+        }
 
-        if (requestError) throw requestError;
-
-        // Send message
+        // Send approval message
         await supabase
           .from('request_messages')
           .insert([{
             request_id: request.id,
             sender_role: 'owner',
-            message_text: `Work approved! ${feedback || ''}`
+            message_text: `Work approved and published! Dataset ID: ${result.datasetId}. ${feedback || ''}`
           }]);
 
-        alert('✅ Work approved! The dataset will be published shortly.');
+        alert('✅ Work approved! The dataset has been published to the marketplace and partnerships have been created.');
         
       } else if (reviewAction === 'revision') {
         // Request revisions
