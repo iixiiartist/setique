@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminDashboard() {
   console.log('🔵 AdminDashboard component loaded');
-  const { user } = useAuth();
-  console.log('🔵 User from AuthContext:', user);
+  const { user, loading: authLoading } = useAuth();
+  console.log('🔵 User from AuthContext:', user, 'Auth loading:', authLoading);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -100,15 +100,23 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Immediate redirect if not logged in
+    // Wait for auth to finish loading
+    if (authLoading) {
+      console.log('⏳ Waiting for auth to load...');
+      return;
+    }
+
+    // Redirect if not logged in (after auth loaded)
     if (!user) {
+      console.log('❌ No user after auth loaded - redirecting to home');
       navigate('/');
       return;
     }
     
+    console.log('✅ User authenticated, checking admin status');
     checkAdminStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, authLoading]);
 
   const fetchAdminData = async () => {
     try {
@@ -440,11 +448,26 @@ export default function AdminDashboard() {
     }
   };
 
+  // Show loading while auth is loading
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || !user || !isAdmin) {
     // Show nothing while checking/redirecting
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking admin permissions...</p>
+        </div>
       </div>
     );
   }
