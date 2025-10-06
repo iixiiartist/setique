@@ -187,7 +187,9 @@ export default function AdminDashboard() {
             username,
             email
           ),
-          curation_proposals (count)
+          curation_proposals (
+            id
+          )
         `)
         .order('created_at', { ascending: false });
       
