@@ -188,7 +188,7 @@ export default function CuratorSubmissionModal({
               <input
                 type="file"
                 onChange={handleFileChange}
-                accept=".csv,.json,.zip,.parquet,.jsonl"
+                accept=".csv,.json,.zip,.parquet,.jsonl,.txt,.xlsx,.xls,.pdf,.mp3,.wav,.mp4,.avi,.mov,.png,.jpg,.jpeg,.gif,.webp,.svg,.tar,.gz,.7z,.rar"
                 className="hidden"
                 id="dataset-upload"
                 disabled={submitting}
@@ -213,7 +213,7 @@ export default function CuratorSubmissionModal({
                   <div>
                     <p className="font-bold mb-2">Click to upload curated dataset</p>
                     <p className="text-xs text-black/60">
-                      CSV, JSON, ZIP, Parquet, or JSONL (Max 500MB)
+                      Supports: CSV, JSON, ZIP, Excel, PDF, Images, Audio, Video, Archives (Max 500MB)
                     </p>
                   </div>
                 )}
