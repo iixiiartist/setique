@@ -36,6 +36,7 @@ sample_data_url       TEXT
 ### curation_proposals
 ```sql
 -- Proposals from Pro Curators for bounties
+-- ⚠️ ACTUAL TABLE NAME: curator_proposals (not curation_proposals!)
 id                           UUID PRIMARY KEY
 request_id                   UUID -> curation_requests(id)
 curator_id                   UUID -> pro_curators(id)
@@ -49,12 +50,17 @@ updated_at                   TIMESTAMPTZ
 
 **Query Pattern**:
 ```javascript
+// ⚠️ Use curator_proposals not curation_proposals!
+
 // Fetch proposals count
-.select('*, curation_proposals(id)')
-// Then use: curation_proposals?.length
+.from('curator_proposals')
+.select('id')
+.in('request_id', requestIds)
+// Then use: .length
 
 // Fetch full proposals
-.select('*, curation_proposals(id, status, proposal_text, ...)')
+.from('curator_proposals')
+.select('id, status, proposal_text, curator_id, ...')
 ```
 
 ### deletion_requests
