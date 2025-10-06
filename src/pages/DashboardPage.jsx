@@ -231,15 +231,7 @@ function DashboardPage() {
           .from('curation_requests')
           .select(`
             *,
-            requestor:profiles!curation_requests_creator_id_fkey(username, avatar_url),
-            curator_proposals!curator_proposals_request_id_fkey(
-              id,
-              proposal_text,
-              estimated_completion_days,
-              suggested_price,
-              status,
-              created_at
-            )
+            profiles!creator_id(username, avatar_url)
           `)
           .eq('assigned_curator_id', curatorData.id)
           .order('created_at', { ascending: false })
@@ -253,16 +245,28 @@ function DashboardPage() {
         if (assignedError) {
           console.error('Error fetching assigned requests:', assignedError)
         }
-        
-        // Add the accepted proposal to each request for easier access
-        const requestsWithAcceptedProposal = (assignedData || []).map(request => ({
-          ...request,
-          accepted_proposal: request.curator_proposals?.filter(p => p.status === 'accepted') || []
-        }))
-        
-        console.log('✅ Processed assigned requests:', requestsWithAcceptedProposal);
-        
-        setCuratorAssignedRequests(requestsWithAcceptedProposal)
+
+        // Fetch proposals separately for each assigned request
+        if (assignedData && assignedData.length > 0) {
+          const requestIds = assignedData.map(r => r.id);
+          const { data: proposals } = await supabase
+            .from('curator_proposals')
+            .select('*')
+            .in('request_id', requestIds);
+
+          // Add proposals to each request
+          const requestsWithProposals = assignedData.map(request => ({
+            ...request,
+            requestor: request.profiles,
+            curator_proposals: proposals?.filter(p => p.request_id === request.id) || [],
+            accepted_proposal: proposals?.filter(p => p.request_id === request.id && p.status === 'accepted') || []
+          }));
+
+          console.log('✅ Processed assigned requests:', requestsWithProposals);
+          setCuratorAssignedRequests(requestsWithProposals);
+        } else {
+          setCuratorAssignedRequests([]);
+        }
       }
 
     } catch (error) {
