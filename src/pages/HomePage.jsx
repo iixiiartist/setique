@@ -717,7 +717,7 @@ function HomePage() {
             <br /> Better AI.
           </h2>
           <p className="text-lg sm:text-2xl text-black/80 font-semibold mb-12">
-            A marketplace where everyday creators monetize their expertise AND AI builders
+            A marketplace where everyday creators monetize their expertise and AI builders
             discover unique datasets. Turn your niche knowledge into income or find
             cross-domain data that gives your AI the edge.
           </p>
