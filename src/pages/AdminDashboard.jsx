@@ -169,11 +169,11 @@ export default function AdminDashboard() {
       setActivityLog(activity.data || []);
 
       // Fetch deletion requests directly from Supabase (admin has access via RLS)
-      const { data: deletionRequestsData } = await supabase
+      const { data: deletionRequestsData, error: deletionError } = await supabase
         .from('deletion_requests')
         .select(`
           *,
-          datasets (
+          datasets:dataset_id (
             id,
             title,
             description,
@@ -188,6 +188,10 @@ export default function AdminDashboard() {
         `)
         .order('requested_at', { ascending: false });
       
+      if (deletionError) {
+        console.error('Error fetching deletion requests:', deletionError);
+      }
+      
       setDeletionRequests(deletionRequestsData || []);
 
       setStats({
@@ -201,8 +205,14 @@ export default function AdminDashboard() {
         totalTransactions: revenue.data?.totalTransactions || 0
       });
 
+      // Done loading admin data
+      setLoading(false);
+      console.log('✅ Admin data loaded successfully');
+
     } catch (error) {
       console.error('Error fetching admin data:', error);
+      // Set loading to false even on error so user can see the dashboard
+      setLoading(false);
     }
   };
 
