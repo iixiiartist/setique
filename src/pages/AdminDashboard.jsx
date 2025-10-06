@@ -27,6 +27,11 @@ export default function AdminDashboard() {
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
   
+  // Deletion requests
+  const [deletionRequests, setDeletionRequests] = useState([]);
+  const [rejectingRequest, setRejectingRequest] = useState(null);
+  const [adminResponse, setAdminResponse] = useState('');
+  
   // Stats
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -122,6 +127,28 @@ export default function AdminDashboard() {
       setAllUsers(users.data || []);
       setAllDatasets(datasets.data || []);
       setActivityLog(activity.data || []);
+
+      // Fetch deletion requests directly from Supabase (admin has access via RLS)
+      const { data: deletionRequestsData } = await supabase
+        .from('deletion_requests')
+        .select(`
+          *,
+          datasets (
+            id,
+            title,
+            description,
+            price,
+            modality
+          ),
+          profiles:requester_id (
+            id,
+            username,
+            email
+          )
+        `)
+        .order('requested_at', { ascending: false });
+      
+      setDeletionRequests(deletionRequestsData || []);
 
       setStats({
         totalUsers: users.data?.length || 0,
@@ -312,6 +339,75 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveDeletionRequest = async (requestId) => {
+    if (!confirm('⚠️ Approve this deletion request? The dataset will be permanently deleted.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'approve_deletion_request',
+          targetId: requestId,
+          targetType: 'deletion_request',
+          details: { adminResponse: 'Deletion request approved' }
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to approve deletion request');
+      }
+
+      alert('✅ Deletion request approved and dataset deleted!');
+      setRejectingRequest(null);
+      setAdminResponse('');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error approving deletion request:', error);
+      alert('Failed to approve deletion request: ' + error.message);
+    }
+  };
+
+  const handleRejectDeletionRequest = async (requestId) => {
+    if (!adminResponse || adminResponse.length < 5) {
+      alert('Please provide a rejection reason (minimum 5 characters)');
+      return;
+    }
+
+    try {
+      const response = await fetch('/.netlify/functions/admin-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          action: 'reject_deletion_request',
+          targetId: requestId,
+          targetType: 'deletion_request',
+          details: { adminResponse }
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reject deletion request');
+      }
+
+      alert('❌ Deletion request rejected.');
+      setRejectingRequest(null);
+      setAdminResponse('');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error rejecting deletion request:', error);
+      alert('Failed to reject deletion request: ' + error.message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -409,6 +505,21 @@ export default function AdminDashboard() {
               }`}
             >
               📦 Datasets
+            </button>
+            <button
+              onClick={() => setActiveTab('deletions')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'deletions' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              🗑️ Deletion Requests
+              {deletionRequests.filter(r => r.status === 'pending').length > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {deletionRequests.filter(r => r.status === 'pending').length}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('activity')}
@@ -725,6 +836,156 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'deletions' && (
+              <div>
+                <h3 className="text-2xl font-extrabold mb-4">Dataset Deletion Requests</h3>
+                
+                {deletionRequests.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No deletion requests.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Pending Requests */}
+                    <div>
+                      <h4 className="text-lg font-bold mb-3 text-yellow-700">⏳ Pending Requests ({deletionRequests.filter(r => r.status === 'pending').length})</h4>
+                      {deletionRequests.filter(r => r.status === 'pending').length === 0 ? (
+                        <p className="text-gray-500 text-sm">No pending requests</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {deletionRequests.filter(r => r.status === 'pending').map((request) => (
+                            <div key={request.id} className="border-2 border-yellow-500 bg-yellow-50 rounded-xl p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h5 className="text-xl font-extrabold">{request.datasets?.title || 'Dataset Deleted'}</h5>
+                                    {request.datasets && (
+                                      <>
+                                        <span className="px-2 py-1 bg-purple-200 rounded-full text-xs font-bold">
+                                          {request.datasets.modality}
+                                        </span>
+                                        <span className="text-sm font-bold text-green-600">
+                                          ${request.datasets.price}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    <strong>Requester:</strong> {request.profiles?.username || request.profiles?.email || 'Unknown'}
+                                  </p>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    <strong>Requested:</strong> {new Date(request.requested_at).toLocaleString()}
+                                  </p>
+                                  <div className="bg-white border border-yellow-400 rounded-lg p-3 mt-2">
+                                    <p className="text-sm font-bold mb-1">Reason:</p>
+                                    <p className="text-sm text-gray-700">{request.reason}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Actions */}
+                              {rejectingRequest === request.id ? (
+                                <div className="border-t-2 border-yellow-500 pt-3 mt-3">
+                                  <label className="block text-sm font-bold mb-2">Admin Response (required):</label>
+                                  <textarea
+                                    value={adminResponse}
+                                    onChange={(e) => setAdminResponse(e.target.value)}
+                                    placeholder="Explain why this deletion request is being rejected..."
+                                    className="w-full border-2 border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-red-500"
+                                    rows="3"
+                                  />
+                                  <div className="flex gap-2 mt-2">
+                                    <button
+                                      onClick={() => handleRejectDeletionRequest(request.id)}
+                                      className="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition"
+                                    >
+                                      ✓ Confirm Rejection
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setRejectingRequest(null);
+                                        setAdminResponse('');
+                                      }}
+                                      className="flex-1 bg-gray-300 text-black font-bold py-2 px-4 rounded-lg hover:bg-gray-400 transition"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleApproveDeletionRequest(request.id)}
+                                    className="flex-1 bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                                  >
+                                    ✓ Approve & Delete Dataset
+                                  </button>
+                                  <button
+                                    onClick={() => setRejectingRequest(request.id)}
+                                    className="flex-1 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition"
+                                  >
+                                    ✗ Reject Request
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Approved Requests */}
+                    {deletionRequests.filter(r => r.status === 'approved').length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-bold mb-3 text-green-700">✓ Approved Requests ({deletionRequests.filter(r => r.status === 'approved').length})</h4>
+                        <div className="space-y-2">
+                          {deletionRequests.filter(r => r.status === 'approved').map((request) => (
+                            <div key={request.id} className="border border-green-500 bg-green-50 rounded-lg p-3">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-bold">{request.datasets?.title || 'Dataset Deleted'}</p>
+                                  <p className="text-xs text-gray-600">
+                                    Approved on {new Date(request.reviewed_at).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rejected Requests */}
+                    {deletionRequests.filter(r => r.status === 'rejected').length > 0 && (
+                      <div>
+                        <h4 className="text-lg font-bold mb-3 text-red-700">✗ Rejected Requests ({deletionRequests.filter(r => r.status === 'rejected').length})</h4>
+                        <div className="space-y-2">
+                          {deletionRequests.filter(r => r.status === 'rejected').map((request) => (
+                            <div key={request.id} className="border border-red-500 bg-red-50 rounded-lg p-3">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-bold">{request.datasets?.title || 'Unknown Dataset'}</p>
+                                  <p className="text-xs text-gray-600">
+                                    Rejected on {new Date(request.reviewed_at).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                              {request.admin_response && (
+                                <div className="bg-white border border-red-400 rounded p-2 mt-2">
+                                  <p className="text-xs font-bold mb-1">Admin Response:</p>
+                                  <p className="text-xs text-gray-700">{request.admin_response}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
