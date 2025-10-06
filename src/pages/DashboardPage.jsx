@@ -227,12 +227,10 @@ function DashboardPage() {
       if (curatorData) {
         console.log('🔍 Fetching assigned requests for curator:', curatorData.id);
         
+        // Fetch requests WITHOUT any joins to avoid 400 errors
         const { data: assignedData, error: assignedError } = await supabase
           .from('curation_requests')
-          .select(`
-            *,
-            profiles!creator_id(username, avatar_url)
-          `)
+          .select('*')
           .eq('assigned_curator_id', curatorData.id)
           .order('created_at', { ascending: false })
         
@@ -243,28 +241,43 @@ function DashboardPage() {
         });
         
         if (assignedError) {
-          console.error('Error fetching assigned requests:', assignedError)
+          console.error('❌ Error fetching assigned requests:', assignedError)
         }
 
-        // Fetch proposals separately for each assigned request
+        // Fetch related data separately if we got requests
         if (assignedData && assignedData.length > 0) {
           const requestIds = assignedData.map(r => r.id);
+          const creatorIds = assignedData.map(r => r.creator_id).filter(Boolean);
+
+          // Fetch proposals
           const { data: proposals } = await supabase
             .from('curator_proposals')
             .select('*')
             .in('request_id', requestIds);
 
-          // Add proposals to each request
-          const requestsWithProposals = assignedData.map(request => ({
-            ...request,
-            requestor: request.profiles,
-            curator_proposals: proposals?.filter(p => p.request_id === request.id) || [],
-            accepted_proposal: proposals?.filter(p => p.request_id === request.id && p.status === 'accepted') || []
-          }));
+          // Fetch creator profiles
+          const { data: creators } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', creatorIds);
 
-          console.log('✅ Processed assigned requests:', requestsWithProposals);
-          setCuratorAssignedRequests(requestsWithProposals);
+          // Combine the data
+          const requestsWithData = assignedData.map(request => {
+            const requestProposals = proposals?.filter(p => p.request_id === request.id) || [];
+            const creator = creators?.find(c => c.id === request.creator_id);
+            
+            return {
+              ...request,
+              requestor: creator ? { username: creator.username, avatar_url: creator.avatar_url } : null,
+              curator_proposals: requestProposals,
+              accepted_proposal: requestProposals.filter(p => p.status === 'accepted')
+            };
+          });
+
+          console.log('✅ Processed assigned requests:', requestsWithData);
+          setCuratorAssignedRequests(requestsWithData);
         } else {
+          console.log('ℹ️ No assigned requests found');
           setCuratorAssignedRequests([]);
         }
       }
