@@ -191,10 +191,13 @@ export default function AdminDashboard() {
         `)
         .order('created_at', { ascending: false });
       
+      console.log('📊 Admin bounties fetch:', { bountiesData, bountiesError });
+      
       if (bountiesError) {
         console.error('Error fetching bounties:', bountiesError);
       }
       
+      console.log('📊 Setting bounties count:', bountiesData?.length || 0);
       setAllBounties(bountiesData || []);
 
       // Fetch deletion requests directly from Supabase (admin has access via RLS)

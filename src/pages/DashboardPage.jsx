@@ -154,7 +154,7 @@ function DashboardPage() {
       setMyPurchases(purchases || [])
 
       // Fetch user's bounties (curation requests that they posted)
-      const { data: bounties } = await supabase
+      const { data: bounties, error: bountiesError } = await supabase
         .from('curation_requests')
         .select(`
           *,
@@ -180,6 +180,12 @@ function DashboardPage() {
         `)
         .eq('creator_id', user.id)
         .order('created_at', { ascending: false })
+      
+      console.log('💰 Bounties query result:', { bounties, bountiesError, userId: user.id })
+      
+      if (bountiesError) {
+        console.error('Error fetching bounties:', bountiesError)
+      }
       
       setMyBounties(bounties || [])
 
