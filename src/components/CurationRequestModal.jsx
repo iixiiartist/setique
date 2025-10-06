@@ -36,9 +36,9 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('curation_requests')
-        .insert({
+        .insert([{
           creator_id: user.id,
           title: title,
           description: description,
@@ -47,17 +47,26 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
           specialties_needed: specialtiesNeeded,
           status: 'open'
-        });
+        }]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw error;
+      }
 
+      console.log('Successfully created request:', data);
       alert('Curation request posted successfully!');
       resetForm();
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Error posting request:', error);
-      alert('Failed to post request. Please try again.');
+      const errorMsg = error.message || error.hint || 'Unknown error';
+      alert(`Failed to post request: ${errorMsg}`);
     } finally {
       setSubmitting(false);
     }
