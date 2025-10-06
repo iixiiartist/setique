@@ -8,6 +8,7 @@ import ProCuratorProfile from '../components/ProCuratorProfile'
 import CurationRequestModal from '../components/CurationRequestModal'
 import ProposalsModal from '../components/ProposalsModal'
 import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
+import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
 import {
   Database,
   ShoppingBag,
@@ -66,6 +67,10 @@ function DashboardPage() {
   const [selectedRequestForProposal, setSelectedRequestForProposal] = useState(null)
   const [curatorProfile, setCuratorProfile] = useState(null)
   const [curatorAssignedRequests, setCuratorAssignedRequests] = useState([])
+  
+  // Curator submission modal state
+  const [submissionModalOpen, setSubmissionModalOpen] = useState(false)
+  const [selectedRequestForSubmission, setSelectedRequestForSubmission] = useState(null)
   
   // Stripe Connect state
   const [connectingStripe, setConnectingStripe] = useState(false)
@@ -1646,25 +1651,13 @@ function DashboardPage() {
                             {request.status === 'in_progress' && (
                               <div className="flex gap-3 mt-4">
                                 <button
-                                  onClick={async () => {
-                                    if (!confirm('Mark this request as completed? This will notify the data owner.')) return
-                                    try {
-                                      const { error } = await supabase
-                                        .from('curation_requests')
-                                        .update({ status: 'completed' })
-                                        .eq('id', request.id)
-                                      
-                                      if (error) throw error
-                                      alert('Request marked as completed!')
-                                      await fetchDashboardData()
-                                    } catch (error) {
-                                      console.error('Error completing request:', error)
-                                      alert('Failed to update request')
-                                    }
+                                  onClick={() => {
+                                    setSelectedRequestForSubmission(request)
+                                    setSubmissionModalOpen(true)
                                   }}
                                   className="px-4 py-2 bg-green-400 text-black font-bold rounded-full border-2 border-black hover:bg-green-500 transition"
                                 >
-                                  ✅ Mark as Completed
+                                  📤 Submit Completed Work
                                 </button>
                                 <button
                                   onClick={() => {
@@ -1958,6 +1951,18 @@ function DashboardPage() {
           setSelectedRequestForProposal(null)
         }}
         request={selectedRequestForProposal}
+        curatorProfile={curatorProfile}
+        onSuccess={fetchDashboardData}
+      />
+
+      {/* Curator Submission Modal */}
+      <CuratorSubmissionModal
+        isOpen={submissionModalOpen}
+        onClose={() => {
+          setSubmissionModalOpen(false)
+          setSelectedRequestForSubmission(null)
+        }}
+        request={selectedRequestForSubmission}
         curatorProfile={curatorProfile}
         onSuccess={fetchDashboardData}
       />
