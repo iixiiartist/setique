@@ -270,9 +270,8 @@ function DashboardPage() {
       if (!adminError && adminData) {
         setIsAdmin(true)
       }
-    } catch (error) {
+    } catch {
       // Silently fail if admins table doesn't exist
-      console.log('Admin check skipped:', error.message)
     }
 
     setLoading(false)

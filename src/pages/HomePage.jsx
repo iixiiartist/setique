@@ -241,7 +241,6 @@ function HomePage() {
       }
 
       if (error) throw error
-      console.log('📦 Fetched datasets:', data?.length || 0, 'datasets')
       setDatasets(data || [])
     } catch (error) {
       console.error('❌ Error fetching datasets:', error)

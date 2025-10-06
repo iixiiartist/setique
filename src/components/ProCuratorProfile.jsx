@@ -122,8 +122,6 @@ export default function ProCuratorProfile() {
         certification_status: 'pending'
       };
 
-      console.log('Submitting pro curator profile:', profileData);
-
       const { data, error } = await supabase
         .from('pro_curators')
         .insert([profileData])
@@ -135,8 +133,6 @@ export default function ProCuratorProfile() {
       }
       
       const createdProfile = data?.[0] || data;
-
-      console.log('Profile created successfully:', createdProfile);
 
       setCuratorProfile(createdProfile);
       setIsEditing(false);

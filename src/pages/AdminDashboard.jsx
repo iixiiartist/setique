@@ -110,14 +110,6 @@ export default function AdminDashboard() {
       const revenue = await revenueRes.json();
       const activity = await activityRes.json();
 
-      console.log('Admin data loaded:', {
-        curators: curators.data?.length || 0,
-        users: users.data?.length || 0,
-        datasets: datasets.data?.length || 0,
-        revenue: revenue.data,
-        activity: activity.data?.length || 0
-      });
-
       // Log any errors
       if (!curatorsRes.ok) console.error('Curators error:', curators);
       if (!usersRes.ok) console.error('Users error:', users);

@@ -36,7 +36,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('curation_requests')
         .insert([{
           creator_id: user.id,
@@ -58,7 +58,6 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
         throw error;
       }
 
-      console.log('Successfully created request:', data);
       alert('Curation request posted successfully!');
       resetForm();
       onSuccess?.();
