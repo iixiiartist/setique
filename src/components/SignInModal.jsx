@@ -80,6 +80,7 @@ export const SignInModal = ({ isOpen, onClose }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
+            autoComplete="email"
             required
           />
           <input
