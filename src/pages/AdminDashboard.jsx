@@ -178,19 +178,10 @@ export default function AdminDashboard() {
       setActivityLog(activity.data || []);
 
       // Fetch bounties (curation requests) directly from Supabase
+      console.log('🔍 Fetching bounties...');
       const { data: bountiesData, error: bountiesError } = await supabase
         .from('curation_requests')
-        .select(`
-          *,
-          profiles:creator_id (
-            id,
-            username,
-            email
-          ),
-          curation_proposals (
-            id
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       console.log('📊 Admin bounties fetch:', { bountiesData, bountiesError });
@@ -199,34 +190,71 @@ export default function AdminDashboard() {
         console.error('Error fetching bounties:', bountiesError);
       }
       
-      console.log('📊 Setting bounties count:', bountiesData?.length || 0);
-      setAllBounties(bountiesData || []);
+      // Fetch profile data for each bounty creator
+      if (bountiesData && bountiesData.length > 0) {
+        const creatorIds = [...new Set(bountiesData.map(b => b.creator_id).filter(Boolean))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, email')
+          .in('id', creatorIds);
+        
+        // Fetch proposal counts for each bounty
+        const requestIds = bountiesData.map(b => b.id);
+        const { data: proposalsData } = await supabase
+          .from('curation_proposals')
+          .select('request_id')
+          .in('request_id', requestIds);
+        
+        // Attach profile and proposal count to each bounty
+        const bountiesWithData = bountiesData.map(bounty => ({
+          ...bounty,
+          profiles: profilesData?.find(p => p.id === bounty.creator_id),
+          curation_proposals: proposalsData?.filter(p => p.request_id === bounty.id) || []
+        }));
+        
+        console.log('📊 Setting bounties count:', bountiesWithData.length);
+        setAllBounties(bountiesWithData);
+      } else {
+        console.log('📊 Setting bounties count:', 0);
+        setAllBounties([]);
+      }
 
       // Fetch deletion requests directly from Supabase (admin has access via RLS)
       const { data: deletionRequestsData, error: deletionError } = await supabase
         .from('deletion_requests')
-        .select(`
-          *,
-          datasets:dataset_id (
-            id,
-            title,
-            description,
-            price,
-            modality
-          ),
-          profiles:requester_id (
-            id,
-            username,
-            email
-          )
-        `)
+        .select('*')
         .order('requested_at', { ascending: false });
       
       if (deletionError) {
         console.error('Error fetching deletion requests:', deletionError);
       }
       
-      setDeletionRequests(deletionRequestsData || []);
+      // Fetch related data separately
+      if (deletionRequestsData && deletionRequestsData.length > 0) {
+        const datasetIds = [...new Set(deletionRequestsData.map(r => r.dataset_id).filter(Boolean))];
+        const requesterIds = [...new Set(deletionRequestsData.map(r => r.requester_id).filter(Boolean))];
+        
+        const { data: datasetsData } = await supabase
+          .from('datasets')
+          .select('id, title, description, price, modality')
+          .in('id', datasetIds);
+        
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, email')
+          .in('id', requesterIds);
+        
+        // Attach related data
+        const deletionRequestsWithData = deletionRequestsData.map(request => ({
+          ...request,
+          datasets: datasetsData?.find(d => d.id === request.dataset_id),
+          profiles: profilesData?.find(p => p.id === request.requester_id)
+        }));
+        
+        setDeletionRequests(deletionRequestsWithData);
+      } else {
+        setDeletionRequests([]);
+      }
 
       setStats({
         totalUsers: users.data?.length || 0,
