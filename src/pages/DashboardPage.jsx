@@ -9,6 +9,7 @@ import CurationRequestModal from '../components/CurationRequestModal'
 import ProposalsModal from '../components/ProposalsModal'
 import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
 import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
+import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import {
   Database,
   ShoppingBag,
@@ -181,7 +182,7 @@ function DashboardPage() {
       
       setMySubmissions(submissions || [])
 
-      // Fetch user's curation requests with proposal counts
+      // Fetch user's curation requests with proposal counts and submissions
       const { data: curationRequests } = await supabase
         .from('curation_requests')
         .select(`
@@ -202,6 +203,19 @@ function DashboardPage() {
               total_projects,
               specialties
             )
+          ),
+          curator_submissions (
+            id,
+            submission_number,
+            file_name,
+            file_size,
+            file_path,
+            completion_notes,
+            changes_made,
+            status,
+            reviewer_feedback,
+            created_at,
+            reviewed_at
           )
         `)
         .eq('creator_id', user.id)
@@ -1522,6 +1536,22 @@ function DashboardPage() {
                                 </div>
                               </div>
                             </div>
+                          </div>
+                        )}
+
+                        {/* Curator Submissions */}
+                        {request.curator_submissions && request.curator_submissions.length > 0 && (
+                          <div className="space-y-4 mb-4">
+                            {request.curator_submissions
+                              .sort((a, b) => b.submission_number - a.submission_number)
+                              .map((submission) => (
+                                <SubmissionReviewCard
+                                  key={submission.id}
+                                  submission={submission}
+                                  request={request}
+                                  onReviewComplete={fetchDashboardData}
+                                />
+                              ))}
                           </div>
                         )}
 
