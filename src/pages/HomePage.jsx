@@ -718,9 +718,8 @@ function HomePage() {
           </h2>
           <p className="text-lg sm:text-2xl text-black/80 font-semibold mb-12">
             A marketplace where everyday creators monetize their expertise AND AI builders
-            discover unique datasets. From photographers to hobbyists to domain experts—turn
-            your niche knowledge into income. Buyers: discover cross-domain data that gives
-            your AI the edge.
+            discover unique datasets. Turn your niche knowledge into income or find
+            cross-domain data that gives your AI the edge.
           </p>
         </section>
 
@@ -731,9 +730,9 @@ function HomePage() {
             </h3>
             <p className="text-center font-semibold text-xl text-black/80">
               We believe the future of AI should be built on the rich, diverse, and wonderfully
-              specific knowledge captured by real people—from hobbyists to experts. We&apos;re
-              democratizing data by <strong>empowering creators</strong> to monetize their expertise
-              AND <strong>enabling builders</strong> to discover unexpected datasets. A thriving
+              specific knowledge captured by real people. We&apos;re democratizing data by
+              <strong> empowering creators</strong> to monetize their expertise AND
+              <strong> enabling builders</strong> to discover unexpected datasets. A thriving
               community where everyone benefits.
             </p>
           </div>
