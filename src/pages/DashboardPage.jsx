@@ -225,6 +225,8 @@ function DashboardPage() {
 
       // If user is a Pro Curator, fetch requests assigned to them
       if (curatorData) {
+        console.log('🔍 Fetching assigned requests for curator:', curatorData.id);
+        
         const { data: assignedData, error: assignedError } = await supabase
           .from('curation_requests')
           .select(`
@@ -242,6 +244,12 @@ function DashboardPage() {
           .eq('assigned_curator_id', curatorData.id)
           .order('created_at', { ascending: false })
         
+        console.log('📊 Assigned requests query result:', {
+          data: assignedData,
+          error: assignedError,
+          count: assignedData?.length || 0
+        });
+        
         if (assignedError) {
           console.error('Error fetching assigned requests:', assignedError)
         }
@@ -251,6 +259,8 @@ function DashboardPage() {
           ...request,
           accepted_proposal: request.curator_proposals?.filter(p => p.status === 'accepted') || []
         }))
+        
+        console.log('✅ Processed assigned requests:', requestsWithAcceptedProposal);
         
         setCuratorAssignedRequests(requestsWithAcceptedProposal)
       }
