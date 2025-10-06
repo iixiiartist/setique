@@ -153,18 +153,29 @@ function DashboardPage() {
       
       setMyPurchases(purchases || [])
 
-      // Fetch user's bounties (that they posted)
+      // Fetch user's bounties (curation requests that they posted)
       const { data: bounties } = await supabase
-        .from('bounties')
+        .from('curation_requests')
         .select(`
           *,
-          bounty_submissions (
+          profiles:creator_id (
+            id,
+            username,
+            email
+          ),
+          curation_proposals (
             id,
             status,
-            notes,
-            submitted_at,
-            datasets (*),
-            profiles:creator_id (*)
+            curator_id,
+            proposal_text,
+            estimated_completion_days,
+            suggested_price,
+            created_at,
+            pro_curators (
+              id,
+              display_name,
+              badge_level
+            )
           )
         `)
         .eq('creator_id', user.id)
@@ -1303,10 +1314,10 @@ function DashboardPage() {
                               {bounty.modality}
                             </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              ${bounty.budget}
+                              ${bounty.budget_min} - ${bounty.budget_max}
                             </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              {bounty.bounty_submissions?.length || 0} submissions
+                              {bounty.curation_proposals?.length || 0} proposals
                             </span>
                             <span className={`bg-white border-2 border-black rounded-full px-3 py-1 ${
                               bounty.status === 'open' ? 'text-green-700' :
@@ -1335,150 +1346,55 @@ function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Submissions (Expanded) */}
+                      {/* Proposals (Expanded) */}
                       {expandedBounty === bounty.id && (
                         <div className="mt-4 space-y-3">
-                          {bounty.bounty_submissions && bounty.bounty_submissions.length > 0 ? (
-                            bounty.bounty_submissions.map((submission) => (
+                          {bounty.curation_proposals && bounty.curation_proposals.length > 0 ? (
+                            bounty.curation_proposals.map((proposal) => (
                               <div
-                                key={submission.id}
+                                key={proposal.id}
                                 className="bg-white border-2 border-black rounded-xl p-4"
                               >
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex-1">
                                     <h5 className="font-extrabold text-base mb-1">
-                                      {submission.datasets?.title || 'Untitled Dataset'}
+                                      Proposal from {proposal.pro_curators?.display_name || 'Curator'}
                                     </h5>
-                                    <p className="text-sm font-semibold text-black/70 mb-1">
-                                      By {submission.profiles?.username || 'Anonymous'}
-                                    </p>
+                                    <div className="flex gap-2 mb-2">
+                                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                        proposal.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
+                                        proposal.status === 'accepted' ? 'bg-green-200 text-green-800' :
+                                        'bg-gray-200 text-gray-800'
+                                      }`}>
+                                        {proposal.status}
+                                      </span>
+                                      {proposal.pro_curators?.badge_level && (
+                                        <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold">
+                                          {proposal.pro_curators.badge_level}
+                                        </span>
+                                      )}
+                                    </div>
                                     <p className="text-sm text-black/70 mb-2">
-                                      Price: ${submission.datasets?.price || 0}
+                                      💰 Suggested Price: ${proposal.suggested_price} | ⏱️ Est. {proposal.estimated_completion_days} days
                                     </p>
-                                    {submission.notes && (
+                                    {proposal.proposal_text && (
                                       <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-3">
-                                        <p className="text-sm font-semibold italic">
-                                          &quot;{submission.notes}&quot;
+                                        <p className="text-sm">
+                                          {proposal.proposal_text}
                                         </p>
                                       </div>
                                     )}
-                                  </div>
-                                  <div className="flex flex-col gap-2 ml-4">
-                                    {submission.status === 'pending' && (
-                                      <>
-                                        <button
-                                          onClick={async () => {
-                                            try {
-                                              const dataset = submission.datasets
-                                              
-                                              // Check if user already owns this dataset
-                                              const { data: existingPurchase } = await supabase
-                                                .from('purchases')
-                                                .select('id')
-                                                .eq('user_id', user.id)
-                                                .eq('dataset_id', dataset.id)
-                                                .single()
-
-                                              if (existingPurchase) {
-                                                alert('You already own this dataset!')
-                                                return
-                                              }
-
-                                              // Update submission to approved
-                                              const { error: updateError } = await supabase
-                                                .from('bounty_submissions')
-                                                .update({ status: 'approved' })
-                                                .eq('id', submission.id)
-
-                                              if (updateError) throw updateError
-
-                                              // Handle free datasets
-                                              if (dataset.price === 0) {
-                                                const { error: purchaseError } = await supabase
-                                                  .from('purchases')
-                                                  .insert([{
-                                                    user_id: user.id,
-                                                    dataset_id: dataset.id,
-                                                    amount: 0,
-                                                    status: 'completed'
-                                                  }])
-
-                                                if (purchaseError) throw purchaseError
-                                                alert('✅ Submission approved and dataset added to your library!')
-                                                fetchDashboardData()
-                                                return
-                                              }
-
-                                              // For paid datasets, create Stripe checkout
-                                              const stripe = await stripePromise
-                                              
-                                              const response = await fetch('/.netlify/functions/create-checkout', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                  datasetId: dataset.id,
-                                                  userId: user.id
-                                                })
-                                              })
-
-                                              const { sessionId, error } = await response.json()
-                                              if (error) throw new Error(error)
-
-                                              // Redirect to Stripe checkout
-                                              await stripe.redirectToCheckout({ sessionId })
-                                              
-                                            } catch (err) {
-                                              console.error('Error approving submission:', err)
-                                              alert('Error approving submission: ' + err.message)
-                                            }
-                                          }}
-                                          className="bg-green-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm whitespace-nowrap"
-                                        >
-                                          ✓ Approve & Purchase
-                                        </button>
-                                        <button
-                                          onClick={async () => {
-                                            if (!window.confirm('Are you sure you want to reject this submission?')) return
-                                            try {
-                                              const { error } = await supabase
-                                                .from('bounty_submissions')
-                                                .update({ status: 'rejected' })
-                                                .eq('id', submission.id)
-
-                                              if (error) throw error
-                                              alert('Submission rejected.')
-                                              fetchDashboardData()
-                                            } catch (err) {
-                                              alert('Error rejecting submission: ' + err.message)
-                                            }
-                                          }}
-                                          className="bg-red-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
-                                        >
-                                          ✗ Reject
-                                        </button>
-                                      </>
-                                    )}
-                                    {submission.status === 'approved' && (
-                                      <span className="bg-green-100 border-2 border-green-600 text-green-800 font-bold px-4 py-2 rounded-full text-sm">
-                                        ✓ Approved
-                                      </span>
-                                    )}
-                                    {submission.status === 'rejected' && (
-                                      <span className="bg-red-100 border-2 border-red-600 text-red-800 font-bold px-4 py-2 rounded-full text-sm">
-                                        ✗ Rejected
-                                      </span>
-                                    )}
+                                    <p className="text-xs text-black/50 font-semibold">
+                                      Submitted {new Date(proposal.created_at).toLocaleDateString()}
+                                    </p>
                                   </div>
                                 </div>
-                                <p className="text-xs text-black/50 font-semibold">
-                                  Submitted {new Date(submission.submitted_at).toLocaleDateString()}
-                                </p>
                               </div>
                             ))
                           ) : (
                             <div className="bg-white border-2 border-black rounded-xl p-6 text-center">
                               <p className="text-sm font-bold text-black/60">
-                                No submissions yet. Share your bounty to get responses!
+                                No proposals yet. Share your bounty to get responses from Pro Curators!
                               </p>
                             </div>
                           )}
