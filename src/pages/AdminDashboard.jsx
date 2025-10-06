@@ -49,19 +49,33 @@ export default function AdminDashboard() {
   const checkAdminStatus = async () => {
     // Redirect if no user
     if (!user) {
+      console.log('No user logged in');
       navigate('/');
       return;
     }
+
+    console.log('Checking admin status for user:', user.id, user.email);
 
     try {
       const { data, error } = await supabase
         .from('admins')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
-        console.error('Not an admin - redirecting');
+      console.log('Admin query result:', { data, error });
+
+      if (error) {
+        console.error('Error querying admins table:', error);
+        setIsAdmin(false);
+        setLoading(false);
+        // Redirect unauthorized users
+        navigate('/');
+        return;
+      }
+
+      if (!data) {
+        console.error('User not found in admins table');
         setIsAdmin(false);
         setLoading(false);
         // Redirect unauthorized users
@@ -70,11 +84,12 @@ export default function AdminDashboard() {
       }
 
       if (data) {
+        console.log('User is admin!', data);
         setIsAdmin(true);
         await fetchAdminData();
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Exception checking admin status:', error);
       setIsAdmin(false);
       setLoading(false);
       // Redirect on error
