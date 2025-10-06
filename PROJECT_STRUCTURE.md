@@ -19,12 +19,17 @@ SETIQUE/
 ├── eslint.config.js             # ESLint rules
 ├── netlify.toml                 # Netlify deployment config
 ├── README.md                     # Project README
-├── CLEANUP_RECOMMENDATIONS.md   # Code quality analysis
+├── PROJECT_STRUCTURE.md         # This file
 │
 ├── docs/                        # 📚 Documentation
-│   ├── *.md                     # Active documentation
-│   └── archive/                 # Historical docs
-│       ├── old/                 # Completed milestones
+│   ├── CURRENT_FEATURES.md      # ⭐ Complete feature overview
+│   ├── SETUP_GUIDE.md           # Installation guide
+│   ├── QUICK_REFERENCE.md       # Command reference
+│   ├── DEPLOYMENT_CHECKLIST.md  # Pre-deployment steps
+│   ├── PRO_CURATOR_SYSTEM.md    # Pro Curator technical docs
+│   ├── DELETION_REQUEST_SYSTEM.md # Deletion workflow (NEW)
+│   ├── *.md                     # Other active documentation
+│   └── archive/                 # Historical documentation
 │       └── *.md                 # Archived guides
 │
 ├── sql/                         # 🗄️ Database Scripts
@@ -33,6 +38,8 @@ SETIQUE/
 │   ├── setup/                   # Initial setup scripts
 │   ├── fixes/                   # Bug fix scripts
 │   ├── migrations/              # Historical migrations
+│   │   ├── 011_deletion_requests_system.sql # Latest migration
+│   │   └── archive/             # Old step-based migrations
 │   └── admin/                   # Admin management
 │
 ├── scripts/                     # 🔧 Setup Scripts
@@ -87,34 +94,52 @@ SETIQUE/
 ## Key Directories Explained
 
 ### `/docs` - Documentation
-- **Active docs** in root (current guides, checklists)
-- **`/archive`** for completed documentation
-- **`/archive/old`** for historical milestones
+
+All project documentation organized by category:
+
+- **`CURRENT_FEATURES.md`** - ⭐ **Start here** - Complete feature overview
+- **Active documentation** - Current guides and references
+- **`archive/`** - Historical docs from previous development phases
+
+Key files:
+- Setup and deployment guides
+- Feature-specific documentation (Pro Curator, Deletion Requests, Bounties, AI Assistant)
+- Configuration guides (Stripe, Supabase, Security)
+- Testing checklists
 
 ### `/sql` - Database Scripts
+
 Organized by purpose:
+
 - **`diagnostic/`** - Check database health
 - **`setup/`** - Initial table creation
 - **`fixes/`** - Bug fixes and corrections
-- **`migrations/`** - Historical migration steps
+- **`migrations/`** - Database migrations
+  - `011_deletion_requests_system.sql` - Latest migration
+  - `archive/` - Old step-based migrations (step1-5)
 - **`admin/`** - Admin management scripts
 
 See `sql/README.md` for detailed usage.
 
 ### `/supabase` - Database Configuration
+
 - **`migrations/`** - Automated migrations (run by Supabase CLI)
 - These are version-controlled and applied automatically
 
 ### `/netlify/functions` - Serverless Backend
+
 All backend operations run as Netlify Edge Functions:
-- **`admin-actions.js`** - Admin operations (bypasses RLS)
+
+- **`admin-actions.js`** - Admin operations (deletion requests, user management)
+- **`request-deletion.js`** - Deletion request submissions (NEW)
 - **`create-checkout.js`** - Stripe payment processing
 - **`connect-onboarding.js`** - Stripe Connect onboarding
 - **`download-dataset.js`** - Secure file downloads
 
 ### `/src` - React Application
+
 - **`pages/`** - Full page components
-- **`components/`** - Reusable UI components
+- **`components/`** - Reusable UI components (modals, profiles, etc.)
 - **`contexts/`** - Global state management
 - **`lib/`** - Utilities and helpers
 

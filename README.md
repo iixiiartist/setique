@@ -59,27 +59,25 @@ Visit `http://localhost:3000` to see your app.
 
 ## 📚 Documentation
 
-All detailed documentation has been moved to the [`docs/`](./docs) folder for better organization.
+All detailed documentation is in the [`docs/`](./docs) folder.
 
-### � Essential Guides
+### ⭐ Start Here
 
-- **[Setup Guide](./docs/SETUP_GUIDE.md)** - Complete installation and configuration
+- **[Current Features](./docs/CURRENT_FEATURES.md)** - Complete overview of all platform features
+- **[Setup Guide](./docs/SETUP_GUIDE.md)** - Installation and configuration
 - **[Quick Reference](./docs/QUICK_REFERENCE.md)** - Common commands and tasks
-- **[Deployment Checklist](./docs/DEPLOYMENT_CHECKLIST.md)** - Pre-deployment steps
 
-### 🔧 Configuration
+### 🎯 Key Features
 
-- **[Supabase Setup](./docs/SUPABASE_SETUP_COMPLETE.md)** - Database configuration
-- **[Stripe Keys Guide](./docs/STRIPE_KEYS_GUIDE.md)** - API keys configuration
-- **[Stripe Connect Guide](./docs/STRIPE_CONNECT_GUIDE.md)** - Creator payout setup
+- **Pro Curator System** - Partnership marketplace for dataset collaboration
+- **Bounty System** - Request custom datasets with price negotiation
+- **Deletion Requests** - Admin-approved deletion workflow (NEW)
+- **AI Assistant** - Context-aware help chat on every page
+- **Stripe Connect** - Automated creator payouts (80% revenue share)
 
-### 🛠️ Automation Scripts
+### � Full Documentation
 
-PowerShell automation scripts are in the [`scripts/`](./scripts) folder:
-
-- **setup.ps1** - Full automated setup
-- **setup-simple.ps1** - Simplified setup script
-- **quickstart.ps1** - Quick start script
+See [`docs/README.md`](./docs/README.md) for the complete documentation index organized by category.
 
 
 ## 🏗️ Project Structure

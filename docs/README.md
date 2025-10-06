@@ -4,51 +4,61 @@ This folder contains all project documentation organized by category.
 
 ## 📚 Table of Contents
 
-### 🚀 Getting Started
-- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Complete setup instructions for the project
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Quick reference for common commands and tasks
-- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - Overview of the project architecture and features
+### ⭐ Start Here
+- **[CURRENT_FEATURES.md](./CURRENT_FEATURES.md)** - **Complete overview of all platform features and systems**
+- **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** - Installation and configuration instructions
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Common commands and tasks
+- **[PROJECT_SUMMARY.md](./PROJECT_SUMMARY.md)** - Project architecture overview
+
+### 🎯 Feature Documentation
+- **[PRO_CURATOR_SYSTEM.md](./PRO_CURATOR_SYSTEM.md)** - Pro Curator technical implementation
+- **[PRO_CURATOR_USER_GUIDE.md](./PRO_CURATOR_USER_GUIDE.md)** - Pro Curator user guide
+- **[DELETION_REQUEST_SYSTEM.md](./DELETION_REQUEST_SYSTEM.md)** - Deletion request workflow (NEW)
+- **[CURATION_REQUESTS_SYSTEM.md](./CURATION_REQUESTS_SYSTEM.md)** - Curation request management
+- **[CURATION_REQUESTS_SYSTEM_REVIEW.md](./CURATION_REQUESTS_SYSTEM_REVIEW.md)** - System status review
+- **[DATASET_MANAGEMENT.md](./DATASET_MANAGEMENT.md)** - Dataset operations guide
+- **[BOUNTY_QUICK_START.md](./BOUNTY_QUICK_START.md)** - Bounty system user guide
+- **[AI_ASSISTANT_USER_GUIDE.md](./AI_ASSISTANT_USER_GUIDE.md)** - AI chat assistant guide
+- **[AI_ASSISTANT_UPDATE.md](./AI_ASSISTANT_UPDATE.md)** - AI assistant technical details
 
 ### 🔧 Configuration Guides
-- **[SUPABASE_SETUP_COMPLETE.md](./SUPABASE_SETUP_COMPLETE.md)** - Supabase database configuration
-- **[STRIPE_KEYS_GUIDE.md](./STRIPE_KEYS_GUIDE.md)** - How to obtain and configure Stripe API keys
-- **[STRIPE_CONNECT_GUIDE.md](./STRIPE_CONNECT_GUIDE.md)** - Stripe Connect setup for creator payouts
-- **[PAYMENT_AND_DELIVERY_GUIDE.md](./PAYMENT_AND_DELIVERY_GUIDE.md)** - Payment processing and digital delivery
-
-### 🚀 Deployment
-- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
-- **[APP_IS_WORKING.md](./APP_IS_WORKING.md)** - Verification that the application is functional
-
-### 🔨 Build & Troubleshooting Fixes
-These documents record all the fixes applied during the Netlify deployment process:
-
-- **[NETLIFY_FIX.md](./NETLIFY_FIX.md)** - Initial Netlify deployment fixes
-- **[NETLIFY_BUILD_FIX.md](./NETLIFY_BUILD_FIX.md)** - Build command and dependency fixes
-- **[NODE_VERSION_FIX.md](./NODE_VERSION_FIX.md)** - Node.js version configuration fix
-- **[NETLIFY_FUNCTIONS_FIX.md](./NETLIFY_FUNCTIONS_FIX.md)** - Serverless functions configuration
-- **[NETLIFY_CONFIG_FIX.md](./NETLIFY_CONFIG_FIX.md)** - netlify.toml syntax corrections
-- **[NETLIFY_SECRETS_CONFIG.md](./NETLIFY_SECRETS_CONFIG.md)** - Secrets scanning configuration
-- **[NETLIFY_SECRETS_SYNTAX_FIX.md](./NETLIFY_SECRETS_SYNTAX_FIX.md)** - TOML array syntax for secrets
-- **[BUILD_FIX_COMPLETE.md](./BUILD_FIX_COMPLETE.md)** - Summary of all build fixes
-
-### 🔒 Security
+- **[PAYMENT_AND_DELIVERY_GUIDE.md](./PAYMENT_AND_DELIVERY_GUIDE.md)** - Payment processing flow
+- **[STRIPE_CONNECT_GUIDE.md](./STRIPE_CONNECT_GUIDE.md)** - Stripe Connect setup
+- **[STRIPE_CONNECT_ACTIVATION.md](./STRIPE_CONNECT_ACTIVATION.md)** - Stripe Connect activation
 - **[SECURITY_AUDIT.md](./SECURITY_AUDIT.md)** - Security audit and recommendations
-- **[SECRETS_FIX.md](./SECRETS_FIX.md)** - How secrets were secured in the repository
+
+### � Deployment & Testing
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Pre-deployment checklist
+- **[TESTING_CHECKLIST.md](./TESTING_CHECKLIST.md)** - QA and testing procedures
+
 
 ## 🎯 Quick Links
 
+### For New Users
+Start with **[CURRENT_FEATURES.md](./CURRENT_FEATURES.md)** to see everything the platform can do.
+
 ### For Developers
-Start with [SETUP_GUIDE.md](./SETUP_GUIDE.md) to get your development environment running.
+Follow [SETUP_GUIDE.md](./SETUP_GUIDE.md) to set up your development environment.
 
 ### For Deployment
 Review [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) before deploying to production.
 
-### For Troubleshooting
-Check the **Build & Troubleshooting Fixes** section for solutions to common deployment issues.
-
-### For Configuration
-See the **Configuration Guides** section for integrating third-party services.
+### For Feature Implementation
+Check individual feature documentation files in the **Feature Documentation** section.
 
 ---
 
-**Note:** All documentation is maintained to reflect the current state of the project. If you find outdated information, please update it accordingly.
+## 📁 Archive Folder
+
+The `/archive` folder contains historical documentation from previous development phases. These files are kept for reference but are no longer actively maintained:
+
+- Refactoring summaries (Dec 2024)
+- Build fix documentation (completed)
+- Netlify deployment fixes (resolved)
+- Project cleanup reports (superseded)
+- Previous milestone documentation
+
+**Current users should refer to active documentation above.**
+
+---
+
