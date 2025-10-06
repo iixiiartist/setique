@@ -39,7 +39,7 @@ ON deletion_requests FOR SELECT
 TO authenticated
 USING (
   requester_id = auth.uid()
-  OR auth.uid() IN (SELECT id FROM profiles WHERE is_admin = true)
+  OR auth.uid() IN (SELECT user_id FROM admins)
 );
 
 -- Policy 2: Users can create deletion requests for their own datasets
@@ -59,8 +59,8 @@ WITH CHECK (
 CREATE POLICY "Admins can update deletion requests"
 ON deletion_requests FOR UPDATE
 TO authenticated
-USING (auth.uid() IN (SELECT id FROM profiles WHERE is_admin = true))
-WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE is_admin = true));
+USING (auth.uid() IN (SELECT user_id FROM admins))
+WITH CHECK (auth.uid() IN (SELECT user_id FROM admins));
 
 -- =====================================================
 -- Helper Functions
@@ -74,7 +74,7 @@ SECURITY DEFINER
 AS $$
 BEGIN
   -- Verify admin
-  IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true) THEN
+  IF NOT EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()) THEN
     RAISE EXCEPTION 'Unauthorized';
   END IF;
   
