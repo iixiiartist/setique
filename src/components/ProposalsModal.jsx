@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Star, Clock, DollarSign, CheckCircle } from './Icons';
+import { X, Star, Clock, DollarSign } from './Icons';
 
 export default function ProposalsModal({ isOpen, onClose, request, onAccept }) {
   const [accepting, setAccepting] = useState(null);
@@ -146,7 +146,7 @@ export default function ProposalsModal({ isOpen, onClose, request, onAccept }) {
           {acceptedProposal && (
             <div className="bg-green-50 border-4 border-green-500 rounded-xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <Star className="h-6 w-6 text-green-600 fill-green-600" />
                 <h3 className="text-xl font-extrabold text-green-900">Accepted Proposal</h3>
               </div>
               {renderProposal(acceptedProposal)}
