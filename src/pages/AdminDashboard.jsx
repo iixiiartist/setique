@@ -182,7 +182,7 @@ export default function AdminDashboard() {
         .from('curation_requests')
         .select(`
           *,
-          profiles:creator_id (
+          profiles:requester_id (
             id,
             username,
             email
