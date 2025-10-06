@@ -155,13 +155,19 @@ exports.handler = async (event) => {
 
       case 'delete_dataset':
         // Admin can delete any dataset
-        // First delete related partnerships (if any)
+        // Step 1: Clear published_dataset_id references in curation_requests
+        await supabase
+          .from('curation_requests')
+          .update({ published_dataset_id: null })
+          .eq('published_dataset_id', targetId)
+        
+        // Step 2: Delete related partnerships (if any)
         await supabase
           .from('dataset_partnerships')
           .delete()
           .eq('dataset_id', targetId)
         
-        // Then delete the dataset
+        // Step 3: Delete the dataset
         result = await supabase
           .from('datasets')
           .delete()
