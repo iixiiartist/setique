@@ -6,6 +6,8 @@ import { stripePromise } from '../lib/stripe'
 import { DatasetUploadModal } from '../components/DatasetUploadModal'
 import ProCuratorProfile from '../components/ProCuratorProfile'
 import CurationRequestModal from '../components/CurationRequestModal'
+import ProposalsModal from '../components/ProposalsModal'
+import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
 import {
   Database,
   ShoppingBag,
@@ -54,6 +56,15 @@ function DashboardPage() {
   const [myBounties, setMyBounties] = useState([])
   const [mySubmissions, setMySubmissions] = useState([])
   const [expandedBounty, setExpandedBounty] = useState(null)
+  
+  // Curation requests data
+  const [myCurationRequests, setMyCurationRequests] = useState([])
+  const [selectedRequest, setSelectedRequest] = useState(null)
+  const [proposalsModalOpen, setProposalsModalOpen] = useState(false)
+  const [openCurationRequests, setOpenCurationRequests] = useState([])
+  const [proposalSubmissionOpen, setProposalSubmissionOpen] = useState(false)
+  const [selectedRequestForProposal, setSelectedRequestForProposal] = useState(null)
+  const [curatorProfile, setCuratorProfile] = useState(null)
   
   // Stripe Connect state
   const [connectingStripe, setConnectingStripe] = useState(false)
@@ -163,6 +174,53 @@ function DashboardPage() {
         .order('submitted_at', { ascending: false })
       
       setMySubmissions(submissions || [])
+
+      // Fetch user's curation requests with proposal counts
+      const { data: curationRequests } = await supabase
+        .from('curation_requests')
+        .select(`
+          *,
+          curator_proposals (
+            id,
+            status,
+            curator_id,
+            proposal_text,
+            estimated_completion_days,
+            suggested_price,
+            created_at,
+            pro_curators (
+              id,
+              display_name,
+              badge_level,
+              rating,
+              total_projects,
+              specialties
+            )
+          )
+        `)
+        .eq('creator_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      setMyCurationRequests(curationRequests || [])
+
+      // Fetch open curation requests for Pro Curators to browse
+      const { data: openRequests } = await supabase
+        .from('curation_requests')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(20) // Show recent 20 open requests
+      
+      setOpenCurationRequests(openRequests || [])
+
+      // Fetch curator profile if user is a Pro Curator
+      const { data: curatorData } = await supabase
+        .from('pro_curators')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      
+      setCuratorProfile(curatorData)
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -585,6 +643,16 @@ function DashboardPage() {
             }`}
           >
             My Submissions ({mySubmissions.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('curation-requests')}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
+              activeTab === 'curation-requests'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            My Requests ({myCurationRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('pro-curator')}
@@ -1264,6 +1332,180 @@ function DashboardPage() {
             </div>
           )}
 
+          {/* My Curation Requests Tab */}
+          {activeTab === 'curation-requests' && (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-2xl font-extrabold mb-2">My Curation Requests</h3>
+                  <p className="text-sm text-black/70">
+                    Track your posted requests and review proposals from Pro Curators
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCurationRequestModalOpen(true)}
+                  className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
+                >
+                  + New Request
+                </button>
+              </div>
+
+              {myCurationRequests.length === 0 ? (
+                <div className="text-center py-16">
+                  <p className="text-xl font-bold text-black/60 mb-4">
+                    No curation requests yet
+                  </p>
+                  <p className="text-sm text-black/50 mb-6">
+                    Post a request to get help from professional curators
+                  </p>
+                  <button
+                    onClick={() => setCurationRequestModalOpen(true)}
+                    className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
+                  >
+                    Post Your First Request
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myCurationRequests.map((request) => {
+                    const proposals = request.curator_proposals || []
+                    const pendingCount = proposals.filter(p => p.status === 'pending').length
+                    const acceptedProposal = proposals.find(p => p.status === 'accepted')
+                    
+                    return (
+                      <div
+                        key={request.id}
+                        className="bg-white border-2 border-black rounded-xl p-6 hover:shadow-[4px_4px_0_#000] transition"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <h4 className="text-xl font-extrabold mb-2">{request.title}</h4>
+                            <p className="text-sm text-black/70 mb-3 line-clamp-2">
+                              {request.description}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {/* Status Badge */}
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 border-black ${
+                                request.status === 'open' ? 'bg-green-100 text-green-800' :
+                                request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                request.status === 'completed' ? 'bg-purple-100 text-purple-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {request.status.replace('_', ' ').toUpperCase()}
+                              </span>
+                              
+                              {/* Quality Badge */}
+                              <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-yellow-100 text-yellow-800">
+                                {request.target_quality.toUpperCase()}
+                              </span>
+                              
+                              {/* Budget */}
+                              {(request.budget_min || request.budget_max) && (
+                                <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-indigo-100 text-indigo-800">
+                                  ${request.budget_min || '0'} - ${request.budget_max || '∞'}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Specialties */}
+                            {request.specialties_needed && request.specialties_needed.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {request.specialties_needed.map((spec, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-1 text-xs font-semibold bg-gray-100 rounded"
+                                  >
+                                    {spec.replace(/_/g, ' ')}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            <p className="text-xs text-black/50">
+                              Posted {new Date(request.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          <div className="text-right ml-4">
+                            <div className="text-3xl font-extrabold text-indigo-600 mb-1">
+                              {proposals.length}
+                            </div>
+                            <div className="text-xs font-bold text-black/60">
+                              Proposal{proposals.length !== 1 ? 's' : ''}
+                            </div>
+                            {pendingCount > 0 && (
+                              <div className="text-xs font-bold text-green-600 mt-1">
+                                {pendingCount} pending
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Accepted Curator Info */}
+                        {acceptedProposal && (
+                          <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-green-500 text-white rounded-full p-2">
+                                <Star className="h-5 w-5 fill-current" />
+                              </div>
+                              <div>
+                                <div className="font-extrabold text-green-900">
+                                  Curator Assigned: {acceptedProposal.pro_curators?.display_name}
+                                </div>
+                                <div className="text-sm text-green-700">
+                                  {acceptedProposal.estimated_completion_days} days • ${acceptedProposal.suggested_price}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          {proposals.length > 0 && (
+                            <button
+                              onClick={() => {
+                                setSelectedRequest(request)
+                                setProposalsModalOpen(true)
+                              }}
+                              className="flex-1 bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-4 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
+                            >
+                              View {proposals.length} Proposal{proposals.length !== 1 ? 's' : ''}
+                            </button>
+                          )}
+                          
+                          {request.status === 'open' && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Close this request? No new proposals will be accepted.')) return
+                                try {
+                                  const { error } = await supabase
+                                    .from('curation_requests')
+                                    .update({ status: 'cancelled' })
+                                    .eq('id', request.id)
+                                  
+                                  if (error) throw error
+                                  await fetchDashboardData()
+                                } catch (error) {
+                                  console.error('Error closing request:', error)
+                                  alert('Failed to close request')
+                                }
+                              }}
+                              className="px-4 py-2 bg-gray-200 text-black font-bold rounded-full border-2 border-black hover:bg-gray-300 transition"
+                            >
+                              Close Request
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Pro Curator Tab */}
           {activeTab === 'pro-curator' && (
             <div>
@@ -1402,6 +1644,17 @@ function DashboardPage() {
         isOpen={curationRequestModalOpen}
         onClose={() => setCurationRequestModalOpen(false)}
         onSuccess={fetchDashboardData}
+      />
+      
+      {/* Proposals Modal */}
+      <ProposalsModal 
+        isOpen={proposalsModalOpen}
+        onClose={() => {
+          setProposalsModalOpen(false)
+          setSelectedRequest(null)
+        }}
+        request={selectedRequest}
+        onAccept={fetchDashboardData}
       />
     </div>
   )
