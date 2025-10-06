@@ -721,14 +721,24 @@ function DashboardPage() {
                 Here&apos;s what&apos;s happening with your data economy
               </p>
             </div>
-            {isAdmin && (
-              <a
-                href="/admin"
-                className="bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
-              >
-                🔐 Admin Dashboard
-              </a>
-            )}
+            <div className="flex gap-3">
+              {profile?.username && (
+                <a
+                  href={`/profile/${profile.username}`}
+                  className="bg-purple-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
+                >
+                  👤 View Profile
+                </a>
+              )}
+              {isAdmin && (
+                <a
+                  href="/admin"
+                  className="bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
+                >
+                  🔐 Admin Dashboard
+                </a>
+              )}
+            </div>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import SuccessPage from './pages/SuccessPage'
 import DashboardPage from './pages/DashboardPage'
 import MarketplacePage from './pages/MarketplacePage'
 import AdminDashboard from './pages/AdminDashboard'
+import UserProfilePage from './pages/UserProfilePage'
 import { AIAssistant } from './components/AIAssistant'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/profile/:username" element={<UserProfilePage />} />
       </Routes>
       
       {/* AI Assistant - Available on all pages */}

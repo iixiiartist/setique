@@ -89,8 +89,49 @@ email             TEXT
 bio               TEXT
 avatar_url        TEXT
 stripe_account_id TEXT
+display_name      TEXT
+location          TEXT
+website           TEXT
+twitter_handle    TEXT
+github_handle     TEXT
+follower_count    INTEGER DEFAULT 0
+following_count   INTEGER DEFAULT 0
 created_at        TIMESTAMPTZ
 updated_at        TIMESTAMPTZ
+```
+
+### user_follows
+```sql
+-- User follow/following relationships
+id             UUID PRIMARY KEY
+follower_id    UUID -> auth.users(id)  -- User who is following
+following_id   UUID -> auth.users(id)  -- User being followed
+created_at     TIMESTAMPTZ
+
+-- Constraints:
+-- - no_self_follow: Users cannot follow themselves
+-- - unique_follow: Each follow relationship is unique
+```
+
+**Query Pattern**:
+```javascript
+// Check if user A follows user B
+const { data } = await supabase
+  .from('user_follows')
+  .select('id')
+  .eq('follower_id', userA.id)
+  .eq('following_id', userB.id)
+  .maybeSingle()
+
+const isFollowing = !!data
+
+// Get user's followers
+.select('*, profiles:follower_id(id, username, display_name, avatar_url)')
+.eq('following_id', userId)
+
+// Get who user is following
+.select('*, profiles:following_id(id, username, display_name, avatar_url)')
+.eq('follower_id', userId)
 ```
 
 ### pro_curators
