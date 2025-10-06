@@ -1,5 +1,8 @@
 # 🎯 Quick Reference Guide
 
+## ⚠️ Important: Always Check Schema First
+**Before writing any database queries, check [`DATABASE_SCHEMA_REFERENCE.md`](./DATABASE_SCHEMA_REFERENCE.md)** to verify actual column names. The database may differ from migration files!
+
 ## Essential Commands
 
 ```bash
