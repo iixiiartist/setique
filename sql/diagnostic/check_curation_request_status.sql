@@ -9,7 +9,7 @@ SELECT
   assigned_curator_id,
   creator_id as requestor_user_id,
   created_at,
-  deadline
+  updated_at
 FROM curation_requests
 ORDER BY created_at DESC
 LIMIT 10;
