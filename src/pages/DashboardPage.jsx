@@ -585,6 +585,30 @@ function DashboardPage() {
     }
   }
 
+  const handleCloseMyBounty = async (bountyId) => {
+    if (!window.confirm('Close this bounty? No more proposals will be accepted.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('curation_requests')
+        .update({ status: 'closed' })
+        .eq('id', bountyId)
+        .eq('creator_id', user.id) // Only allow closing own bounties
+
+      if (error) throw error
+
+      alert('✅ Bounty closed successfully!')
+      
+      // Refresh bounties
+      await fetchDashboardData()
+    } catch (error) {
+      console.error('Error closing bounty:', error)
+      alert('Failed to close bounty: ' + error.message)
+    }
+  }
+
   const handleConnectStripe = async () => {
     setConnectingStripe(true)
     setConnectError(null)
@@ -1284,14 +1308,31 @@ function DashboardPage() {
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
                               {bounty.bounty_submissions?.length || 0} submissions
                             </span>
+                            <span className={`bg-white border-2 border-black rounded-full px-3 py-1 ${
+                              bounty.status === 'open' ? 'text-green-700' :
+                              bounty.status === 'assigned' ? 'text-yellow-700' :
+                              'text-gray-700'
+                            }`}>
+                              {bounty.status}
+                            </span>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setExpandedBounty(expandedBounty === bounty.id ? null : bounty.id)}
-                          className="bg-white border-2 border-black rounded-full px-4 py-2 font-bold hover:bg-gray-100 transition"
-                        >
-                          {expandedBounty === bounty.id ? 'Hide' : 'View'} Submissions
-                        </button>
+                        <div className="flex gap-2">
+                          {bounty.status === 'open' && (
+                            <button
+                              onClick={() => handleCloseMyBounty(bounty.id)}
+                              className="bg-yellow-400 border-2 border-black rounded-lg px-4 py-2 font-bold hover:bg-yellow-300 transition text-sm"
+                            >
+                              🔒 Close Bounty
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setExpandedBounty(expandedBounty === bounty.id ? null : bounty.id)}
+                            className="bg-white border-2 border-black rounded-full px-4 py-2 font-bold hover:bg-gray-100 transition"
+                          >
+                            {expandedBounty === bounty.id ? 'Hide' : 'View'} Submissions
+                          </button>
+                        </div>
                       </div>
 
                       {/* Submissions (Expanded) */}

@@ -36,6 +36,11 @@ export default function AdminDashboard() {
   const [rejectingRequest, setRejectingRequest] = useState(null);
   const [adminResponse, setAdminResponse] = useState('');
   
+  // Bounties (curation requests)
+  const [allBounties, setAllBounties] = useState([]);
+  const [selectedBounty, setSelectedBounty] = useState(null);
+  const [showBountyModal, setShowBountyModal] = useState(false);
+  
   // Stats
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -45,7 +50,11 @@ export default function AdminDashboard() {
     totalRevenue: 0,
     platformRevenue: 0,
     creatorRevenue: 0,
-    totalTransactions: 0
+    totalTransactions: 0,
+    totalBounties: 0,
+    openBounties: 0,
+    assignedBounties: 0,
+    completedBounties: 0
   });
 
   const checkAdminStatus = async () => {
@@ -168,6 +177,26 @@ export default function AdminDashboard() {
       setAllDatasets(datasets.data || []);
       setActivityLog(activity.data || []);
 
+      // Fetch bounties (curation requests) directly from Supabase
+      const { data: bountiesData, error: bountiesError } = await supabase
+        .from('curation_requests')
+        .select(`
+          *,
+          profiles:creator_id (
+            id,
+            username,
+            email
+          ),
+          curation_proposals (count)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (bountiesError) {
+        console.error('Error fetching bounties:', bountiesError);
+      }
+      
+      setAllBounties(bountiesData || []);
+
       // Fetch deletion requests directly from Supabase (admin has access via RLS)
       const { data: deletionRequestsData, error: deletionError } = await supabase
         .from('deletion_requests')
@@ -202,7 +231,11 @@ export default function AdminDashboard() {
         totalRevenue: revenue.data?.totalRevenue || 0,
         platformRevenue: revenue.data?.platformRevenue || 0,
         creatorRevenue: revenue.data?.creatorRevenue || 0,
-        totalTransactions: revenue.data?.totalTransactions || 0
+        totalTransactions: revenue.data?.totalTransactions || 0,
+        totalBounties: bountiesData?.length || 0,
+        openBounties: bountiesData?.filter(b => b.status === 'open').length || 0,
+        assignedBounties: bountiesData?.filter(b => b.status === 'assigned').length || 0,
+        completedBounties: bountiesData?.filter(b => b.status === 'completed').length || 0
       });
 
       // Done loading admin data
@@ -458,6 +491,57 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleCloseBounty = async (bountyId) => {
+    if (!confirm('Close this bounty? No more proposals will be accepted.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('curation_requests')
+        .update({ status: 'closed' })
+        .eq('id', bountyId);
+
+      if (error) throw error;
+
+      alert('✅ Bounty closed successfully!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error closing bounty:', error);
+      alert('Failed to close bounty: ' + error.message);
+    }
+  };
+
+  const handleDeleteBounty = async (bountyId) => {
+    if (!confirm('⚠️ PERMANENTLY delete this bounty? This cannot be undone!')) {
+      return;
+    }
+
+    try {
+      // Delete proposals first (foreign key constraint)
+      const { error: proposalsError } = await supabase
+        .from('curation_proposals')
+        .delete()
+        .eq('request_id', bountyId);
+
+      if (proposalsError) throw proposalsError;
+
+      // Then delete the bounty
+      const { error } = await supabase
+        .from('curation_requests')
+        .delete()
+        .eq('id', bountyId);
+
+      if (error) throw error;
+
+      alert('✅ Bounty and all proposals deleted successfully!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error deleting bounty:', error);
+      alert('Failed to delete bounty: ' + error.message);
+    }
+  };
+
   // Show loading while auth is loading
   if (authLoading) {
     return (
@@ -562,6 +646,19 @@ export default function AdminDashboard() {
               }`}
             >
               📦 Datasets
+            </button>
+            <button
+              onClick={() => setActiveTab('bounties')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'bounties' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              💰 Bounties
+              <span className="ml-2 text-xs text-gray-600">
+                ({stats.openBounties} open)
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('deletions')}
@@ -893,6 +990,202 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'bounties' && (
+              <div>
+                <h3 className="text-2xl font-extrabold mb-4">Bounty Management</h3>
+                
+                {/* Bounty Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-100 border-2 border-blue-600 rounded-xl p-4">
+                    <div className="text-sm font-bold text-blue-800">Total Bounties</div>
+                    <div className="text-3xl font-extrabold text-blue-800">{stats.totalBounties}</div>
+                  </div>
+                  <div className="bg-green-100 border-2 border-green-600 rounded-xl p-4">
+                    <div className="text-sm font-bold text-green-800">Open</div>
+                    <div className="text-3xl font-extrabold text-green-800">{stats.openBounties}</div>
+                  </div>
+                  <div className="bg-yellow-100 border-2 border-yellow-600 rounded-xl p-4">
+                    <div className="text-sm font-bold text-yellow-800">Assigned</div>
+                    <div className="text-3xl font-extrabold text-yellow-800">{stats.assignedBounties}</div>
+                  </div>
+                  <div className="bg-purple-100 border-2 border-purple-600 rounded-xl p-4">
+                    <div className="text-sm font-bold text-purple-800">Completed</div>
+                    <div className="text-3xl font-extrabold text-purple-800">{stats.completedBounties}</div>
+                  </div>
+                </div>
+
+                {allBounties.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No bounties yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Open Bounties */}
+                    <div>
+                      <h4 className="text-lg font-bold mb-3 text-green-700">🟢 Open Bounties ({allBounties.filter(b => b.status === 'open').length})</h4>
+                      {allBounties.filter(b => b.status === 'open').length === 0 ? (
+                        <p className="text-gray-500 text-sm">No open bounties</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {allBounties.filter(b => b.status === 'open').map((bounty) => (
+                            <div key={bounty.id} className="border-2 border-green-500 bg-green-50 rounded-xl p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h5 className="text-xl font-extrabold">{bounty.title}</h5>
+                                    <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-bold">
+                                      {bounty.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 mb-2">{bounty.description}</p>
+                                  <div className="flex gap-4 text-sm">
+                                    <span className="font-semibold">
+                                      💰 ${bounty.budget_min} - ${bounty.budget_max}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      📅 {new Date(bounty.created_at).toLocaleDateString()}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      👤 {bounty.profiles?.username || 'Unknown'}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      📝 {bounty.curation_proposals?.[0]?.count || 0} proposals
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleCloseBounty(bounty.id)}
+                                  className="bg-yellow-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-300 transition text-sm"
+                                >
+                                  🔒 Close Bounty
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteBounty(bounty.id)}
+                                  className="bg-red-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-red-300 transition text-sm"
+                                >
+                                  🗑️ Delete
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedBounty(bounty);
+                                    setShowBountyModal(true);
+                                  }}
+                                  className="bg-blue-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-blue-300 transition text-sm"
+                                >
+                                  👁️ View Details
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Assigned Bounties */}
+                    <div>
+                      <h4 className="text-lg font-bold mb-3 text-yellow-700">🟡 Assigned Bounties ({allBounties.filter(b => b.status === 'assigned').length})</h4>
+                      {allBounties.filter(b => b.status === 'assigned').length === 0 ? (
+                        <p className="text-gray-500 text-sm">No assigned bounties</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {allBounties.filter(b => b.status === 'assigned').map((bounty) => (
+                            <div key={bounty.id} className="border-2 border-yellow-500 bg-yellow-50 rounded-xl p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h5 className="text-xl font-extrabold">{bounty.title}</h5>
+                                    <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-bold">
+                                      {bounty.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 mb-2">{bounty.description}</p>
+                                  <div className="flex gap-4 text-sm">
+                                    <span className="font-semibold">
+                                      💰 ${bounty.budget_min} - ${bounty.budget_max}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      📅 {new Date(bounty.created_at).toLocaleDateString()}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      👤 {bounty.profiles?.username || 'Unknown'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleDeleteBounty(bounty.id)}
+                                  className="bg-red-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-red-300 transition text-sm"
+                                >
+                                  🗑️ Delete
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedBounty(bounty);
+                                    setShowBountyModal(true);
+                                  }}
+                                  className="bg-blue-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-blue-300 transition text-sm"
+                                >
+                                  👁️ View Details
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Completed & Closed Bounties */}
+                    <div>
+                      <h4 className="text-lg font-bold mb-3 text-gray-700">⚫ Completed & Closed ({allBounties.filter(b => b.status === 'completed' || b.status === 'closed').length})</h4>
+                      {allBounties.filter(b => b.status === 'completed' || b.status === 'closed').length === 0 ? (
+                        <p className="text-gray-500 text-sm">No completed or closed bounties</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {allBounties.filter(b => b.status === 'completed' || b.status === 'closed').map((bounty) => (
+                            <div key={bounty.id} className="border-2 border-gray-400 bg-gray-50 rounded-xl p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h5 className="text-xl font-extrabold">{bounty.title}</h5>
+                                    <span className="bg-gray-200 text-gray-800 px-2 py-1 rounded text-xs font-bold">
+                                      {bounty.status}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 mb-2">{bounty.description}</p>
+                                  <div className="flex gap-4 text-sm">
+                                    <span className="font-semibold">
+                                      💰 ${bounty.budget_min} - ${bounty.budget_max}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      📅 {new Date(bounty.created_at).toLocaleDateString()}
+                                    </span>
+                                    <span className="text-gray-600">
+                                      👤 {bounty.profiles?.username || 'Unknown'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleDeleteBounty(bounty.id)}
+                                  className="bg-red-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-red-300 transition text-sm"
+                                >
+                                  🗑️ Delete
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
