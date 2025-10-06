@@ -10,6 +10,7 @@ import ProposalsModal from '../components/ProposalsModal'
 import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
 import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
 import SubmissionReviewCard from '../components/SubmissionReviewCard'
+import DeletionRequestModal from '../components/DeletionRequestModal'
 import {
   Database,
   ShoppingBag,
@@ -38,6 +39,8 @@ function DashboardPage() {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [deletionRequests, setDeletionRequests] = useState([])
+  const [deletionModalDataset, setDeletionModalDataset] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   
   // Upload modal state
@@ -320,6 +323,26 @@ function DashboardPage() {
       // Silently fail if admins table doesn't exist
     }
 
+    // Fetch user's deletion requests
+    try {
+      const { data: deletionRequestsData } = await supabase
+        .from('deletion_requests')
+        .select(`
+          *,
+          datasets (
+            id,
+            title,
+            description
+          )
+        `)
+        .eq('requester_id', user.id)
+        .order('requested_at', { ascending: false })
+      
+      setDeletionRequests(deletionRequestsData || [])
+    } catch (error) {
+      console.error('Error fetching deletion requests:', error)
+    }
+
     setLoading(false)
   }, [user])
 
@@ -527,6 +550,38 @@ function DashboardPage() {
       alert('Failed to delete dataset: ' + error.message)
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const handleRequestDeletion = async (datasetId, reason) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      const response = await fetch('/.netlify/functions/request-deletion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          datasetId,
+          reason
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit deletion request')
+      }
+
+      alert('Deletion request submitted! An admin will review your request.')
+      
+      // Refresh deletion requests
+      await fetchDashboardData()
+    } catch (error) {
+      console.error('Error requesting deletion:', error)
+      throw error
     }
   }
 
@@ -902,21 +957,100 @@ function DashboardPage() {
                           >
                             <Edit className="h-5 w-5" />
                           </button>
-                          <button
-                            onClick={() => handleDeleteDataset(dataset.id)}
-                            className={`p-2 rounded-lg border-2 border-black hover:scale-110 transition ${
-                              deleteConfirm === dataset.id 
-                                ? 'bg-red-500 text-white' 
-                                : 'bg-red-300'
-                            }`}
-                            title={deleteConfirm === dataset.id ? 'Click again to confirm' : 'Delete dataset'}
-                          >
-                            <Trash className="h-5 w-5" />
-                          </button>
+                          
+                          {/* Show delete button for admins, request deletion for regular users */}
+                          {isAdmin ? (
+                            <button
+                              onClick={() => handleDeleteDataset(dataset.id)}
+                              className={`p-2 rounded-lg border-2 border-black hover:scale-110 transition ${
+                                deleteConfirm === dataset.id 
+                                  ? 'bg-red-500 text-white' 
+                                  : 'bg-red-300'
+                              }`}
+                              title={deleteConfirm === dataset.id ? 'Click again to confirm' : 'Delete dataset'}
+                            >
+                              <Trash className="h-5 w-5" />
+                            </button>
+                          ) : (
+                            (() => {
+                              const pendingRequest = deletionRequests.find(
+                                req => req.dataset_id === dataset.id && req.status === 'pending'
+                              )
+                              const rejectedRequest = deletionRequests.find(
+                                req => req.dataset_id === dataset.id && req.status === 'rejected'
+                              )
+                              
+                              return (
+                                <button
+                                  onClick={() => {
+                                    if (pendingRequest) {
+                                      alert('Deletion request is pending admin review')
+                                    } else {
+                                      setDeletionModalDataset(dataset)
+                                    }
+                                  }}
+                                  className={`p-2 rounded-lg border-2 border-black hover:scale-110 transition ${
+                                    pendingRequest 
+                                      ? 'bg-yellow-300 cursor-not-allowed' 
+                                      : 'bg-red-300'
+                                  }`}
+                                  title={
+                                    pendingRequest 
+                                      ? 'Deletion request pending' 
+                                      : rejectedRequest
+                                        ? 'Previous request rejected - Request again'
+                                        : 'Request deletion'
+                                  }
+                                >
+                                  <Trash className="h-5 w-5" />
+                                </button>
+                              )
+                            })()
+                          )}
                         </div>
                       </div>
                       
-                      {deleteConfirm === dataset.id && (
+                      {/* Show deletion request status */}
+                      {(() => {
+                        const pendingRequest = deletionRequests.find(
+                          req => req.dataset_id === dataset.id && req.status === 'pending'
+                        )
+                        const rejectedRequest = deletionRequests.find(
+                          req => req.dataset_id === dataset.id && req.status === 'rejected'
+                        )
+                        
+                        if (pendingRequest) {
+                          return (
+                            <div className="mt-3 p-3 bg-yellow-100 border-2 border-yellow-500 rounded-lg">
+                              <p className="font-bold text-sm text-yellow-700">
+                                ⏳ Deletion request pending admin review
+                              </p>
+                              <p className="text-xs text-yellow-600 mt-1">
+                                Requested: {new Date(pendingRequest.requested_at).toLocaleString()}
+                              </p>
+                            </div>
+                          )
+                        }
+                        
+                        if (rejectedRequest) {
+                          return (
+                            <div className="mt-3 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
+                              <p className="font-bold text-sm text-red-700">
+                                ❌ Deletion request rejected
+                              </p>
+                              {rejectedRequest.admin_response && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  Admin response: {rejectedRequest.admin_response}
+                                </p>
+                              )}
+                            </div>
+                          )
+                        }
+                        
+                        return null
+                      })()}
+                      
+                      {deleteConfirm === dataset.id && isAdmin && (
                         <div className="mt-3 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
                           <p className="font-bold text-sm text-red-700">
                             ⚠️ Are you sure? Click delete again to confirm. This cannot be undone!
@@ -1996,6 +2130,15 @@ function DashboardPage() {
         curatorProfile={curatorProfile}
         onSuccess={fetchDashboardData}
       />
+
+      {/* Deletion Request Modal */}
+      {deletionModalDataset && (
+        <DeletionRequestModal
+          dataset={deletionModalDataset}
+          onClose={() => setDeletionModalDataset(null)}
+          onSubmit={handleRequestDeletion}
+        />
+      )}
     </div>
   )
 }

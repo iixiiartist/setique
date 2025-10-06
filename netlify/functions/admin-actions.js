@@ -201,6 +201,74 @@ exports.handler = async (event) => {
         }
         break
 
+      case 'approve_deletion_request':
+        // Approve deletion request and delete the dataset
+        // Step 1: Get the deletion request
+        const { data: deletionRequest, error: requestError } = await supabase
+          .from('deletion_requests')
+          .select('*, datasets(*)')
+          .eq('id', targetId)
+          .single()
+        
+        if (requestError || !deletionRequest) {
+          return {
+            statusCode: 404,
+            body: JSON.stringify({ error: 'Deletion request not found' })
+          }
+        }
+        
+        // Step 2: Clear published_dataset_id references in curation_requests
+        await supabase
+          .from('curation_requests')
+          .update({ published_dataset_id: null })
+          .eq('published_dataset_id', deletionRequest.dataset_id)
+        
+        // Step 3: Delete related partnerships (if any)
+        await supabase
+          .from('dataset_partnerships')
+          .delete()
+          .eq('dataset_id', deletionRequest.dataset_id)
+        
+        // Step 4: Delete the dataset
+        const { error: deleteError } = await supabase
+          .from('datasets')
+          .delete()
+          .eq('id', deletionRequest.dataset_id)
+        
+        if (deleteError) throw deleteError
+        
+        // Step 5: Update the deletion request status
+        result = await supabase
+          .from('deletion_requests')
+          .update({
+            status: 'approved',
+            reviewed_by: userId,
+            reviewed_at: new Date().toISOString(),
+            admin_response: details?.adminResponse || 'Deletion request approved'
+          })
+          .eq('id', targetId)
+        break
+
+      case 'reject_deletion_request':
+        // Reject deletion request with reason
+        if (!details?.adminResponse) {
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'Admin response required for rejection' })
+          }
+        }
+        
+        result = await supabase
+          .from('deletion_requests')
+          .update({
+            status: 'rejected',
+            reviewed_by: userId,
+            reviewed_at: new Date().toISOString(),
+            admin_response: details.adminResponse
+          })
+          .eq('id', targetId)
+        break
+
       default:
         return {
           statusCode: 400,
