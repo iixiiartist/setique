@@ -70,40 +70,52 @@ export default function UserProfilePage() {
       // Fetch followers
       const { data: followersData } = await supabase
         .from('user_follows')
-        .select(`
-          id,
-          follower_id,
-          created_at,
-          profiles:follower_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('id, follower_id, created_at')
         .eq('following_id', profileData.id)
         .order('created_at', { ascending: false })
 
-      setFollowers(followersData || [])
+      // Fetch follower profiles separately
+      if (followersData && followersData.length > 0) {
+        const followerIds = followersData.map(f => f.follower_id)
+        const { data: followerProfiles } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url')
+          .in('id', followerIds)
+        
+        // Attach profiles to followers
+        const followersWithProfiles = followersData.map(follower => ({
+          ...follower,
+          profiles: followerProfiles?.find(p => p.id === follower.follower_id)
+        }))
+        setFollowers(followersWithProfiles)
+      } else {
+        setFollowers([])
+      }
 
       // Fetch following
       const { data: followingData } = await supabase
         .from('user_follows')
-        .select(`
-          id,
-          following_id,
-          created_at,
-          profiles:following_id (
-            id,
-            username,
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('id, following_id, created_at')
         .eq('follower_id', profileData.id)
         .order('created_at', { ascending: false })
 
-      setFollowing(followingData || [])
+      // Fetch following profiles separately
+      if (followingData && followingData.length > 0) {
+        const followingIds = followingData.map(f => f.following_id)
+        const { data: followingProfiles } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url')
+          .in('id', followingIds)
+        
+        // Attach profiles to following
+        const followingWithProfiles = followingData.map(follow => ({
+          ...follow,
+          profiles: followingProfiles?.find(p => p.id === follow.following_id)
+        }))
+        setFollowing(followingWithProfiles)
+      } else {
+        setFollowing([])
+      }
 
     } catch (error) {
       console.error('Error fetching profile:', error)
