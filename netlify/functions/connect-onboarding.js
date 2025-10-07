@@ -66,12 +66,22 @@ exports.handler = async (event) => {
     }
 
     // Create account link for onboarding
+    const finalReturnUrl = returnUrl || `${process.env.URL}/creator-dashboard?onboarding=complete`
+    const finalRefreshUrl = refreshUrl || `${process.env.URL}/creator-dashboard?refresh=true`
+    
+    console.log('Creating Stripe account link with URLs:', {
+      return_url: finalReturnUrl,
+      refresh_url: finalRefreshUrl
+    })
+    
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: refreshUrl || `${process.env.URL}/creator-dashboard?refresh=true`,
-      return_url: returnUrl || `${process.env.URL}/creator-dashboard?onboarding=complete`,
+      refresh_url: finalRefreshUrl,
+      return_url: finalReturnUrl,
       type: 'account_onboarding',
     })
+    
+    console.log('Created account link:', accountLink.url)
 
     return {
       statusCode: 200,

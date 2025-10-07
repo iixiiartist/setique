@@ -149,6 +149,32 @@ function DashboardPage() {
         .maybeSingle()
       
       setPayoutAccount(payout)
+      
+      // If payout account exists but payouts aren't enabled, verify with Stripe
+      if (payout && payout.stripe_connect_account_id && !payout.payouts_enabled) {
+        console.log('Payout account exists but not enabled, verifying with Stripe...')
+        try {
+          const verifyResponse = await fetch('/.netlify/functions/verify-stripe-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ creatorId: user.id })
+          })
+          const verifyData = await verifyResponse.json()
+          console.log('Verification result:', verifyData)
+          
+          if (verifyData.success && verifyData.account?.payouts_enabled) {
+            // Refresh payout account data
+            const { data: updatedPayout } = await supabase
+              .from('creator_payout_accounts')
+              .select('*')
+              .eq('creator_id', user.id)
+              .single()
+            setPayoutAccount(updatedPayout)
+          }
+        } catch (error) {
+          console.log('Background verification failed:', error)
+        }
+      }
 
       // Fetch user's purchases
       const { data: purchases } = await supabase
@@ -728,6 +754,11 @@ function DashboardPage() {
     setConnectError(null)
     
     try {
+      const returnUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`
+      const refreshUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`
+      
+      console.log('Creating Stripe onboarding with URLs:', { returnUrl, refreshUrl })
+      
       const response = await fetch('/.netlify/functions/connect-onboarding', {
         method: 'POST',
         headers: {
@@ -736,8 +767,8 @@ function DashboardPage() {
         body: JSON.stringify({
           creatorId: user.id,
           email: profile?.email || user.email,
-          returnUrl: `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`,
-          refreshUrl: `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`,
+          returnUrl,
+          refreshUrl,
         }),
       })
 
