@@ -409,15 +409,35 @@ function DashboardPage() {
     const tabParam = urlParams.get('tab')
     
     if (onboardingStatus === 'complete') {
-      alert('✅ Stripe account connected successfully! Your payout account is now set up.')
-      // Switch to earnings tab if not already there
-      if (tabParam === 'earnings') {
-        setActiveTab('earnings')
-      }
-      // Clean up URL
-      window.history.replaceState({}, '', '/dashboard')
-      // Refresh data to show updated payout account
-      setTimeout(() => fetchDashboardData(), 1000)
+      // Verify Stripe account status with Stripe API
+      ;(async () => {
+        try {
+          const response = await fetch('/.netlify/functions/verify-stripe-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ creatorId: user.id })
+          })
+          const data = await response.json()
+          
+          if (data.success) {
+            alert('✅ Stripe account connected successfully! Your payout account is now set up.')
+          } else {
+            alert(`⚠️ Account verification incomplete: ${data.message || 'Please complete all required information.'}`)
+          }
+        } catch (error) {
+          console.error('Error verifying Stripe account:', error)
+          alert('⚠️ Error verifying account status. Please refresh and try again.')
+        }
+        
+        // Switch to earnings tab if not already there
+        if (tabParam === 'earnings') {
+          setActiveTab('earnings')
+        }
+        // Clean up URL
+        window.history.replaceState({}, '', '/dashboard')
+        // Refresh data to show updated payout account
+        setTimeout(() => fetchDashboardData(), 1000)
+      })()
     } else if (onboardingStatus === 'refresh') {
       alert('⚠️ Stripe onboarding was interrupted. Please try again.')
       if (tabParam === 'earnings') {
