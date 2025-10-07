@@ -795,10 +795,12 @@ function DashboardPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto">
+        {/* Tabs - Accessible tab navigation with ARIA attributes */}
+        <div className="flex gap-2 mb-6 overflow-x-auto" role="tablist" aria-label="Dashboard sections">
           <button
             onClick={() => setActiveTab('overview')}
+            role="tab"
+            aria-selected={activeTab === 'overview'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'overview'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -809,6 +811,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('datasets')}
+            role="tab"
+            aria-selected={activeTab === 'datasets'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'datasets'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -819,6 +823,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('purchases')}
+            role="tab"
+            aria-selected={activeTab === 'purchases'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'purchases'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -829,6 +835,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('earnings')}
+            role="tab"
+            aria-selected={activeTab === 'earnings'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'earnings'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -839,6 +847,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('bounties')}
+            role="tab"
+            aria-selected={activeTab === 'bounties'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'bounties'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -849,6 +859,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('submissions')}
+            role="tab"
+            aria-selected={activeTab === 'submissions'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'submissions'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -859,6 +871,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('curation-requests')}
+            role="tab"
+            aria-selected={activeTab === 'curation-requests'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
               activeTab === 'curation-requests'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
@@ -869,6 +883,8 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => setActiveTab('pro-curator')}
+            role="tab"
+            aria-selected={activeTab === 'pro-curator'}
             className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition flex items-center gap-2 ${
               activeTab === 'pro-curator'
                 ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
