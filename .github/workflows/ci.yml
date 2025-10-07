@@ -1,0 +1,186 @@
+name: CI Testing Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Lint and Unit Tests
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Run unit tests
+        run: npm run test:run
+      
+      - name: Generate coverage report
+        run: npm run test:coverage
+        continue-on-error: true
+      
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@v3
+        if: matrix.node-version == '20.x'
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # E2E Tests
+  e2e:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+      
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: test-results.json
+          retention-days: 30
+
+  # Lighthouse Performance Audit
+  lighthouse:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build production bundle
+        run: npm run build
+      
+      - name: Start preview server
+        run: npm run preview &
+        env:
+          CI: true
+      
+      - name: Wait for server
+        run: npx wait-on http://localhost:4173 -t 60000
+      
+      - name: Run Lighthouse audit
+        run: |
+          mkdir -p reports
+          npx lighthouse http://localhost:4173 \
+            --output html \
+            --output json \
+            --output-path ./reports/lighthouse \
+            --chrome-flags="--headless --no-sandbox"
+      
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lighthouse-report
+          path: reports/
+          retention-days: 30
+      
+      - name: Check Lighthouse scores
+        run: |
+          SCORE=$(jq '.categories.performance.score * 100' reports/lighthouse.report.json)
+          echo "Performance score: $SCORE"
+          if (( $(echo "$SCORE < 80" | bc -l) )); then
+            echo "⚠️ Performance score is below 80"
+            exit 1
+          fi
+
+  # Security Scan (optional - requires OWASP ZAP Docker image)
+  security:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Start dev server
+        run: npm run dev &
+        env:
+          CI: true
+      
+      - name: Wait for server
+        run: npx wait-on http://localhost:5173 -t 60000
+      
+      - name: Run OWASP ZAP baseline scan
+        run: |
+          docker run -t owasp/zap2docker-stable zap-baseline.py \
+            -t http://host.docker.internal:5173 \
+            -r zap-report.html \
+            || true
+      
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: zap-security-report
+          path: zap-report.html
+          retention-days: 30

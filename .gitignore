@@ -35,3 +35,19 @@ check-database.js
 
 # Netlify
 .netlify
+
+# Testing
+coverage/
+*.coverage
+.nyc_output
+test-results/
+test-results.json
+playwright-report/
+playwright/.cache/
+reports/
+lighthouse-report.html
+zap-report.html
+*.spec.js.snap
+
+# Husky
+.husky/_
