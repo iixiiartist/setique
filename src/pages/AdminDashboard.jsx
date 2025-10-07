@@ -42,6 +42,9 @@ export default function AdminDashboard() {
   const [selectedBounty, setSelectedBounty] = useState(null);
   const [showBountyModal, setShowBountyModal] = useState(false);
   
+  // Confirm Dialog
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
+
   // Stats
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -419,15 +422,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteDataset = async (datasetId, datasetTitle) => {
-    if (!confirm(`⚠️ Are you sure you want to DELETE "${datasetTitle}"?\n\nThis action cannot be undone and will remove all associated data.`)) {
-      return;
-    }
-
-    const confirmAgain = prompt(`Type "DELETE" to confirm deletion of "${datasetTitle}"`);
-    if (confirmAgain !== 'DELETE') {
-      alert('Deletion cancelled.');
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Dataset?',
+      message: `⚠️ Are you sure you want to DELETE "${datasetTitle}"?\n\nThis action cannot be undone and will remove all associated data.`,
+      confirmText: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
 
     try {
       const response = await fetch('/.netlify/functions/admin-actions', {
@@ -448,12 +449,14 @@ export default function AdminDashboard() {
         throw new Error(result.error || 'Failed to delete dataset');
       }
 
-      alert('✅ Dataset deleted successfully!');
-      await fetchAdminData();
-    } catch (error) {
-      console.error('Error deleting dataset:', error);
-      alert('Failed to delete dataset: ' + error.message);
+        alert('✅ Dataset deleted successfully!');
+        await fetchAdminData();
+      } catch (error) {
+        console.error('Error deleting dataset:', error);
+        alert('Failed to delete dataset: ' + error.message);
+      }
     }
+    });
   };
 
   const handleApproveDeletionRequest = async (requestId) => {
@@ -547,33 +550,38 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBounty = async (bountyId) => {
-    if (!confirm('⚠️ PERMANENTLY delete this bounty? This cannot be undone!')) {
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Bounty?',
+      message: '⚠️ PERMANENTLY delete this bounty? This cannot be undone and will delete all associated proposals.',
+      confirmText: 'Delete',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          // Delete proposals first (foreign key constraint)
+          const { error: proposalsError } = await supabase
+            .from('curator_proposals')
+            .delete()
+            .eq('request_id', bountyId);
 
-    try {
-      // Delete proposals first (foreign key constraint)
-      const { error: proposalsError } = await supabase
-        .from('curator_proposals')
-        .delete()
-        .eq('request_id', bountyId);
+          if (proposalsError) throw proposalsError;
 
-      if (proposalsError) throw proposalsError;
+          // Then delete the bounty
+          const { error } = await supabase
+            .from('curation_requests')
+            .delete()
+            .eq('id', bountyId);
 
-      // Then delete the bounty
-      const { error } = await supabase
-        .from('curation_requests')
-        .delete()
-        .eq('id', bountyId);
+          if (error) throw error;
 
-      if (error) throw error;
-
-      alert('✅ Bounty and all proposals deleted successfully!');
-      await fetchAdminData();
-    } catch (error) {
-      console.error('Error deleting bounty:', error);
-      alert('Failed to delete bounty: ' + error.message);
-    }
+          alert('✅ Bounty and all proposals deleted successfully!');
+          await fetchAdminData();
+        } catch (error) {
+          console.error('Error deleting bounty:', error);
+          alert('Failed to delete bounty: ' + error.message);
+        }
+      }
+    });
   };
 
   // Show loading while auth is loading
@@ -1617,6 +1625,17 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }
