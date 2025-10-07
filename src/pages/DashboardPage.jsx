@@ -198,7 +198,7 @@ function DashboardPage() {
         .from('bounty_submissions')
         .select(`
           *,
-          bounties (*),
+          curation_requests!request_id (*),
           datasets (*)
         `)
         .eq('creator_id', user.id)
@@ -1515,10 +1515,10 @@ function DashboardPage() {
                             {submission.datasets?.title || 'Untitled Dataset'}
                           </h4>
                           <p className="text-sm font-semibold text-black/70 mb-2">
-                            → Submitted to: <strong>{submission.bounties?.title}</strong>
+                            → Submitted to: <strong>{submission.curation_requests?.title}</strong>
                           </p>
                           <p className="text-sm text-black/60 mb-2">
-                            Bounty Budget: ${submission.bounties?.budget} • Your Price: ${submission.datasets?.price}
+                            Bounty Budget: ${submission.curation_requests?.budget_max} • Your Price: ${submission.datasets?.price}
                           </p>
                           {submission.notes && (
                             <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-2">

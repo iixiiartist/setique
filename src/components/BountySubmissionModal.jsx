@@ -29,7 +29,7 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
           const { data: submissionsData, error: submissionsError } = await supabase
             .from('bounty_submissions')
             .select('dataset_id')
-            .eq('bounty_id', bounty.id)
+            .eq('request_id', bounty.id)
             .eq('creator_id', user.id)
 
           if (submissionsError) throw submissionsError
@@ -62,7 +62,7 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
       const { error: insertError } = await supabase
         .from('bounty_submissions')
         .insert([{
-          bounty_id: bounty.id,
+          request_id: bounty.id,
           creator_id: user.id,
           dataset_id: selectedDataset,
           notes: notes.trim(),
