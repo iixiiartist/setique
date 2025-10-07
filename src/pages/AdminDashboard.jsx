@@ -1006,9 +1006,6 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-gray-700 text-sm line-clamp-2 mb-3">{dataset.description}</p>
                         <div className="flex items-center gap-4 text-sm pt-3 border-t border-gray-200 flex-wrap">
-                          <span className="font-bold">Size:</span>
-                          <span>{dataset.file_size ? (dataset.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}</span>
-                          <span>•</span>
                           <span className="font-bold">Purchases:</span>
                           <span>{dataset.purchase_count || 0}</span>
                           <span>•</span>
@@ -1469,10 +1466,6 @@ export default function AdminDashboard() {
                   <div className="text-sm font-bold text-gray-600 mb-1">Creator</div>
                   <div className="font-bold">{selectedDataset.profiles?.username || 'Unknown'}</div>
                   <div className="text-xs text-gray-500">{selectedDataset.profiles?.email || ''}</div>
-                </div>
-                <div className="border-2 border-black rounded-lg p-4">
-                  <div className="text-sm font-bold text-gray-600 mb-1">File Size</div>
-                  <div className="font-bold">{selectedDataset.file_size ? (selectedDataset.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}</div>
                 </div>
                 <div className="border-2 border-black rounded-lg p-4">
                   <div className="text-sm font-bold text-gray-600 mb-1">Purchases</div>
