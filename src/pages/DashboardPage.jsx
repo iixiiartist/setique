@@ -105,331 +105,217 @@ function DashboardPage() {
     
     setLoading(true)
     try {
-      // Fetch user's created datasets with partnership info
-      const { data: datasets } = await supabase
-        .from('datasets')
-        .select(`
-          *,
-          dataset_partnerships (
-            id,
-            status,
-            curator_user_id,
-            pro_curators (
-              display_name,
-              badge_level
+      // Batch 1: Core user data (parallel execution)
+      const [
+        datasetsResult,
+        earningsResult,
+        payoutResult,
+        purchasesResult,
+        adminResult
+      ] = await Promise.all([
+        // Fetch user's created datasets with partnership info
+        supabase
+          .from('datasets')
+          .select(`
+            *,
+            dataset_partnerships (
+              id,
+              status,
+              curator_user_id,
+              pro_curators (
+                display_name,
+                badge_level
+              )
             )
-          )
-        `)
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
+          `)
+          .eq('creator_id', user.id)
+          .order('created_at', { ascending: false }),
+        
+        // Fetch earnings summary
+        supabase
+          .from('creator_earnings')
+          .select('*')
+          .eq('creator_id', user.id)
+          .order('earned_at', { ascending: false }),
+        
+        // Fetch payout account
+        supabase
+          .from('creator_payout_accounts')
+          .select('*')
+          .eq('creator_id', user.id)
+          .maybeSingle(),
+        
+        // Fetch user's purchases
+        supabase
+          .from('purchases')
+          .select(`
+            *,
+            datasets (*)
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+          .order('purchased_at', { ascending: false }),
+        
+        // Check if user is admin
+        supabase
+          .from('admins')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ]);
+
+      const datasets = datasetsResult.data || [];
       
-      // Add purchase counts to each dataset
-      if (datasets) {
-        for (const dataset of datasets) {
-          const { count } = await supabase
-            .from('purchases')
-            .select('*', { count: 'exact', head: true })
-            .eq('dataset_id', dataset.id)
-            .eq('status', 'completed')
-          dataset.purchase_count = count || 0
-        }
+      // Batch fetch all purchase counts in ONE query instead of loop
+      if (datasets.length > 0) {
+        const datasetIds = datasets.map(d => d.id);
+        const { data: purchaseCounts } = await supabase
+          .from('purchases')
+          .select('dataset_id')
+          .in('dataset_id', datasetIds)
+          .eq('status', 'completed');
+        
+        // Count purchases per dataset
+        const countMap = {};
+        purchaseCounts?.forEach(p => {
+          countMap[p.dataset_id] = (countMap[p.dataset_id] || 0) + 1;
+        });
+        
+        // Add counts to datasets
+        datasets.forEach(dataset => {
+          dataset.purchase_count = countMap[dataset.id] || 0;
+        });
       }
       
-      setMyDatasets(datasets || [])
+      setMyDatasets(datasets)
 
-      // Fetch earnings summary
-      const { data: earningsData } = await supabase
-        .from('creator_earnings')
-        .select('*')
-        .eq('creator_id', user.id)
-        .order('earned_at', { ascending: false })
-      
-      // Calculate totals
-      const totalEarned = earningsData?.reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0
-      const pendingEarnings = earningsData?.filter(e => e.status === 'pending').reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0
+      // Process earnings (already fetched in parallel)
+      const earningsData = earningsResult.data || [];
+      const totalEarned = earningsData.reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0;
+      const pendingEarnings = earningsData.filter(e => e.status === 'pending').reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0;
       
       setEarnings({
         total: totalEarned,
         pending: pendingEarnings,
         paid: totalEarned - pendingEarnings,
-        transactions: earningsData || []
-      })
+        transactions: earningsData
+      });
 
-      // Fetch payout account
-      const { data: payout } = await supabase
-        .from('creator_payout_accounts')
-        .select('*')
-        .eq('creator_id', user.id)
-        .maybeSingle()
+      // Process payout account (already fetched in parallel)
+      const payout = payoutResult.data;
+      setPayoutAccount(payout);
       
-      setPayoutAccount(payout)
+      // Process purchases (already fetched in parallel)
+      setMyPurchases(purchasesResult.data || []);
+
+      // Process admin status (already fetched in parallel)
+      if (!adminResult.error && adminResult.data) {
+        setIsAdmin(true);
+      }
       
-      // If payout account exists but payouts aren't enabled, verify with Stripe
+      // Verify Stripe account if needed (background, non-blocking)
       if (payout && payout.stripe_connect_account_id && !payout.payouts_enabled) {
-        console.log('Payout account exists but not enabled, verifying with Stripe...')
-        try {
-          const verifyResponse = await fetch('/.netlify/functions/verify-stripe-account', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ creatorId: user.id })
+        fetch('/.netlify/functions/verify-stripe-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ creatorId: user.id })
+        })
+          .then(res => res.json())
+          .then(verifyData => {
+            if (verifyData.success && verifyData.account?.payouts_enabled) {
+              supabase
+                .from('creator_payout_accounts')
+                .select('*')
+                .eq('creator_id', user.id)
+                .single()
+                .then(({ data }) => setPayoutAccount(data));
+            }
           })
-          const verifyData = await verifyResponse.json()
-          console.log('Verification result:', verifyData)
-          
-          if (verifyData.success && verifyData.account?.payouts_enabled) {
-            // Refresh payout account data
-            const { data: updatedPayout } = await supabase
-              .from('creator_payout_accounts')
-              .select('*')
-              .eq('creator_id', user.id)
-              .single()
-            setPayoutAccount(updatedPayout)
-          }
-        } catch (error) {
-          console.log('Background verification failed:', error)
-        }
+          .catch(err => console.log('Background verification failed:', err));
       }
 
-      // Fetch user's purchases
-      const { data: purchases } = await supabase
-        .from('purchases')
-        .select(`
-          *,
-          datasets (*)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .order('purchased_at', { ascending: false })
-      
-      setMyPurchases(purchases || [])
+      // Batch 2: Bounty and curation data (parallel execution)
+      const [
+        bountiesResult,
+        submissionsResult,
+        curationRequestsResult,
+        openRequestsResult,
+        curatorProfileResult,
+        deletionRequestsResult
+      ] = await Promise.all([
+        supabase.from('curation_requests').select('*').eq('creator_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('bounty_submissions').select('*, curation_requests!request_id (*), datasets (*)').eq('creator_id', user.id).order('submitted_at', { ascending: false }),
+        supabase.from('curation_requests').select('*, curator_proposals (id, status, curator_id, proposal_text, estimated_completion_days, suggested_price, created_at, pro_curators (id, display_name, badge_level, rating, total_projects, specialties)), curator_submissions (id, submission_number, file_name, file_size, file_path, completion_notes, changes_made, status, reviewer_feedback, created_at, reviewed_at)').eq('creator_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('curation_requests').select('*').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
+        supabase.from('pro_curators').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('deletion_requests').select('*, datasets (id, title, description)').eq('requester_id', user.id).order('requested_at', { ascending: false })
+      ]);
 
-      // Fetch user's bounties (curation requests that they posted)
-      const { data: bounties, error: bountiesError } = await supabase
-        .from('curation_requests')
-        .select('*')
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-      
-      console.log('💰 Bounties query result:', { bounties, bountiesError, userId: user.id })
-      
-      if (bountiesError) {
-        console.error('Error fetching bounties:', bountiesError)
-      }
-      
-      // Fetch proposals for each bounty
-      if (bounties && bounties.length > 0) {
+      // Process bounties with proposals
+      const bounties = bountiesResult.data || [];
+      if (bounties.length > 0) {
         const requestIds = bounties.map(b => b.id);
-        const { data: proposalsData } = await supabase
-          .from('curator_proposals')
-          .select(`
-            id,
-            request_id,
-            status,
-            curator_id,
-            proposal_text,
-            estimated_completion_days,
-            suggested_price,
-            created_at
-          `)
-          .in('request_id', requestIds);
+        const [proposalsResult, curatorsResult] = await Promise.all([
+          supabase.from('curator_proposals').select('*').in('request_id', requestIds),
+          supabase.from('pro_curators').select('id, display_name, badge_level')
+        ]);
         
-        // Fetch pro curator info for proposals
-        if (proposalsData && proposalsData.length > 0) {
-          const curatorIds = [...new Set(proposalsData.map(p => p.curator_id).filter(Boolean))];
-          const { data: curatorsData } = await supabase
-            .from('pro_curators')
-            .select('id, display_name, badge_level')
-            .in('id', curatorIds);
-          
-          // Attach curator data to proposals
-          const proposalsWithCurators = proposalsData.map(proposal => ({
-            ...proposal,
-            pro_curators: curatorsData?.find(c => c.id === proposal.curator_id)
-          }));
-          
-          // Attach proposals to bounties
-          const bountiesWithProposals = bounties.map(bounty => ({
-            ...bounty,
-            curator_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
-          }));
-          
-          setMyBounties(bountiesWithProposals);
-        } else {
-          setMyBounties(bounties.map(b => ({ ...b, curator_proposals: [] })));
-        }
+        const proposalsWithCurators = (proposalsResult.data || []).map(proposal => ({
+          ...proposal,
+          pro_curators: (curatorsResult.data || []).find(c => c.id === proposal.curator_id)
+        }));
+        
+        setMyBounties(bounties.map(bounty => ({
+          ...bounty,
+          curator_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
+        })));
       } else {
         setMyBounties([]);
       }
 
-      // Fetch user's submissions (datasets they submitted to bounties)
-      const { data: submissions } = await supabase
-        .from('bounty_submissions')
-        .select(`
-          *,
-          curation_requests!request_id (*),
-          datasets (*)
-        `)
-        .eq('creator_id', user.id)
-        .order('submitted_at', { ascending: false })
-      
-      setMySubmissions(submissions || [])
+      setMySubmissions(submissionsResult.data || []);
+      setMyCurationRequests(curationRequestsResult.data || []);
+      setOpenCurationRequests(openRequestsResult.data || []);
+      setCuratorProfile(curatorProfileResult.data);
+      setDeletionRequests(deletionRequestsResult.data || []);
 
-      // Fetch user's curation requests with proposal counts and submissions
-      const { data: curationRequests } = await supabase
-        .from('curation_requests')
-        .select(`
-          *,
-          curator_proposals (
-            id,
-            status,
-            curator_id,
-            proposal_text,
-            estimated_completion_days,
-            suggested_price,
-            created_at,
-            pro_curators (
-              id,
-              display_name,
-              badge_level,
-              rating,
-              total_projects,
-              specialties
-            )
-          ),
-          curator_submissions (
-            id,
-            submission_number,
-            file_name,
-            file_size,
-            file_path,
-            completion_notes,
-            changes_made,
-            status,
-            reviewer_feedback,
-            created_at,
-            reviewed_at
-          )
-        `)
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-      
-      setMyCurationRequests(curationRequests || [])
-
-      // Fetch open curation requests for Pro Curators to browse
-      const { data: openRequests } = await supabase
-        .from('curation_requests')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(20) // Show recent 20 open requests
-      
-      setOpenCurationRequests(openRequests || [])
-
-      // Fetch curator profile if user is a Pro Curator
-      const { data: curatorData } = await supabase
-        .from('pro_curators')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      
-      setCuratorProfile(curatorData)
-
-      // If user is a Pro Curator, fetch requests assigned to them
+      // If user is a Pro Curator, fetch assigned requests
+      const curatorData = curatorProfileResult.data;
       if (curatorData) {
-        console.log('🔍 Fetching assigned requests for curator:', curatorData.id);
-        
-        // Fetch requests WITHOUT any joins to avoid 400 errors
-        const { data: assignedData, error: assignedError } = await supabase
+        const { data: assignedData } = await supabase
           .from('curation_requests')
           .select('*')
           .eq('assigned_curator_id', curatorData.id)
-          .order('created_at', { ascending: false })
-        
-        console.log('📊 Assigned requests query result:', {
-          data: assignedData,
-          error: assignedError,
-          count: assignedData?.length || 0
-        });
-        
-        if (assignedError) {
-          console.error('❌ Error fetching assigned requests:', assignedError)
-        }
+          .order('created_at', { ascending: false });
 
-        // Fetch related data separately if we got requests
         if (assignedData && assignedData.length > 0) {
           const requestIds = assignedData.map(r => r.id);
           const creatorIds = assignedData.map(r => r.creator_id).filter(Boolean);
 
-          // Fetch proposals
-          const { data: proposals } = await supabase
-            .from('curator_proposals')
-            .select('*')
-            .in('request_id', requestIds);
+          // Fetch proposals and creator profiles in parallel
+          const [proposalsResult, creatorsResult] = await Promise.all([
+            supabase.from('curator_proposals').select('*').in('request_id', requestIds),
+            supabase.from('profiles').select('id, username, avatar_url').in('id', creatorIds)
+          ]);
 
-          // Fetch creator profiles
-          const { data: creators } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .in('id', creatorIds);
+          const proposals = proposalsResult.data || [];
+          const creators = creatorsResult.data || [];
 
-          // Combine the data
-          const requestsWithData = assignedData.map(request => {
-            const requestProposals = proposals?.filter(p => p.request_id === request.id) || [];
-            const creator = creators?.find(c => c.id === request.creator_id);
-            
-            return {
-              ...request,
-              requestor: creator ? { username: creator.username, avatar_url: creator.avatar_url } : null,
-              curator_proposals: requestProposals,
-              accepted_proposal: requestProposals.filter(p => p.status === 'accepted')
-            };
-          });
-
-          console.log('✅ Processed assigned requests:', requestsWithData);
-          setCuratorAssignedRequests(requestsWithData);
+          setCuratorAssignedRequests(assignedData.map(request => ({
+            ...request,
+            requestor: creators.find(c => c.id === request.creator_id) || null,
+            curator_proposals: proposals.filter(p => p.request_id === request.id),
+            accepted_proposal: proposals.filter(p => p.request_id === request.id && p.status === 'accepted')
+          })));
         } else {
-          console.log('ℹ️ No assigned requests found');
           setCuratorAssignedRequests([]);
         }
+      } else {
+        setCuratorAssignedRequests([]);
       }
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-    }
-
-    // Check if user is an admin (separate try-catch so it doesn't break dashboard)
-    try {
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
-      
-      if (!adminError && adminData) {
-        setIsAdmin(true)
-      }
-    } catch {
-      // Silently fail if admins table doesn't exist
-    }
-
-    // Fetch user's deletion requests
-    try {
-      const { data: deletionRequestsData } = await supabase
-        .from('deletion_requests')
-        .select(`
-          *,
-          datasets (
-            id,
-            title,
-            description
-          )
-        `)
-        .eq('requester_id', user.id)
-        .order('requested_at', { ascending: false })
-      
-      setDeletionRequests(deletionRequestsData || [])
-    } catch (error) {
-      console.error('Error fetching deletion requests:', error)
     }
 
     setLoading(false)
