@@ -769,8 +769,8 @@ function HomePage() {
               <CircleDollarSign className="h-16 w-16 text-cyan-500 mx-auto mb-4" />
               <h3 className="text-2xl font-extrabold mb-2">2. Set Your Value & Build Trust</h3>
               <p className="font-semibold text-black/70">
-                You&apos;re the expert—set your price and earn 80% per sale. Pro Curators
-                ensure quality and earn 40% ongoing. Build your reputation in the community.
+                You&apos;re the expert—set your price and earn 80% per purchase (ongoing passive income). Pro Curators
+                can help improve quality and earn 40% ongoing by partnering with you. Build your reputation in the community.
               </p>
             </div>
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">

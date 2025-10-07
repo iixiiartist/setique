@@ -83,8 +83,8 @@ Want to give it a shot?`
     } else {
       return `Pro Curator is our partnership system where dataset owners and expert curators team up to create better datasets and share the revenue.
 
-If you're a dataset owner: Get professional help improving your data, split revenue 50/50
-If you want to be a curator: Earn 40% of ongoing purchases from datasets you help improve
+If you're a dataset owner: Get professional help improving your data, split revenue 50/50 - both you and your curator earn from every purchase
+If you want to be a curator: Earn 40% from every purchase of datasets you help improve - ongoing passive income from your expertise
 
 It's in the Dashboard → Pro Curator tab, or you can browse curation requests on the Marketplace page.
 
@@ -197,7 +197,7 @@ Where do you want to go?`
   if (msg.match(/stripe|payout|payment|earn|money|paid/)) {
     return `Getting paid is easy once you set up Stripe Connect. It's a one-time thing that takes like 2-3 minutes.
 
-Just go to Dashboard → Earnings tab → "Setup Stripe Connect" and follow the prompts. After that, you earn 80% of every sale automatically. Platform takes 20%, and payments go straight to your bank account.
+Just go to Dashboard → Earnings tab → "Setup Stripe Connect" and follow the prompts. After that, you earn 80% of every purchase automatically - unlimited ongoing passive income. Platform takes 20%, and payments go straight to your bank account.
 
 You can track everything in the Earnings tab - see every sale, how much you made, the whole nine yards.
 
@@ -258,7 +258,7 @@ What kind of data are you looking for?`
 
 **Pro Curator System:**
 • Partner with expert curators to improve datasets
-• Become a curator and earn ongoing revenue
+• Become a curator and earn ongoing revenue from datasets you improve (without owning them)
 • Browse marketplace for curation opportunities
 
 **Pro Tips:**
