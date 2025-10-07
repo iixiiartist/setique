@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { X } from './Icons'
 import { useAuth } from '../contexts/AuthContext'
 
 export const SignInModal = ({ isOpen, onClose }) => {
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -10,6 +13,15 @@ export const SignInModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn, signUp } = useAuth()
+
+  // Set initial mode based on URL parameter or route
+  useEffect(() => {
+    if (searchParams.get('signup') === 'true' || location.pathname === '/signup') {
+      setIsSignUp(true)
+    } else {
+      setIsSignUp(false)
+    }
+  }, [searchParams, location])
 
   if (!isOpen) return null
 

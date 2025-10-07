@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
@@ -29,6 +29,7 @@ const badgeColors = {
 function HomePage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   // General state
   const [query, setQuery] = useState('')
@@ -41,6 +42,13 @@ function HomePage() {
   const [checkoutIdx, setCheckoutIdx] = useState(null)
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
+  
+  // Check URL parameters for auth modal (supports /login and /signup routes)
+  useEffect(() => {
+    if (searchParams.get('signin') === 'true' || searchParams.get('signup') === 'true') {
+      setSignInOpen(true)
+    }
+  }, [searchParams])
 
   // Creator form state with localStorage persistence
   const [newTitle, setNewTitle] = useState(() => {
