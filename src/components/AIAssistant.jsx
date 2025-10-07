@@ -880,3 +880,5 @@ export function AIAssistant() {
     </>
   )
 }
+
+export default AIAssistant
