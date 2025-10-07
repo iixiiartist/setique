@@ -221,12 +221,96 @@ export default function ProCuratorProfile() {
   if (!curatorProfile) {
     return (
       <div className="max-w-3xl mx-auto">
+        {/* Benefits Information Section */}
+        <div className="bg-gradient-to-br from-purple-50 to-cyan-50 border-4 border-black rounded-xl p-8 mb-8 shadow-[8px_8px_0_#000]">
+          <h2 className="text-3xl font-extrabold text-black mb-4">✨ Pro Curator Program</h2>
+          <p className="text-black/80 mb-6 text-lg">
+            Partner with data owners, earn ongoing passive income, and build your reputation as a certified data expert.
+          </p>
+
+          {/* Benefits Grid */}
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white border-2 border-black rounded-lg p-4">
+              <div className="text-2xl mb-2">💰</div>
+              <h3 className="font-extrabold text-black mb-2">Earn 40% Revenue</h3>
+              <p className="text-sm text-black/70">
+                Get 40% of every purchase from datasets you help improve. Ongoing passive income from your expertise.
+              </p>
+            </div>
+            <div className="bg-white border-2 border-black rounded-lg p-4">
+              <div className="text-2xl mb-2">🎯</div>
+              <h3 className="font-extrabold text-black mb-2">Choose Your Projects</h3>
+              <p className="text-sm text-black/70">
+                Browse open requests, submit proposals, and work on projects that match your skills and interests.
+              </p>
+            </div>
+            <div className="bg-white border-2 border-black rounded-lg p-4">
+              <div className="text-2xl mb-2">⭐</div>
+              <h3 className="font-extrabold text-black mb-2">Build Your Badge</h3>
+              <p className="text-sm text-black/70">
+                Start as Verified, advance to Expert (10+ projects), then Master (50+ projects) with performance ratings.
+              </p>
+            </div>
+          </div>
+
+          {/* Requirements & Process */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+              <h4 className="font-extrabold text-black mb-3 flex items-center gap-2">
+                <span>📋</span> Requirements
+              </h4>
+              <ul className="space-y-2 text-sm text-black/80">
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-600 font-bold">•</span>
+                  <span>Portfolio samples or experience description</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-600 font-bold">•</span>
+                  <span>Expertise in data cleaning, annotation, or enhancement</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-600 font-bold">•</span>
+                  <span>Professional profile with contact information</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-yellow-600 font-bold">•</span>
+                  <span>Commitment to quality and timely delivery</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+              <h4 className="font-extrabold text-black mb-3 flex items-center gap-2">
+                <span>🚀</span> Application Process
+              </h4>
+              <ol className="space-y-2 text-sm text-black/80">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-green-600">1.</span>
+                  <span>Complete the application form below</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-green-600">2.</span>
+                  <span>Our team reviews within 2-3 business days</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-green-600">3.</span>
+                  <span>Once approved, browse and bid on open requests</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-green-600">4.</span>
+                  <span>Start earning from your first completed project</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        {/* Application Form */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Become a Pro Curator</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Application Form</h2>
             <p className="text-gray-600">
-              Join our professional curator program and partner with data owners on a 50/50 revenue split.
-              Earn money by applying your expertise to clean, annotate, and enhance datasets.
+              Fill out the form below to apply for Pro Curator certification. All fields marked with * are required.
             </p>
           </div>
 
