@@ -60,7 +60,10 @@ ALTER TABLE bounty_submissions
   REFERENCES curation_requests(id) 
   ON DELETE CASCADE;
 
-RAISE NOTICE '✓ bounty_submissions now references curation_requests';
+DO $$
+BEGIN
+  RAISE NOTICE '✓ bounty_submissions now references curation_requests';
+END $$;
 
 -- ============================================
 -- STEP 2: Drop deprecated bounties table
@@ -72,7 +75,10 @@ RAISE NOTICE '✓ bounty_submissions now references curation_requests';
 -- - Any other dependent objects
 DROP TABLE IF EXISTS bounties CASCADE;
 
-RAISE NOTICE 'Dropped deprecated bounties table';
+DO $$
+BEGIN
+  RAISE NOTICE 'Dropped deprecated bounties table';
+END $$;
 
 -- ============================================
 -- VERIFICATION
