@@ -1,7 +1,10 @@
 import { useState } from 'react'
 
-export const TagInput = ({ tags, setTags }) => {
+export const TagInput = ({ tags, setTags, onChange, disabled, placeholder }) => {
   const [inputValue, setInputValue] = useState('')
+  
+  // Support both setTags and onChange props
+  const updateTags = onChange || setTags
 
   const handleKeyDown = (e) => {
     if (e.key !== 'Enter' && e.key !== ',') return
@@ -11,12 +14,12 @@ export const TagInput = ({ tags, setTags }) => {
       setInputValue('')
       return
     }
-    setTags([...tags, value])
+    updateTags([...tags, value])
     setInputValue('')
   }
 
   const removeTag = (index) => {
-    setTags(tags.filter((_, i) => i !== index))
+    updateTags(tags.filter((_, i) => i !== index))
   }
 
   return (
@@ -30,6 +33,8 @@ export const TagInput = ({ tags, setTags }) => {
           <button
             onClick={() => removeTag(index)}
             className="font-mono hover:text-red-500"
+            type="button"
+            disabled={disabled}
           >
             x
           </button>
@@ -41,7 +46,8 @@ export const TagInput = ({ tags, setTags }) => {
         onKeyDown={handleKeyDown}
         type="text"
         className="flex-grow bg-transparent outline-none font-semibold"
-        placeholder={tags.length === 0 ? 'Add labels (e.g., cat, dog)...' : ''}
+        placeholder={placeholder || (tags.length === 0 ? 'Add labels (e.g., cat, dog)...' : '')}
+        disabled={disabled}
       />
     </div>
   )
