@@ -173,7 +173,6 @@ function HomePage() {
   const [bounties, setBounties] = useState([])
   const [topCurators, setTopCurators] = useState([])
   const [userPurchases, setUserPurchases] = useState([])
-  const [loading, setLoading] = useState(true)
 
   // Fetch datasets
   useEffect(() => {
