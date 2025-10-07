@@ -1028,10 +1028,10 @@ function DashboardPage() {
                 </div>
               )}
 
-              {/* Recent Dataset Sales */}
+              {/* Recent Dataset Purchases */}
               {earnings && earnings.transactions.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-extrabold mb-3">Recent Sales</h4>
+                  <h4 className="text-lg font-extrabold mb-3">Recent Purchases from Your Datasets</h4>
                   <div className="space-y-2">
                     {earnings.transactions.slice(0, 3).map((transaction) => (
                       <div
@@ -1039,7 +1039,7 @@ function DashboardPage() {
                         className="flex justify-between items-center p-3 bg-pink-100 border-2 border-black rounded-lg"
                       >
                         <div>
-                          <div className="font-bold">Sale #{transaction.id.substring(0, 8)}</div>
+                          <div className="font-bold">Purchase #{transaction.id.substring(0, 8)}</div>
                           <div className="text-sm text-black/60">
                             {new Date(transaction.earned_at).toLocaleDateString()}
                           </div>
@@ -1124,7 +1124,7 @@ function DashboardPage() {
                               📦 {dataset.modality}
                             </span>
                             <span className="flex items-center gap-1">
-                              🛒 {dataset.purchase_count || 0} sales
+                              🛒 {dataset.purchase_count || 0} purchases
                             </span>
                             <span className="flex items-center gap-1">
                               📅 {new Date(dataset.created_at).toLocaleDateString()}

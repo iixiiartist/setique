@@ -220,7 +220,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
               </div>
             </div>
             <p className="text-xs text-gray-600 mt-2 font-semibold">
-              Optional budget for initial curation work. Once live, you and your curator will split revenue 50/50 (you get 40% of sales, curator gets 40%, platform 20%).
+              Optional budget for initial curation work. Once live, you and your curator will split revenue 50/50 (you get 40% of purchases, curator gets 40%, platform 20%).
             </p>
           </div>
 
@@ -231,7 +231,7 @@ export default function CurationRequestModal({ isOpen, onClose, onSuccess }) {
               <li>Post your curation request with detailed requirements</li>
               <li>Pro Curators submit proposals with their approach and pricing</li>
               <li>Review proposals and accept one to create a partnership</li>
-              <li>Work together on the dataset (50/50 revenue split on all sales)</li>
+              <li>Work together on the dataset (50/50 revenue split on all purchases)</li>
               <li>Launch curated dataset and earn from every purchase</li>
             </ol>
           </div>

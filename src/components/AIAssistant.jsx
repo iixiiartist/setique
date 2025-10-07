@@ -54,7 +54,7 @@ const generateResponse = (userMessage, context, conversationHistory = [], option
     if (msg.match(/become|apply|how to be|sign up/)) {
       return `Great! So you want to become a Pro Curator. Here's the deal:
 
-You'll apply through your Dashboard (Pro Curator tab), browse curation requests from dataset owners, and submit proposals for projects you can help with. When accepted, you earn 40% of all future sales from that dataset.
+You'll apply through your Dashboard (Pro Curator tab), browse curation requests from dataset owners, and submit proposals for projects you can help with. When accepted, you earn 40% of all future purchases from that dataset.
 
 As you complete projects, you'll earn badges:
 🔵 Verified (starting out)
@@ -83,8 +83,8 @@ Want to give it a shot?`
     } else {
       return `Pro Curator is our partnership system where dataset owners and expert curators team up to create better datasets and share the revenue.
 
-If you're a dataset owner: Get professional help improving your data, split sales 50/50
-If you want to be a curator: Earn 40% of ongoing sales from datasets you help improve
+If you're a dataset owner: Get professional help improving your data, split revenue 50/50
+If you want to be a curator: Earn 40% of ongoing purchases from datasets you help improve
 
 It's in the Dashboard → Pro Curator tab, or you can browse curation requests on the Marketplace page.
 
