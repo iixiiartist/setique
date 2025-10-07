@@ -37,6 +37,7 @@ export default function ConfirmDialog({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition"
+            aria-label="Close dialog"
           >
             <X className="w-5 h-5" />
           </button>
@@ -59,8 +60,8 @@ export default function ConfirmDialog({
           </button>
           <button
             onClick={() => {
-              onConfirm()
-              onClose()
+              if (onConfirm) onConfirm()
+              if (onClose) onClose()
             }}
             className={`flex-1 font-bold px-4 py-3 rounded-full border-2 border-black hover:scale-105 transition ${styles.button}`}
           >
