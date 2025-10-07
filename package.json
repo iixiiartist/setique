@@ -17,13 +17,14 @@
     "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.3",
     "@stripe/stripe-js": "^2.4.0",
+    "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.7.2",
-    "stripe": "^14.10.0",
+    "lucide-react": "^0.545.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.3"
+    "react-router-dom": "^6.21.3",
+    "stripe": "^14.10.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
