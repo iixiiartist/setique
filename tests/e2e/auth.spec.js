@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { TEST_USER } from './helpers.js';
 
 /**
  * E2E Tests for Authentication Flow
@@ -13,9 +14,8 @@ import { test, expect } from '@playwright/test';
  * - Protected route access control
  */
 
-const TEST_USER = {
-  email: `test-${Date.now()}@example.com`,
-  password: 'TestPassword123!',
+// Additional test data
+const INVALID_TEST_DATA = {
   weakPassword: '123',
   invalidEmail: 'not-an-email'
 };

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { TEST_USER, loginUser } from './helpers.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,13 +24,6 @@ const __dirname = dirname(__filename);
  * - Form draft persistence (localStorage)
  */
 
-// Test user credentials (should match existing test user or create new)
-const TEST_USER = {
-  email: 'testuser@example.com',
-  password: 'TestPassword123!',
-  username: 'testuser'
-};
-
 // Test dataset data
 const TEST_DATASET = {
   title: 'E2E Test Dataset - Street Signs',
@@ -40,28 +34,10 @@ const TEST_DATASET = {
   tags: ['computer-vision', 'object-detection', 'street-signs']
 };
 
-// Helper function to login
-async function loginUser(page) {
-  await page.goto('/login');
-  
-  // Wait for modal to be visible
-  await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 5000 });
-  
-  // Fill in credentials
-  await page.locator('input[type="email"]').fill(TEST_USER.email);
-  await page.locator('input[type="password"]').fill(TEST_USER.password);
-  
-  // Click sign in button
-  await page.locator('button[type="submit"]').click();
-  
-  // Wait for successful login (redirect to dashboard)
-  await page.waitForURL(/\/dashboard/, { timeout: 10000 });
-}
-
 // Helper function to open upload modal
 async function openUploadModal(page) {
-  // Look for "Upload New Dataset" button
-  await page.locator('button:has-text("Upload New Dataset")').first().click();
+  // Look for "Upload New Dataset" button using Playwright 1.56.0 syntax
+  await page.click('button:has-text("Upload New Dataset")');
   
   // Wait for modal to appear
   await page.waitForSelector('text=Upload New Dataset', { timeout: 5000 });
