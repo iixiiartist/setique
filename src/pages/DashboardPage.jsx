@@ -121,6 +121,18 @@ function DashboardPage() {
         .eq('creator_id', user.id)
         .order('created_at', { ascending: false })
       
+      // Add purchase counts to each dataset
+      if (datasets) {
+        for (const dataset of datasets) {
+          const { count } = await supabase
+            .from('purchases')
+            .select('*', { count: 'exact', head: true })
+            .eq('dataset_id', dataset.id)
+            .eq('status', 'completed')
+          dataset.purchase_count = count || 0
+        }
+      }
+      
       setMyDatasets(datasets || [])
 
       // Fetch earnings summary
