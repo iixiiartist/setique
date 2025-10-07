@@ -1575,19 +1575,28 @@ function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 max-w-xl mx-auto">
                   <Package className="h-16 w-16 mx-auto mb-4 text-black/30" />
-                  <p className="font-bold text-black/60 mb-2">
+                  <h4 className="text-xl font-extrabold text-black mb-2">
                     No bounties posted yet
+                  </h4>
+                  <p className="text-sm text-black/70 mb-3 leading-relaxed">
+                    <strong>Bounties</strong> let you request custom datasets from professional curators. 
+                    Set your budget and requirements, then review proposals from experts.
                   </p>
-                  <p className="text-sm text-black/50 mb-4">
-                    Post a bounty to request custom datasets from Pro Curators
-                  </p>
+                  <div className="bg-cyan-50 border-2 border-cyan-200 rounded-lg p-4 mb-6 text-left">
+                    <p className="text-sm font-bold text-cyan-900 mb-2">💡 How it works:</p>
+                    <ol className="text-sm text-cyan-800 space-y-1 list-decimal list-inside">
+                      <li>Post your dataset requirements and budget</li>
+                      <li>Pro curators submit proposals with timelines</li>
+                      <li>Choose the best curator and get your custom dataset</li>
+                    </ol>
+                  </div>
                   <button
                     onClick={() => setShowBountyModal(true)}
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
+                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
                   >
-                    + Post Bounty
+                    🎯 Post Your First Bounty
                   </button>
                 </div>
               )}
@@ -1653,19 +1662,28 @@ function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 max-w-xl mx-auto">
                   <Database className="h-16 w-16 mx-auto mb-4 text-black/30" />
-                  <p className="font-bold text-black/60 mb-2">
+                  <h4 className="text-xl font-extrabold text-black mb-2">
                     No submissions yet
+                  </h4>
+                  <p className="text-sm text-black/70 mb-4 leading-relaxed">
+                    Submit your existing datasets to open bounties and earn rewards!
+                    Each bounty lists specific requirements and budgets.
                   </p>
-                  <p className="text-sm text-black/50 mb-4">
-                    Browse bounties on the homepage and submit your datasets
-                  </p>
+                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6 text-left">
+                    <p className="text-sm font-bold text-yellow-900 mb-2">💰 Earn money by:</p>
+                    <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+                      <li>Finding bounties that match your datasets</li>
+                      <li>Submitting high-quality data that meets requirements</li>
+                      <li>Getting selected and receiving payment</li>
+                    </ul>
+                  </div>
                   <button
                     onClick={() => navigate('/')}
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
+                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
                   >
-                    Browse Bounties
+                    🎯 Browse Open Bounties
                   </button>
                 </div>
               )}
@@ -1691,18 +1709,33 @@ function DashboardPage() {
               </div>
 
               {myCurationRequests.length === 0 ? (
-                <div className="text-center py-16">
-                  <p className="text-xl font-bold text-black/60 mb-4">
+                <div className="text-center py-16 max-w-2xl mx-auto">
+                  <h4 className="text-2xl font-extrabold text-black mb-3">
                     No curation requests yet
+                  </h4>
+                  <p className="text-sm text-black/70 mb-4 leading-relaxed">
+                    Need help improving or expanding your datasets? <strong>Curation requests</strong> connect you 
+                    with professional curators who can enhance your data quality.
                   </p>
-                  <p className="text-sm text-black/50 mb-6">
-                    Post a request to get help from professional curators
-                  </p>
+                  <div className="grid md:grid-cols-3 gap-4 mb-6 text-left">
+                    <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+                      <p className="text-lg font-bold text-purple-900 mb-1">🎨 Curation</p>
+                      <p className="text-xs text-purple-800">Get expert help organizing and cleaning your datasets</p>
+                    </div>
+                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                      <p className="text-lg font-bold text-green-900 mb-1">✨ Enhancement</p>
+                      <p className="text-xs text-green-800">Add metadata, tags, and improve data structure</p>
+                    </div>
+                    <div className="bg-pink-50 border-2 border-pink-200 rounded-lg p-4">
+                      <p className="text-lg font-bold text-pink-900 mb-1">📈 Value</p>
+                      <p className="text-xs text-pink-800">Increase your dataset's quality and market value</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => setCurationRequestModalOpen(true)}
-                    className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
+                    className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
                   >
-                    Post Your First Request
+                    🚀 Post Your First Request
                   </button>
                 </div>
               ) : (
@@ -1971,12 +2004,16 @@ function DashboardPage() {
                   <div>
                     <h4 className="text-xl font-extrabold mb-4">🔥 Open Curation Requests</h4>
                     {openCurationRequests.length === 0 ? (
-                      <div className="text-center py-12 bg-gray-50 border-2 border-black rounded-xl">
-                        <p className="text-lg font-bold text-black/60">
+                      <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-cyan-50 border-2 border-black rounded-xl">
+                        <div className="text-4xl mb-3">🎯</div>
+                        <p className="text-lg font-extrabold text-black mb-2">
                           No open requests at the moment
                         </p>
-                        <p className="text-sm text-black/50 mt-2">
-                          Check back later for new opportunities
+                        <p className="text-sm text-black/70 mb-4">
+                          All current curation requests have been claimed!
+                        </p>
+                        <p className="text-xs text-black/60 bg-white border border-black/20 rounded-lg px-4 py-2 inline-block">
+                          💡 Tip: Check back regularly - new requests are posted daily
                         </p>
                       </div>
                     ) : (
