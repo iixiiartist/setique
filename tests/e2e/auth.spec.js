@@ -14,11 +14,9 @@ import { TEST_USER } from './helpers.js';
  * - Protected route access control
  */
 
-// Additional test data
-const INVALID_TEST_DATA = {
-  weakPassword: '123',
-  invalidEmail: 'not-an-email'
-};
+// Playwright 1.56.0 compatible selectors
+const emailInput = (page) => page.locator('input[type="email"]');
+const passwordInput = (page) => page.locator('input[type="password"]');
 
 test.describe('Authentication Flow', () => {
   
@@ -37,8 +35,8 @@ test.describe('Authentication Flow', () => {
       await expect(page).toHaveURL(/\/signup/);
       
       // Form elements should be visible
-      await expect(page.getByPlaceholderText(/email/i)).toBeVisible();
-      await expect(page.getByPlaceholderText(/password/i)).toBeVisible();
+      await expect(emailInput(page)).toBeVisible();
+      await expect(passwordInput(page)).toBeVisible();
       await expect(page.getByRole('button', { name: /sign up/i })).toBeVisible();
     });
 
@@ -46,8 +44,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       
       // Enter invalid email
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.invalidEmail);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.invalidEmail);
+      await passwordInput(page).fill(TEST_USER.password);
       
       // Try to submit
       await page.getByRole('button', { name: /sign up/i }).click();
@@ -60,8 +58,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       
       // Enter weak password
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.weakPassword);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.weakPassword);
       
       // Try to submit
       await page.getByRole('button', { name: /sign up/i }).click();
@@ -74,8 +72,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       
       // Fill in valid credentials
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       
       // Submit form
       await page.getByRole('button', { name: /sign up/i }).click();
@@ -91,8 +89,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       
       // Use an email that already exists (from previous test)
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       
       await page.getByRole('button', { name: /sign up/i }).click();
       
@@ -119,8 +117,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/login');
       
       // Form elements should be visible
-      await expect(page.getByPlaceholderText(/email/i)).toBeVisible();
-      await expect(page.getByPlaceholderText(/password/i)).toBeVisible();
+      await expect(emailInput(page)).toBeVisible();
+      await expect(passwordInput(page)).toBeVisible();
       await expect(page.getByRole('button', { name: /sign in|log in/i })).toBeVisible();
     });
 
@@ -128,8 +126,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/login');
       
       // Enter valid email but wrong password
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill('WrongPassword123!');
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill('WrongPassword123!');
       
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
@@ -141,8 +139,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/login');
       
       // Enter non-existent email
-      await page.getByPlaceholderText(/email/i).fill('nonexistent@example.com');
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill('nonexistent@example.com');
+      await passwordInput(page).fill(TEST_USER.password);
       
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
@@ -154,8 +152,8 @@ test.describe('Authentication Flow', () => {
       await page.goto('/login');
       
       // Enter correct credentials
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
@@ -184,8 +182,8 @@ test.describe('Authentication Flow', () => {
     test('should persist session across page refresh', async ({ page }) => {
       // Login first
       await page.goto('/login');
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -201,8 +199,8 @@ test.describe('Authentication Flow', () => {
     test('should show user email in navigation when logged in', async ({ page }) => {
       // Login first
       await page.goto('/login');
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -217,8 +215,8 @@ test.describe('Authentication Flow', () => {
     test('should successfully logout and clear session', async ({ page }) => {
       // Login first
       await page.goto('/login');
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -237,8 +235,8 @@ test.describe('Authentication Flow', () => {
     test('should not be able to access protected routes after logout', async ({ page }) => {
       // Login first
       await page.goto('/login');
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -278,8 +276,8 @@ test.describe('Authentication Flow', () => {
     test('should allow access to dashboard after login', async ({ page }) => {
       // Login
       await page.goto('/login');
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       await page.getByRole('button', { name: /sign in|log in/i }).click();
       
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
@@ -310,8 +308,8 @@ test.describe('Authentication Flow', () => {
     test('should enforce minimum password length', async ({ page }) => {
       await page.goto('/signup');
       
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill('12345'); // 5 chars
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill('12345'); // 5 chars
       
       await page.getByRole('button', { name: /sign up/i }).click();
       
@@ -333,7 +331,7 @@ test.describe('Authentication Flow', () => {
       await page.goto('/signup');
       
       // Leave email empty
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await passwordInput(page).fill(TEST_USER.password);
       
       await page.getByRole('button', { name: /sign up/i }).click();
       
@@ -353,9 +351,9 @@ test.describe('Authentication Flow', () => {
       ];
       
       for (const email of invalidEmails) {
-        await page.getByPlaceholderText(/email/i).clear();
-        await page.getByPlaceholderText(/email/i).fill(email);
-        await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+        await emailInput(page).fill(''); // Clear previous value
+        await emailInput(page).fill(email);
+        await passwordInput(page).fill(TEST_USER.password);
         
         await page.getByRole('button', { name: /sign up/i }).click();
         
@@ -370,8 +368,8 @@ test.describe('Authentication Flow', () => {
     test('should show loading state during sign up', async ({ page }) => {
       await page.goto('/signup');
       
-      await page.getByPlaceholderText(/email/i).fill(`new-${Date.now()}@example.com`);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(`new-${Date.now()}@example.com`);
+      await passwordInput(page).fill(TEST_USER.password);
       
       // Click submit
       const submitButton = page.getByRole('button', { name: /sign up/i });
@@ -384,8 +382,8 @@ test.describe('Authentication Flow', () => {
     test('should show loading state during login', async ({ page }) => {
       await page.goto('/login');
       
-      await page.getByPlaceholderText(/email/i).fill(TEST_USER.email);
-      await page.getByPlaceholderText(/password/i).fill(TEST_USER.password);
+      await emailInput(page).fill(TEST_USER.email);
+      await passwordInput(page).fill(TEST_USER.password);
       
       // Click submit
       const submitButton = page.getByRole('button', { name: /sign in|log in/i });
@@ -398,10 +396,10 @@ test.describe('Authentication Flow', () => {
     test('should allow password visibility toggle', async ({ page }) => {
       await page.goto('/login');
       
-      const passwordInput = page.getByPlaceholderText(/password/i);
+      const pwdInput = passwordInput(page);
       
       // Password should be hidden by default
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await expect(pwdInput).toHaveAttribute('type', 'password');
       
       // Look for toggle button (eye icon)
       const toggleButton = page.locator('button[aria-label*="password" i], button:has-text("👁")').first();
@@ -410,7 +408,7 @@ test.describe('Authentication Flow', () => {
         await toggleButton.click();
         
         // Password should now be visible
-        await expect(passwordInput).toHaveAttribute('type', 'text');
+        await expect(pwdInput).toHaveAttribute('type', 'text');
       }
     });
   });

@@ -8,7 +8,10 @@
 export const TEST_USER = {
   email: 'setique.e2etest@gmail.com',
   password: 'TestPassword123!',
-  username: 'e2etestuser'
+  username: 'e2etestuser',
+  // Additional test data for validation tests
+  invalidEmail: 'not-an-email',
+  weakPassword: '123'
 };
 
 /**
