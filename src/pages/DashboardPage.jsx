@@ -87,6 +87,16 @@ function DashboardPage() {
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false)
+  
+  // Bounty creation modal state
+  const [showBountyModal, setShowBountyModal] = useState(false)
+  const [newBounty, setNewBounty] = useState({
+    title: '',
+    description: '',
+    modality: 'text',
+    budget_min: '',
+    budget_max: ''
+  })
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -621,6 +631,45 @@ function DashboardPage() {
     } catch (error) {
       console.error('Error requesting deletion:', error)
       throw error
+    }
+  }
+
+  const handleCreateBounty = async () => {
+    if (!newBounty.title || !newBounty.description || !newBounty.budget_max) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    try {
+      const { error } = await supabase.from('curation_requests').insert([
+        {
+          creator_id: user.id,
+          title: newBounty.title,
+          description: newBounty.description,
+          modality: newBounty.modality,
+          budget_min: parseFloat(newBounty.budget_min) || parseFloat(newBounty.budget_max) * 0.8,
+          budget_max: parseFloat(newBounty.budget_max),
+          status: 'open',
+          target_quality: 'standard',
+          specialties_needed: []
+        }
+      ])
+
+      if (error) throw error
+
+      alert(`Bounty "${newBounty.title}" posted successfully!`)
+      setShowBountyModal(false)
+      setNewBounty({
+        title: '',
+        description: '',
+        modality: 'text',
+        budget_min: '',
+        budget_max: ''
+      })
+      await fetchDashboardData()
+    } catch (error) {
+      console.error('Error creating bounty:', error)
+      alert('Failed to create bounty: ' + error.message)
     }
   }
 
@@ -1331,10 +1380,22 @@ function DashboardPage() {
           {/* My Bounties Tab */}
           {activeTab === 'bounties' && (
             <div>
-              <h3 className="text-2xl font-extrabold mb-4">Bounties I Posted</h3>
-              <p className="text-sm text-black/70 mb-6">
-                View submissions from creators responding to your bounties
-              </p>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-2xl font-extrabold mb-1">Bounties I Posted</h3>
+                  <p className="text-sm text-black/70">
+                    View submissions from creators responding to your bounties
+                  </p>
+                </div>
+                {myBounties.length > 0 && (
+                  <button
+                    onClick={() => setShowBountyModal(true)}
+                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
+                  >
+                    + Post Bounty
+                  </button>
+                )}
+              </div>
 
               {myBounties.length > 0 ? (
                 <div className="space-y-4">
@@ -1448,13 +1509,13 @@ function DashboardPage() {
                     No bounties posted yet
                   </p>
                   <p className="text-sm text-black/50 mb-4">
-                    Post a bounty on the homepage to request specific datasets
+                    Post a bounty to request custom datasets from Pro Curators
                   </p>
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => setShowBountyModal(true)}
                     className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
                   >
-                    Go to Homepage
+                    + Post Bounty
                   </button>
                 </div>
               )}
@@ -2133,6 +2194,100 @@ function DashboardPage() {
           onClose={() => setDeletionModalDataset(null)}
           onSubmit={handleRequestDeletion}
         />
+      )}
+
+      {/* Bounty Creation Modal */}
+      {showBountyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-3xl font-black">Post a Bounty</h2>
+              <button
+                onClick={() => setShowBountyModal(false)}
+                className="text-2xl font-bold hover:opacity-70"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block font-bold mb-2">Title *</label>
+                <input
+                  type="text"
+                  value={newBounty.title}
+                  onChange={(e) => setNewBounty({...newBounty, title: e.target.value})}
+                  placeholder="e.g., High-quality audio of rain sounds"
+                  className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2">Description *</label>
+                <textarea
+                  value={newBounty.description}
+                  onChange={(e) => setNewBounty({...newBounty, description: e.target.value})}
+                  placeholder="Describe what you need in detail..."
+                  rows={4}
+                  className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2">Data Type *</label>
+                <select
+                  value={newBounty.modality}
+                  onChange={(e) => setNewBounty({...newBounty, modality: e.target.value})}
+                  className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
+                >
+                  <option value="text">Text</option>
+                  <option value="image">Image</option>
+                  <option value="audio">Audio</option>
+                  <option value="video">Video</option>
+                  <option value="tabular">Tabular</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold mb-2">Min Budget</label>
+                  <input
+                    type="number"
+                    value={newBounty.budget_min}
+                    onChange={(e) => setNewBounty({...newBounty, budget_min: e.target.value})}
+                    placeholder="100"
+                    className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-2">Max Budget *</label>
+                  <input
+                    type="number"
+                    value={newBounty.budget_max}
+                    onChange={(e) => setNewBounty({...newBounty, budget_max: e.target.value})}
+                    placeholder="200"
+                    className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleCreateBounty}
+                  className="flex-1 bg-purple-400 hover:bg-purple-500 border-4 border-black rounded-xl px-6 py-3 font-black text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                >
+                  Post Bounty
+                </button>
+                <button
+                  onClick={() => setShowBountyModal(false)}
+                  className="px-6 py-3 border-4 border-black rounded-xl font-bold hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

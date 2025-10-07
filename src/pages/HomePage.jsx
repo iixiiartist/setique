@@ -576,16 +576,18 @@ function HomePage() {
     }
 
     try {
-      const { error } = await supabase.from('bounties').insert([
+      // Insert into curation_requests (new system)
+      const { error } = await supabase.from('curation_requests').insert([
         {
           creator_id: user.id,
           title: bountyTitle,
           description: bountyDesc,
           modality: bountyModality,
-          quantity: bountyQuantity,
-          budget: parseFloat(bountyBudget),
-          labels: bountyTags,
-          deadline: bountyDeadline || null,
+          budget_min: parseFloat(bountyBudget) * 0.8, // Set min to 80% of budget
+          budget_max: parseFloat(bountyBudget),
+          status: 'open',
+          target_quality: 'standard',
+          specialties_needed: bountyTags,
         },
       ])
 
