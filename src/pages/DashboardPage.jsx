@@ -11,6 +11,7 @@ import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
 import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
 import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import DeletionRequestModal from '../components/DeletionRequestModal'
+import ConfirmDialog from '../components/ConfirmDialog'
 import {
   Database,
   ShoppingBag,
@@ -84,6 +85,7 @@ function DashboardPage() {
   const [editingDataset, setEditingDataset] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false)
@@ -607,62 +609,63 @@ function DashboardPage() {
   }
 
   const handleDeleteDataset = async (datasetId) => {
-    if (!deleteConfirm) {
-      setDeleteConfirm(datasetId)
-      return
-    }
-    
-    if (deleteConfirm !== datasetId) return
-    
-    setActionLoading(true)
     try {
       // Check if dataset has purchases
       const { data: purchases, error: purchaseError } = await supabase
         .from('purchases')
         .select('id')
         .eq('dataset_id', datasetId)
+        .eq('status', 'completed')
         .limit(1)
       
       if (purchaseError) throw purchaseError
       
-      if (purchases && purchases.length > 0) {
-        const confirmHardDelete = window.confirm(
-          'This dataset has purchases! Deleting it will break download access for buyers. Are you absolutely sure you want to delete it permanently?'
-        )
-        if (!confirmHardDelete) {
-          setDeleteConfirm(null)
-          setActionLoading(false)
-          return
+      const hasPurchases = purchases && purchases.length > 0
+      
+      // Show confirmation dialog
+      setConfirmDialog({
+        isOpen: true,
+        title: hasPurchases ? 'Delete Dataset with Purchases?' : 'Delete Dataset?',
+        message: hasPurchases 
+          ? '⚠️ This dataset has purchases! Deleting it will break download access for buyers. This action cannot be undone. Are you absolutely sure?'
+          : 'Are you sure you want to delete this dataset? This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'danger',
+        onConfirm: async () => {
+          setActionLoading(true)
+          try {
+            // Call Netlify function to delete (bypasses RLS)
+            const response = await fetch('/.netlify/functions/delete-dataset', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                datasetId: datasetId,
+                userId: user.id
+              })
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to delete dataset')
+            }
+
+            alert('✅ Dataset deleted successfully')
+            await fetchDashboardData()
+            setDeleteConfirm(null)
+          } catch (error) {
+            console.error('Error deleting dataset:', error)
+            alert('Failed to delete dataset: ' + error.message)
+          } finally {
+            setActionLoading(false)
+          }
         }
-      }
-      
-      // Call Netlify function to delete (bypasses RLS)
-      const response = await fetch('/.netlify/functions/delete-dataset', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          datasetId: datasetId,
-          userId: user.id
-        })
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete dataset')
-      }
-      
-      // Update local state
-      setMyDatasets(prev => prev.filter(d => d.id !== datasetId))
-      setDeleteConfirm(null)
-      alert('Dataset deleted successfully!')
     } catch (error) {
-      console.error('Error deleting dataset:', error)
-      alert('Failed to delete dataset: ' + error.message)
-    } finally {
-      setActionLoading(false)
+      console.error('Error checking dataset purchases:', error)
+      alert('Failed to check dataset status: ' + error.message)
     }
   }
 
@@ -2358,6 +2361,17 @@ function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        variant={confirmDialog.variant}
+      />
     </div>
   )
 }
