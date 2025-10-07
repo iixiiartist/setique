@@ -164,24 +164,12 @@ function DashboardPage() {
       setMyPurchases(purchases || [])
 
       // Fetch user's bounties (curation requests that they posted)
+      // Now with foreign keys, PostgREST can do automatic joins!
       const { data: bounties, error: bountiesError } = await supabase
         .from('curation_requests')
-        .select('*')
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false })
-      
-      console.log('💰 Bounties query result:', { bounties, bountiesError, userId: user.id })
-      
-      if (bountiesError) {
-        console.error('Error fetching bounties:', bountiesError)
-      }
-      
-      // Fetch proposals for each bounty
-      if (bounties && bounties.length > 0) {
-        const requestIds = bounties.map(b => b.id);
-        const { data: proposalsData } = await supabase
-          .from('curator_proposals')
-          .select(`
+        .select(`
+          *,
+          curator_proposals(
             id,
             request_id,
             status,
@@ -189,36 +177,20 @@ function DashboardPage() {
             proposal_text,
             estimated_completion_days,
             suggested_price,
-            created_at
-          `)
-          .in('request_id', requestIds);
-        
-        // Fetch pro curator info for proposals
-        if (proposalsData && proposalsData.length > 0) {
-          const curatorIds = [...new Set(proposalsData.map(p => p.curator_id).filter(Boolean))];
-          const { data: curatorsData } = await supabase
-            .from('pro_curators')
-            .select('id, display_name, badge_level')
-            .in('id', curatorIds);
-          
-          // Attach curator data to proposals
-          const proposalsWithCurators = proposalsData.map(proposal => ({
-            ...proposal,
-            pro_curators: curatorsData?.find(c => c.id === proposal.curator_id)
-          }));
-          
-          // Attach proposals to bounties
-          const bountiesWithProposals = bounties.map(bounty => ({
-            ...bounty,
-            curator_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
-          }));
-          
-          setMyBounties(bountiesWithProposals);
-        } else {
-          setMyBounties(bounties.map(b => ({ ...b, curator_proposals: [] })));
-        }
+            created_at,
+            pro_curators(id, display_name, badge_level)
+          )
+        `)
+        .eq('creator_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      console.log('💰 Bounties query result:', { bounties, bountiesError, userId: user.id })
+      
+      if (bountiesError) {
+        console.error('Error fetching bounties:', bountiesError)
+        setMyBounties([])
       } else {
-        setMyBounties([]);
+        setMyBounties(bounties || [])
       }
 
       // Fetch user's submissions (datasets they submitted to bounties)

@@ -179,44 +179,24 @@ export default function AdminDashboard() {
 
       // Fetch bounties (curation requests) directly from Supabase
       console.log('🔍 Fetching bounties...');
+      // Now with foreign keys, PostgREST can do automatic joins!
       const { data: bountiesData, error: bountiesError } = await supabase
         .from('curation_requests')
-        .select('*')
+        .select(`
+          *,
+          profiles:creator_id(id, username, email),
+          curator_proposals(id, request_id)
+        `)
         .order('created_at', { ascending: false });
       
       console.log('📊 Admin bounties fetch:', { bountiesData, bountiesError });
       
       if (bountiesError) {
         console.error('Error fetching bounties:', bountiesError);
-      }
-      
-      // Fetch profile data for each bounty creator
-      if (bountiesData && bountiesData.length > 0) {
-        const creatorIds = [...new Set(bountiesData.map(b => b.creator_id).filter(Boolean))];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, username, email')
-          .in('id', creatorIds);
-        
-        // Fetch proposal counts for each bounty
-        const requestIds = bountiesData.map(b => b.id);
-        const { data: proposalsData } = await supabase
-          .from('curator_proposals')
-          .select('request_id')
-          .in('request_id', requestIds);
-        
-        // Attach profile and proposal count to each bounty
-        const bountiesWithData = bountiesData.map(bounty => ({
-          ...bounty,
-          profiles: profilesData?.find(p => p.id === bounty.creator_id),
-          curator_proposals: proposalsData?.filter(p => p.request_id === bounty.id) || []
-        }));
-        
-        console.log('📊 Setting bounties count:', bountiesWithData.length);
-        setAllBounties(bountiesWithData);
-      } else {
-        console.log('📊 Setting bounties count:', 0);
         setAllBounties([]);
+      } else {
+        console.log('📊 Setting bounties count:', bountiesData?.length || 0);
+        setAllBounties(bountiesData || []);
       }
 
       // Fetch deletion requests directly from Supabase (admin has access via RLS)

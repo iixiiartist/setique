@@ -253,34 +253,25 @@ function HomePage() {
     try {
       const { data, error } = await supabase
         .from('curation_requests')
-        .select('*')
+        .select(`
+          *,
+          profiles:creator_id(id, username)
+        `)
         .eq('status', 'open')
         .order('created_at', { ascending: false })
         .limit(10)
 
       if (error) throw error
       
-      // Fetch creator profiles for each bounty
-      if (data && data.length > 0) {
-        const creatorIds = [...new Set(data.map(b => b.creator_id).filter(Boolean))];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, username')
-          .in('id', creatorIds);
-        
-        // Attach profile data
-        const bountiesWithProfiles = data.map(bounty => ({
-          ...bounty,
-          profiles: profilesData?.find(p => p.id === bounty.creator_id),
-          // Map to old format for UI compatibility
-          budget: bounty.budget_max || bounty.budget_min,
-          modality: bounty.modality || 'data'
-        }));
-        
-        setBounties(bountiesWithProfiles);
-      } else {
-        setBounties([]);
-      }
+      // Map to old format for UI compatibility
+      const bountiesWithProfiles = data?.map(bounty => ({
+        ...bounty,
+        // Map to old format for UI compatibility
+        budget: bounty.budget_max || bounty.budget_min,
+        modality: bounty.modality || 'data'
+      })) || [];
+      
+      setBounties(bountiesWithProfiles);
     } catch (error) {
       console.error('Error fetching bounties:', error)
     }
