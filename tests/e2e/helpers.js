@@ -16,10 +16,20 @@ export const TEST_USER = {
  * Compatible with Playwright 1.56.0
  */
 export async function loginUser(page) {
-  await page.goto('/login');
+  // Clear cookies and storage to ensure clean state
+  await page.context().clearCookies();
   
-  // Wait for page to load
-  await page.waitForLoadState('networkidle');
+  // Navigate to login page
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  
+  // Clear storage after page loads
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  
+  // Wait for the email input to be visible (page is ready)
+  await page.waitForSelector('input[type="email"]', { state: 'visible', timeout: 5000 });
   
   // Fill in credentials using Playwright 1.56.0 compatible syntax
   await page.fill('input[type="email"]', TEST_USER.email);
@@ -29,7 +39,15 @@ export async function loginUser(page) {
   await page.click('button[type="submit"]');
   
   // Wait for successful login (redirect to dashboard)
-  await page.waitForURL(/\/dashboard/, { timeout: 10000 });
+  // The login page might redirect to / first, then to /dashboard
+  await page.waitForURL(url => {
+    return url.pathname === '/dashboard' || url.pathname === '/';
+  }, { timeout: 10000 });
+  
+  // If we landed on homepage, wait longer for the auth state to propagate and redirect
+  if (page.url().includes('localhost:3000/') && !page.url().includes('/dashboard')) {
+    await page.waitForURL(/\/dashboard/, { timeout: 10000 });
+  }
 }
 
 /**

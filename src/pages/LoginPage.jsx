@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Redirect to dashboard if already logged in
+    // Redirect to dashboard if already logged in OR if just logged in
     if (!loading && user) {
       navigate('/dashboard', { replace: true });
     } else if (!loading && !user) {
@@ -25,8 +25,8 @@ export default function LoginPage() {
   }, [user, loading, navigate]);
 
   const handleClose = () => {
-    // When closing modal, go back to home
-    navigate('/');
+    // Don't navigate - let the useEffect handle it based on auth state
+    // This prevents race conditions between modal close and auth state update
   };
 
   // Show loading while checking auth state
