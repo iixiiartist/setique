@@ -24,6 +24,8 @@ exports.handler = async (event) => {
       }
     }
 
+    console.log('Verifying Stripe account for creator:', creatorId)
+
     // Get the account from database
     const { data: account, error: dbError } = await supabase
       .from('creator_payout_accounts')
@@ -31,15 +33,41 @@ exports.handler = async (event) => {
       .eq('creator_id', creatorId)
       .single()
 
-    if (dbError || !account) {
+    if (dbError) {
+      console.error('Database error:', dbError)
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: 'No Stripe account found' }),
+        body: JSON.stringify({ 
+          success: false,
+          message: 'No Stripe account found. Please try completing onboarding again.',
+          error: dbError.message 
+        }),
       }
     }
 
+    if (!account || !account.stripe_connect_account_id) {
+      console.error('No account or stripe_connect_account_id found')
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ 
+          success: false,
+          message: 'No Stripe account connected. Please complete onboarding first.' 
+        }),
+      }
+    }
+
+    console.log('Found Stripe account:', account.stripe_connect_account_id)
+
+    console.log('Found Stripe account:', account.stripe_connect_account_id)
+
     // Fetch account status from Stripe
     const stripeAccount = await stripe.accounts.retrieve(account.stripe_connect_account_id)
+    
+    console.log('Stripe account status:', {
+      charges_enabled: stripeAccount.charges_enabled,
+      details_submitted: stripeAccount.details_submitted,
+      payouts_enabled: stripeAccount.payouts_enabled
+    })
 
     // Update database with current status
     const { error: updateError } = await supabase
@@ -54,12 +82,20 @@ exports.handler = async (event) => {
       })
       .eq('creator_id', creatorId)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.error('Update error:', updateError)
+      throw updateError
+    }
+
+    console.log('Successfully updated account status')
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
+        message: stripeAccount.charges_enabled 
+          ? 'Account fully verified and ready to receive payments!'
+          : 'Account created but additional information needed.',
         account: {
           charges_enabled: stripeAccount.charges_enabled,
           details_submitted: stripeAccount.details_submitted,
@@ -73,7 +109,9 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       body: JSON.stringify({ 
-        error: 'Failed to verify account: ' + error.message 
+        success: false,
+        message: 'Failed to verify account status. Please try again.',
+        error: error.message 
       }),
     }
   }

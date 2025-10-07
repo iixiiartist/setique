@@ -412,17 +412,23 @@ function DashboardPage() {
       // Verify Stripe account status with Stripe API
       ;(async () => {
         try {
+          console.log('Starting Stripe account verification for user:', user.id)
+          
           const response = await fetch('/.netlify/functions/verify-stripe-account', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ creatorId: user.id })
           })
+          
+          console.log('Response status:', response.status)
           const data = await response.json()
+          console.log('Response data:', data)
           
           if (data.success) {
-            alert('✅ Stripe account connected successfully! Your payout account is now set up.')
+            alert(`✅ ${data.message || 'Stripe account connected successfully! Your payout account is now set up.'}`)
           } else {
-            alert(`⚠️ Account verification incomplete: ${data.message || 'Please complete all required information.'}`)
+            console.error('Verification failed:', data)
+            alert(`⚠️ ${data.message || 'Account verification incomplete. Please complete all required information.'}`)
           }
         } catch (error) {
           console.error('Error verifying Stripe account:', error)
