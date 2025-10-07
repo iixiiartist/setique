@@ -267,9 +267,9 @@ test.describe('Authentication Flow', () => {
       await expect(page).toHaveURL(/\/login/);
     });
 
-    test('should redirect to login when accessing upload page without auth', async ({ page }) => {
-      // Try to access upload page without logging in
-      await page.goto('/upload');
+    test('should redirect to login when accessing admin panel without auth', async ({ page }) => {
+      // Try to access admin panel without logging in
+      await page.goto('/admin');
       
       // Should redirect to login page
       await expect(page).toHaveURL(/\/login/);

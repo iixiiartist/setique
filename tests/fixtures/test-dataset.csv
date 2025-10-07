@@ -1,0 +1,11 @@
+id,name,category,label
+1,stop_sign_001,traffic_sign,stop
+2,stop_sign_002,traffic_sign,stop
+3,yield_sign_001,traffic_sign,yield
+4,speed_limit_30_001,traffic_sign,speed_limit_30
+5,speed_limit_50_001,traffic_sign,speed_limit_50
+6,one_way_001,directional_sign,one_way
+7,no_parking_001,regulatory_sign,no_parking
+8,pedestrian_crossing_001,warning_sign,pedestrian_crossing
+9,school_zone_001,warning_sign,school_zone
+10,construction_ahead_001,warning_sign,construction
