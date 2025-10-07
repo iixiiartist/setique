@@ -47,6 +47,12 @@ This document outlines the accessibility improvements made to the Setique platfo
 - **Focus Indicators**: Default browser focus rings present
 - **Status**: ✅ Functional
 
+### 5. **Follow Status Announcements**
+- **Issue**: Follow/unfollow buttons lacked contextual confirmation for assistive tech
+- **Fix**: Added accessible status banners with `aria-live="polite"` and toggle-aware `aria-pressed` states on both the profile and discovery follow buttons.
+- **Impact**: Screen reader users now receive immediate confirmation when a follow state changes without relying on alert popups.
+- **Status**: ✅ Implemented
+
 ## 📋 Recommended Future Improvements
 
 ### High Priority

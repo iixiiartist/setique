@@ -1,31 +1,65 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { CheckCircle, AlertCircle } from '../components/Icons'
 
 export default function UserProfilePage() {
   const { username } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile: currentUserProfile } = useAuth()
   
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState(null)
   const [datasets, setDatasets] = useState([])
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  const [followStatus, setFollowStatus] = useState(null)
   const [activeTab, setActiveTab] = useState('datasets') // datasets, followers, following
   const [followers, setFollowers] = useState([])
   const [following, setFollowing] = useState([])
+  const [profileFollowsViewer, setProfileFollowsViewer] = useState(false)
+  const [mutualConnectionIds, setMutualConnectionIds] = useState([])
+  const statusTimerRef = useRef(null)
   
   const isOwnProfile = user?.id === profile?.id
+  const profileDisplayName = profile?.display_name || profile?.username || 'this user'
+  const statusToneClasses = {
+    success: 'bg-green-200 text-green-900',
+    info: 'bg-blue-100 text-blue-900',
+    error: 'bg-red-200 text-red-900',
+  }
+
+  const showFollowStatus = useCallback((type, message) => {
+    if (statusTimerRef.current) {
+      clearTimeout(statusTimerRef.current)
+    }
+
+    setFollowStatus({ type, message })
+
+    statusTimerRef.current = setTimeout(() => {
+      setFollowStatus(null)
+      statusTimerRef.current = null
+    }, 4000)
+  }, [])
 
   useEffect(() => {
-    fetchUserProfile()
-  }, [username])
+    return () => {
+      if (statusTimerRef.current) {
+        clearTimeout(statusTimerRef.current)
+      }
+    }
+  }, [])
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async (options = {}) => {
+    const { showLoader = true } = options
     try {
-      setLoading(true)
+      if (showLoader) {
+        setLoading(true)
+      }
+
+      setProfileFollowsViewer(false)
+      setMutualConnectionIds([])
 
       // Fetch user profile by username
       const { data: profileData, error: profileError } = await supabase
@@ -75,6 +109,7 @@ export default function UserProfilePage() {
         .order('created_at', { ascending: false })
 
       // Fetch follower profiles separately
+      let followersList = []
       if (followersData && followersData.length > 0) {
         const followerIds = followersData.map(f => f.follower_id)
         const { data: followerProfiles } = await supabase
@@ -83,14 +118,14 @@ export default function UserProfilePage() {
           .in('id', followerIds)
         
         // Attach profiles to followers
-        const followersWithProfiles = followersData.map(follower => ({
+        followersList = followersData.map(follower => ({
           ...follower,
           profiles: followerProfiles?.find(p => p.id === follower.follower_id)
         }))
-        setFollowers(followersWithProfiles)
       } else {
-        setFollowers([])
+        followersList = []
       }
+      setFollowers(followersList)
 
       // Fetch following
       const { data: followingData } = await supabase
@@ -100,6 +135,7 @@ export default function UserProfilePage() {
         .order('created_at', { ascending: false })
 
       // Fetch following profiles separately
+      let followingList = []
       if (followingData && followingData.length > 0) {
         const followingIds = followingData.map(f => f.following_id)
         const { data: followingProfiles } = await supabase
@@ -108,22 +144,49 @@ export default function UserProfilePage() {
           .in('id', followingIds)
         
         // Attach profiles to following
-        const followingWithProfiles = followingData.map(follow => ({
+        followingList = followingData.map(follow => ({
           ...follow,
           profiles: followingProfiles?.find(p => p.id === follow.following_id)
         }))
-        setFollowing(followingWithProfiles)
       } else {
-        setFollowing([])
+        followingList = []
+      }
+      setFollowing(followingList)
+
+      // Determine mutual connections (people who both follow and are followed by this profile)
+      const followerIdSet = new Set((followersData ?? []).map(f => f.follower_id))
+      const mutualIds = (followingData ?? [])
+        .filter(follow => followerIdSet.has(follow.following_id))
+        .map(follow => follow.following_id)
+      setMutualConnectionIds(mutualIds)
+
+      // Determine if this profile follows the current viewer
+      if (user && user.id !== profileData.id) {
+        const { data: profileFollowsViewerData, error: profileFollowsViewerError } = await supabase
+          .from('user_follows')
+          .select('id')
+          .eq('follower_id', profileData.id)
+          .eq('following_id', user.id)
+          .maybeSingle()
+
+        if (!profileFollowsViewerError) {
+          setProfileFollowsViewer(!!profileFollowsViewerData)
+        }
       }
 
     } catch (error) {
       console.error('Error fetching profile:', error)
       alert('Error loading profile')
     } finally {
-      setLoading(false)
+      if (showLoader) {
+        setLoading(false)
+      }
     }
-  }
+  }, [navigate, user, username])
+
+  useEffect(() => {
+    fetchUserProfile()
+  }, [fetchUserProfile])
 
   const handleFollowToggle = async () => {
     if (!user) {
@@ -131,6 +194,8 @@ export default function UserProfilePage() {
       navigate('/signin')
       return
     }
+
+    const targetName = profile?.display_name || profile?.username || 'this user'
 
     try {
       setFollowLoading(true)
@@ -145,24 +210,87 @@ export default function UserProfilePage() {
 
         if (error) throw error
         setIsFollowing(false)
+        setProfile(prev =>
+          prev
+            ? {
+                ...prev,
+                follower_count: Math.max(0, (prev.follower_count ?? 1) - 1),
+              }
+            : prev
+        )
+        setFollowers(prev => prev.filter(f => f.follower_id !== user.id))
+        setMutualConnectionIds(prev => prev.filter(id => id !== user.id))
+        showFollowStatus('info', `You unfollowed ${targetName}.`)
       } else {
         // Follow
-        const { error } = await supabase
+        const { data: newFollow, error } = await supabase
           .from('user_follows')
           .insert({
             follower_id: user.id,
             following_id: profile.id
           })
+          .select('id, created_at')
+          .single()
 
         if (error) throw error
         setIsFollowing(true)
+        setProfile(prev =>
+          prev
+            ? {
+                ...prev,
+                follower_count: (prev.follower_count ?? 0) + 1,
+              }
+            : prev
+        )
+        setFollowers(prev => {
+          if (prev.some(f => f.follower_id === user.id)) {
+            return prev
+          }
+
+          const fallbackUsername =
+            currentUserProfile?.username ??
+            user.user_metadata?.username ??
+            user.email?.split('@')?.[0] ??
+            'you'
+
+          const followerProfile = {
+            id: currentUserProfile?.id ?? user.id,
+            username: fallbackUsername,
+            display_name:
+              currentUserProfile?.display_name ??
+              user.user_metadata?.full_name ??
+              fallbackUsername,
+            avatar_url:
+              currentUserProfile?.avatar_url ??
+              user.user_metadata?.avatar_url ??
+              null,
+          }
+
+          const optimisticFollow = {
+            id: newFollow?.id ?? `temp-${user.id}`,
+            follower_id: user.id,
+            created_at: newFollow?.created_at ?? new Date().toISOString(),
+            profiles: followerProfile,
+          }
+
+          return [optimisticFollow, ...prev]
+        })
+
+        if (profileFollowsViewer) {
+          setMutualConnectionIds(prev => {
+            if (prev.includes(user.id)) return prev
+            return [...prev, user.id]
+          })
+        }
+
+        showFollowStatus('success', `You’re now following ${targetName}.`)
       }
 
       // Refresh profile to update counts
-      await fetchUserProfile()
+      await fetchUserProfile({ showLoader: false })
     } catch (error) {
       console.error('Error toggling follow:', error)
-      alert('Failed to update follow status')
+      showFollowStatus('error', 'We couldn’t update follow status. Please try again.')
     } finally {
       setFollowLoading(false)
     }
@@ -230,17 +358,43 @@ export default function UserProfilePage() {
 
                 {/* Follow Button */}
                 {!isOwnProfile && user && (
-                  <button
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    className={`px-6 py-3 font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 ${
-                      isFollowing
-                        ? 'bg-gray-200 hover:bg-gray-300'
-                        : 'bg-purple-400 hover:bg-purple-500'
-                    }`}
-                  >
-                    {followLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
-                  </button>
+                  <div className="flex flex-col items-start gap-2">
+                    <button
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                      aria-pressed={isFollowing}
+                      aria-label={isFollowing ? `Unfollow ${profileDisplayName}` : `Follow ${profileDisplayName}`}
+                      className={`px-6 py-3 font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-50 ${
+                        isFollowing
+                          ? 'bg-gray-200 hover:bg-gray-300'
+                          : 'bg-purple-400 hover:bg-purple-500'
+                      }`}
+                    >
+                      {followLoading ? '...' : isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                    <div className="min-h-[24px]" aria-live="polite" role="status">
+                      {followStatus && (
+                        <span
+                          className={`inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold border-2 border-black rounded-xl ${
+                            statusToneClasses[followStatus.type] || 'bg-gray-100 text-gray-900'
+                          }`}
+                        >
+                          {followStatus.type === 'error' ? (
+                            <AlertCircle className="w-4 h-4" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                          <span>{followStatus.message}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {!isOwnProfile && profileFollowsViewer && (
+                  <span className="inline-flex items-center gap-1 px-3 py-2 font-semibold text-sm bg-green-200 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                    🤝 Follows you
+                  </span>
                 )}
 
                 {isOwnProfile && (
@@ -408,6 +562,11 @@ export default function UserProfilePage() {
                     <div>
                       <p className="font-bold">{follow.profiles.display_name || follow.profiles.username}</p>
                       <p className="text-sm text-gray-600">@{follow.profiles.username}</p>
+                      {mutualConnectionIds.includes(follow.follower_id) && (
+                        <span className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-green-700 bg-green-100 border-2 border-black px-2 py-1">
+                          🤝 Follows you
+                        </span>
+                      )}
                     </div>
                   </Link>
                 ))}
@@ -444,6 +603,11 @@ export default function UserProfilePage() {
                     <div>
                       <p className="font-bold">{follow.profiles.display_name || follow.profiles.username}</p>
                       <p className="text-sm text-gray-600">@{follow.profiles.username}</p>
+                      {mutualConnectionIds.includes(follow.following_id) && (
+                        <span className="inline-flex items-center gap-1 mt-1 text-xs font-semibold text-green-700 bg-green-100 border-2 border-black px-2 py-1">
+                          🤝 Follows you
+                        </span>
+                      )}
                     </div>
                   </Link>
                 ))}

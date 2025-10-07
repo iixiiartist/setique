@@ -123,6 +123,20 @@ SETIQUE is a fully functional AI dataset marketplace connecting data creators wi
 - `docs/DELETION_REQUEST_SYSTEM.md` - Complete documentation
 - `sql/migrations/011_deletion_requests_system.sql` - Database schema
 
+### 9. **Social Discovery & Activity Feed** ✨ *NEW*
+**Stay on top of your network’s dataset launches and purchases**
+
+**Features:**
+- Mutual-follow awareness on profiles with inline follow feedback
+- Discovery hub with follow suggestions and status announcements
+- Dedicated Activity Feed combining new dataset drops and purchase events from people you follow
+- Quick navigation: Dashboard header now exposes an “Activity Feed” link to `/feed`
+
+**Files:**
+- `src/pages/ActivityFeedPage.jsx` - Feed aggregation UI
+- `src/pages/UserProfilePage.jsx` - Follow status feedback and mutual badges
+- `src/pages/UserDiscoveryPage.jsx` - Network discovery experience
+
 ---
 
 ## 🔧 Admin Features

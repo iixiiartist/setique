@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* global process */
 /**
  * Test User Setup Script
  * 

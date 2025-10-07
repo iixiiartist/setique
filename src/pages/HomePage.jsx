@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -251,8 +252,6 @@ function HomePage() {
       setDatasets(data || [])
     } catch (error) {
       console.error('❌ Error fetching datasets:', error)
-    } finally {
-      setLoading(false)
     }
   }
 

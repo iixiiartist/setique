@@ -7,6 +7,8 @@ import DashboardPage from './pages/DashboardPage'
 import MarketplacePage from './pages/MarketplacePage'
 import AdminDashboard from './pages/AdminDashboard'
 import UserProfilePage from './pages/UserProfilePage'
+import UserDiscoveryPage from './pages/UserDiscoveryPage'
+import ActivityFeedPage from './pages/ActivityFeedPage'
 import { AIAssistant } from './components/AIAssistant'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -36,6 +38,15 @@ function App() {
           } 
         />
         <Route path="/profile/:username" element={<UserProfilePage />} />
+        <Route path="/discover" element={<UserDiscoveryPage />} />
+        <Route 
+          path="/feed" 
+          element={
+            <ProtectedRoute>
+              <ActivityFeedPage />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
       
       {/* AI Assistant - Available on all pages */}

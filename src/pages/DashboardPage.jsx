@@ -727,6 +727,13 @@ function DashboardPage() {
               Home
             </button>
             <button
+              onClick={() => navigate('/feed')}
+              className="font-bold text-black hover:text-purple-600 transition flex items-center gap-1"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Activity Feed
+            </button>
+            <button
               onClick={handleSignOut}
               className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1"
             >
@@ -900,6 +907,18 @@ function DashboardPage() {
           {activeTab === 'overview' && (
             <div className="space-y-6">
               <h3 className="text-2xl font-extrabold">Recent Activity</h3>
+
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-2 border-black rounded-xl bg-yellow-100">
+                <p className="font-bold text-black/80 max-w-2xl">
+                  Check out what the curators and buyers you follow are doing in the new Activity Feed. Track fresh datasets, trending purchases, and more—without leaving your dashboard.
+                </p>
+                <button
+                  onClick={() => navigate('/feed')}
+                  className="self-start md:self-auto bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                >
+                  Open Activity Feed
+                </button>
+              </div>
               
               {/* Recent Purchases */}
               {myPurchases.length > 0 && (
@@ -1629,7 +1648,7 @@ function DashboardPage() {
                     </div>
                     <div className="bg-pink-50 border-2 border-pink-200 rounded-lg p-4">
                       <p className="text-lg font-bold text-pink-900 mb-1">📈 Value</p>
-                      <p className="text-xs text-pink-800">Increase your dataset's quality and market value</p>
+                      <p className="text-xs text-pink-800">Increase your dataset’s quality and market value</p>
                     </div>
                   </div>
                   <button

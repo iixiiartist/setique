@@ -1620,6 +1620,61 @@ export default function AdminDashboard() {
       )}
 
       {/* Confirm Dialog */}
+      {showBountyModal && selectedBounty && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
+          <div className="bg-white rounded-2xl border-4 border-black max-w-2xl w-full shadow-[10px_10px_0_#000]">
+            <div className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
+              <h3 className="text-2xl font-extrabold flex items-center gap-2">
+                <span>🧩</span>
+                Bounty Details
+              </h3>
+              <button
+                onClick={() => {
+                  setShowBountyModal(false);
+                  setSelectedBounty(null);
+                }}
+                className="px-3 py-1 font-bold border-2 border-black rounded-full bg-gray-100 hover:bg-gray-200 transition"
+              >
+                Close
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <h4 className="text-xl font-bold mb-1">{selectedBounty.title}</h4>
+                <p className="text-gray-700 leading-relaxed">{selectedBounty.description}</p>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 text-sm font-semibold">
+                <div className="bg-yellow-100 border-2 border-black rounded-xl p-4">
+                  <div>💰 Budget</div>
+                  <div>
+                    ${selectedBounty.budget_min} - ${selectedBounty.budget_max}
+                  </div>
+                </div>
+                <div className="bg-blue-100 border-2 border-black rounded-xl p-4">
+                  <div>📅 Posted</div>
+                  <div>{new Date(selectedBounty.created_at).toLocaleString()}</div>
+                </div>
+                <div className="bg-green-100 border-2 border-black rounded-xl p-4">
+                  <div>🧑 Requestor</div>
+                  <div>{selectedBounty.profiles?.username || 'Unknown'}</div>
+                </div>
+                <div className="bg-purple-100 border-2 border-black rounded-xl p-4">
+                  <div>📦 Status</div>
+                  <div className="capitalize">{selectedBounty.status || 'open'}</div>
+                </div>
+              </div>
+              {selectedBounty.requirements && (
+                <div className="bg-gray-50 border-2 border-dashed border-black rounded-xl p-4">
+                  <div className="font-bold mb-2">📝 Requirements</div>
+                  <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+                    {selectedBounty.requirements}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}

@@ -1,6 +1,7 @@
-import { defineConfig, devices } from '@playwright/test';
-
 /* eslint-env node */
+/* global process */
+
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * Playwright E2E Testing Configuration
