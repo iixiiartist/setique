@@ -41,7 +41,7 @@ const generateResponse = (userMessage, context, conversationHistory = [], option
         ? `Hello ${namePart}! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
         : `Hello! I'm your SETIQUE assistant. How can I help you today? I can answer questions about data curation, pricing strategies, bounties, Pro Curator partnerships, or navigating the platform.`
     }
-    return "Hello! Welcome to SETIQUE, the premium marketplace for curated datasets. I'm here to help you navigate the platform, learn best practices, and maximize your success. What would you like to know?"
+  return "Hello! Welcome to SETIQUE, the premium ecosystem for curated datasets. I'm here to help you navigate the platform, learn best practices, and maximize your success. What would you like to know?"
   }
 
   // Privacy / name origin question
@@ -86,7 +86,7 @@ Want to give it a shot?`
 If you're a dataset owner: Get professional help improving your data, split revenue 50/50 - both you and your curator earn from every purchase
 If you want to be a curator: Earn 40% from every purchase of datasets you help improve - ongoing passive income from your expertise
 
-It's in the Dashboard → Pro Curator tab, or you can browse curation requests on the Marketplace page.
+It's in the Dashboard → Pro Curator tab, or you can browse curation requests on the Ecosystem page.
 
 Want to know more about becoming a curator, or hiring one?`
     }
@@ -259,7 +259,7 @@ What kind of data are you looking for?`
 **Pro Curator System:**
 • Partner with expert curators to improve datasets
 • Become a curator and earn ongoing revenue from datasets you improve (without owning them)
-• Browse marketplace for curation opportunities
+• Explore the ecosystem for curation opportunities
 
 **Pro Tips:**
 • Start with demo datasets ($0) to build reputation
@@ -694,7 +694,7 @@ export function AIAssistant() {
         ? (usePersonalName && userName
             ? `Hello ${userName}! I'm your SETIQUE assistant. I can help you with data curation, pricing strategies, bounties, and navigating the platform. What would you like to know?`
             : `Hello! I'm your SETIQUE assistant. I can help you with data curation, pricing strategies, bounties, and navigating the platform. What would you like to know?`)
-        : `Welcome to SETIQUE! I'm here to help you get the most out of our premium dataset marketplace. Feel free to ask about data curation, pricing, bounties, or how to get started!`
+  : `Welcome to the SETIQUE ecosystem! I'm here to help you get the most out of our premium dataset hub. Feel free to ask about data curation, pricing, bounties, or how to get started!`
       
       setMessages([{
         id: Date.now(),
@@ -757,7 +757,7 @@ export function AIAssistant() {
     setIsTyping(false)
   }
   
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -852,14 +852,14 @@ export function AIAssistant() {
           {/* Input */}
           <div className="border-t-4 border-black p-4 bg-white">
             <div className="flex gap-2">
-              <input
+              <textarea
                 ref={inputRef}
-                type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask me anything..."
-                className="flex-1 px-4 py-2 border-2 border-black rounded-full font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                rows={2}
+                className="flex-1 px-4 py-2 border-2 border-black rounded-2xl font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
                 disabled={isTyping}
               />
               <button

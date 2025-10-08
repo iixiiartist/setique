@@ -1,8 +1,8 @@
-# SETIQUE - Curated Dataset Marketplace for AI Training Data
+# SETIQUE - Curated Dataset Ecosystem for AI Training Data
 
 **Turn your unique data into passive income.** Sell curated datasets to AI researchers, data scientists, and ML engineers. Perfect for creators, writers, artists, photographers, musicians, hobbyists, and domain experts.
 
-A fully functional dataset marketplace built with React, Supabase, Stripe Connect, and Netlify. Creators earn 80% per sale + 40% ongoing revenue as Pro Curators. Buyers discover niche datasets for computer vision, NLP, audio ML, and video understanding.
+A fully functional dataset ecosystem built with React, Supabase, Stripe Connect, and Netlify. Creators earn 80% per sale + 40% ongoing revenue as Pro Curators. Buyers discover niche datasets for computer vision, NLP, audio ML, and video understanding.
 
 ## 🎯 For Data Creators & Sellers
 
@@ -69,7 +69,7 @@ All detailed documentation is in the [`docs/`](./docs) folder.
 
 ### 🎯 Key Features
 
-- **Pro Curator System** - Partnership marketplace for dataset collaboration
+- **Pro Curator System** - Partnership ecosystem for dataset collaboration
 - **Bounty System** - Request custom datasets with price negotiation
 - **Deletion Requests** - Admin-approved deletion workflow (NEW)
 - **AI Assistant** - Context-aware help chat on every page
@@ -82,7 +82,7 @@ See [`docs/README.md`](./docs/README.md) for the complete documentation index or
 
 ## 🏗️ Project Structure
 
-```
+```text
 SETIQUE/
 ├── src/                    # React application source
 │   ├── components/         # Reusable UI components
@@ -131,7 +131,8 @@ SETIQUE/
 4. Deploy automatically on push to main branch
 
 **Required Environment Variables:**
-```
+
+```env
 VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
 VITE_STRIPE_PUBLISHABLE_KEY
@@ -146,6 +147,7 @@ See [Deployment Checklist](./docs/DEPLOYMENT_CHECKLIST.md) for complete steps.
 The application uses 8 tables:
 
 **Core Tables:**
+
 - `profiles` - User profiles
 - `datasets` - Dataset listings
 - `purchases` - Purchase records
@@ -153,6 +155,7 @@ The application uses 8 tables:
 - `submissions` - Bounty submissions
 
 **Payout Tables:**
+
 - `creator_earnings` - Track creator earnings
 - `creator_payout_accounts` - Stripe Connect accounts
 - `payout_requests` - Payout request tracking
