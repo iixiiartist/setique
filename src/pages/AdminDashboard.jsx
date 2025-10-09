@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TrustLevelManager from '../components/TrustLevelManager';
 import FeedbackManagement from '../components/FeedbackManagement';
+import BetaAccessManagement from '../components/BetaAccessManagement';
 
 export default function AdminDashboard() {
   console.log('🔵 AdminDashboard component loaded');
@@ -757,6 +758,16 @@ export default function AdminDashboard() {
               💬 Feedback
             </button>
             <button
+              onClick={() => setActiveTab('beta')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap border-r-2 border-black ${
+                activeTab === 'beta' 
+                  ? 'bg-purple-300' 
+                  : 'bg-white hover:bg-gray-50'
+              }`}
+            >
+              🔐 Beta Access
+            </button>
+            <button
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-4 font-bold transition whitespace-nowrap ${
                 activeTab === 'activity' 
@@ -1458,6 +1469,13 @@ export default function AdminDashboard() {
               <div>
                 <h2 className="text-2xl font-extrabold mb-6">User Feedback</h2>
                 <FeedbackManagement />
+              </div>
+            )}
+
+            {activeTab === 'beta' && (
+              <div>
+                <h2 className="text-2xl font-extrabold mb-6">Beta Access Management</h2>
+                <BetaAccessManagement />
               </div>
             )}
 
