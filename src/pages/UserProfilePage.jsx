@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { stripePromise } from '../lib/stripe'
 import { CheckCircle, AlertCircle, X } from '../components/Icons'
 import ReportButton from '../components/ReportButton'
+import TrustLevelBadge from '../components/TrustLevelBadge'
 
 export default function UserProfilePage() {
   const { username } = useParams()
@@ -509,9 +510,12 @@ export default function UserProfilePage() {
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
                 <div>
-                  <h1 className="text-3xl font-black mb-2">
-                    {profile.display_name || profile.username}
-                  </h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-3xl font-black">
+                      {profile.display_name || profile.username}
+                    </h1>
+                    <TrustLevelBadge level={profile.trust_level || 0} size="md" />
+                  </div>
                   <p className="text-gray-600 mb-2">@{profile.username}</p>
                   {profile.location && (
                     <p className="text-gray-600 mb-2">📍 {profile.location}</p>

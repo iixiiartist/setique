@@ -11,6 +11,7 @@ import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
 import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import DeletionRequestModal from '../components/DeletionRequestModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import TrustLevelBadge from '../components/TrustLevelBadge'
 import {
   Database,
   ShoppingBag,
@@ -326,6 +327,7 @@ function DashboardPage() {
     }
 
     setLoading(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   useEffect(() => {
@@ -766,9 +768,12 @@ function DashboardPage() {
         <div className="mb-8">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-4xl font-extrabold mb-2">
-                Welcome back, {profile?.username || 'there'}! 👋
-              </h2>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-4xl font-extrabold">
+                  Welcome back, {profile?.username || 'there'}! 👋
+                </h2>
+                {profile && <TrustLevelBadge level={profile.trust_level || 0} size="md" />}
+              </div>
               <p className="text-lg font-semibold text-black/70">
                 Here&apos;s what&apos;s happening with your data economy
               </p>

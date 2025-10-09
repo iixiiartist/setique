@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Search, Sparkles, TrendingUp, User as UserIcon, CheckCircle, AlertCircle } from '../components/Icons'
+import TrustLevelBadge from '../components/TrustLevelBadge'
 
 const filterOptions = [
   { key: 'all', label: 'All Creators' },
@@ -82,7 +83,7 @@ export default function UserDiscoveryPage() {
       const [{ data: profileData, error: profileError }, { data: proData, error: proError }] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, username, display_name, avatar_url, bio, follower_count, location, website, twitter_handle, github_handle, created_at')
+          .select('id, username, display_name, avatar_url, bio, follower_count, location, website, twitter_handle, github_handle, created_at, trust_level')
           .order('follower_count', { ascending: false })
           .limit(150),
         supabase
@@ -358,6 +359,7 @@ export default function UserDiscoveryPage() {
                 <Link to={`/profile/${profile.username}`} className="text-xl font-black hover:underline truncate">
                   {profile.display_name || profile.username}
                 </Link>
+                <TrustLevelBadge level={profile.trust_level || 0} size="sm" />
                 {profile.proCurator && (
                   <span className={`text-xs font-extrabold uppercase border-2 border-black px-2 py-1 ${badgeColors[profile.proCurator.badge_level] || 'bg-gray-200 text-gray-800'}`}>
                     Pro Curator · {profile.proCurator.badge_level}
@@ -581,9 +583,12 @@ export default function UserDiscoveryPage() {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <Link to={`/profile/${profile.username}`} className="font-bold hover:underline truncate">
-                        {profile.display_name || profile.username}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link to={`/profile/${profile.username}`} className="font-bold hover:underline truncate">
+                          {profile.display_name || profile.username}
+                        </Link>
+                        <TrustLevelBadge level={profile.trust_level || 0} size="sm" />
+                      </div>
                       <p className="text-xs text-gray-600 truncate">@{profile.username}</p>
                       <p className="text-xs text-green-700 font-semibold">
                         {networkOverlap[profile.id]} mutual connection{networkOverlap[profile.id] === 1 ? '' : 's'}

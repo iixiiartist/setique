@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
+import TrustLevelManager from '../components/TrustLevelManager';
 
 export default function AdminDashboard() {
   console.log('🔵 AdminDashboard component loaded');
@@ -1678,65 +1679,15 @@ export default function AdminDashboard() {
                   </button>
                 </div>
                 
-                {/* Moderation Access Control */}
-                <div className="border-2 border-purple-500 rounded-lg p-4 bg-purple-50">
-                  <h4 className="font-bold mb-2">Moderation Access</h4>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Current Trust Level: <span className="font-bold">{selectedUser.trust_level || 0}</span>
-                    {(selectedUser.trust_level >= 3) && <span className="ml-2 text-green-600">✓ Has Moderation Access</span>}
-                  </p>
-                  <div className="flex gap-2">
-                    {(selectedUser.trust_level < 3) ? (
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`Grant moderation access to ${selectedUser.username || 'this user'}?`)) return;
-                          try {
-                            const { error } = await supabase
-                              .from('profiles')
-                              .update({ trust_level: 3 })
-                              .eq('id', selectedUser.id);
-                            
-                            if (error) throw error;
-                            
-                            alert('Moderation access granted!');
-                            setShowUserModal(false);
-                            fetchAdminData();
-                          } catch (error) {
-                            console.error('Error granting access:', error);
-                            alert('Failed to grant moderation access');
-                          }
-                        }}
-                        className="bg-green-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
-                      >
-                        🚩 Grant Moderation Access
-                      </button>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`Revoke moderation access from ${selectedUser.username || 'this user'}?`)) return;
-                          try {
-                            const { error } = await supabase
-                              .from('profiles')
-                              .update({ trust_level: 1 })
-                              .eq('id', selectedUser.id);
-                            
-                            if (error) throw error;
-                            
-                            alert('Moderation access revoked!');
-                            setShowUserModal(false);
-                            fetchAdminData();
-                          } catch (error) {
-                            console.error('Error revoking access:', error);
-                            alert('Failed to revoke moderation access');
-                          }
-                        }}
-                        className="bg-red-400 text-white font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
-                      >
-                        ✕ Revoke Moderation Access
-                      </button>
-                    )}
-                  </div>
-                </div>
+                {/* Trust Level Management */}
+                <TrustLevelManager 
+                  userId={selectedUser.id}
+                  currentLevel={selectedUser.trust_level || 0}
+                  onUpdate={() => {
+                    setShowUserModal(false);
+                    fetchAdminData();
+                  }}
+                />
               </div>
             </div>
           </div>

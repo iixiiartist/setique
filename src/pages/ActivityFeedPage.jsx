@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Database, ShoppingBag, Sparkles } from '../components/Icons'
+import TrustLevelBadge from '../components/TrustLevelBadge'
 
 const filterOptions = [
   { key: 'all', label: 'All activity' },
@@ -109,7 +110,8 @@ export default function ActivityFeedPage() {
                 id,
                 username,
                 display_name,
-                avatar_url
+                avatar_url,
+                trust_level
               )
             `)
             .in('creator_id', followingIds)
@@ -132,14 +134,16 @@ export default function ActivityFeedPage() {
                 profiles:creator_id (
                   id,
                   username,
-                  display_name
+                  display_name,
+                  trust_level
                 )
               ),
               profiles:user_id (
                 id,
                 username,
                 display_name,
-                avatar_url
+                avatar_url,
+                trust_level
               )
             `)
             .in('user_id', followingIds)
@@ -241,6 +245,7 @@ export default function ActivityFeedPage() {
               >
                 {actorDisplay}
               </Link>
+              <TrustLevelBadge level={event.actor.trust_level || 0} size="sm" />
               <span className="text-sm font-semibold text-gray-500">@{event.actor.username}</span>
               <span className="text-sm font-semibold text-gray-500">{formatTimeAgo(event.createdAt)}</span>
             </div>
