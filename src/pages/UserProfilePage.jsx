@@ -610,6 +610,16 @@ export default function UserProfilePage() {
                     💻 GitHub
                   </a>
                 )}
+                {profile.linkedin_handle && (
+                  <a 
+                    href={`https://linkedin.com/in/${profile.linkedin_handle}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-purple-600 hover:underline flex items-center gap-1"
+                  >
+                    💼 LinkedIn
+                  </a>
+                )}
               </div>
 
               {/* Stats */}

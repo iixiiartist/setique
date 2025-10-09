@@ -17,7 +17,8 @@ export default function ProfileSettingsPage() {
     avatar_url: '',
     website: '',
     twitter_handle: '',
-    github_handle: ''
+    github_handle: '',
+    linkedin_handle: ''
   })
 
   useEffect(() => {
@@ -29,7 +30,8 @@ export default function ProfileSettingsPage() {
         avatar_url: profile.avatar_url || '',
         website: profile.website || '',
         twitter_handle: profile.twitter_handle || '',
-        github_handle: profile.github_handle || ''
+        github_handle: profile.github_handle || '',
+        linkedin_handle: profile.linkedin_handle || ''
       })
     }
   }, [profile])
@@ -80,7 +82,8 @@ export default function ProfileSettingsPage() {
       const cleanedData = {
         ...formData,
         twitter_handle: formData.twitter_handle.replace(/^@/, ''),
-        github_handle: formData.github_handle.replace(/^@/, '')
+        github_handle: formData.github_handle.replace(/^@/, ''),
+        linkedin_handle: formData.linkedin_handle.replace(/^@/, '')
       }
 
       // Update profile
@@ -322,6 +325,25 @@ export default function ProfileSettingsPage() {
                 />
                 <p className="text-sm text-gray-600 mt-1">
                   Without the @ symbol
+                </p>
+              </div>
+
+              {/* LinkedIn */}
+              <div>
+                <label htmlFor="linkedin_handle" className="block font-bold mb-2">
+                  💼 LinkedIn Profile
+                </label>
+                <input
+                  type="text"
+                  id="linkedin_handle"
+                  name="linkedin_handle"
+                  value={formData.linkedin_handle}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border-4 border-black focus:outline-none focus:ring-4 focus:ring-yellow-400"
+                  placeholder="username"
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Your LinkedIn username (e.g., &quot;johnsmith&quot; from linkedin.com/in/johnsmith)
                 </p>
               </div>
             </div>
