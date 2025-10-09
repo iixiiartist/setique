@@ -720,11 +720,13 @@ function DashboardPage() {
       {/* Header */}
       <header className="border-b-4 border-black bg-white/90 backdrop-blur sticky top-0 z-40">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-extrabold">
-            <span className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] bg-clip-text text-transparent">
-              Setique
-            </span>
-          </h1>
+          <a href="/" className="no-underline">
+            <h1 className="text-3xl font-extrabold tracking-tighter">
+              <span className="bg-[linear-gradient(90deg,#ff00c3,#00ffff,#ffea00)] bg-clip-text text-transparent drop-shadow-[2px_2px_0_#000]">
+                SETIQUE
+              </span>
+            </h1>
+          </a>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 font-bold text-black">
               {profile?.username || user.email}
