@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import UserProfilePage from './pages/UserProfilePage'
 import UserDiscoveryPage from './pages/UserDiscoveryPage'
 import ActivityFeedPage from './pages/ActivityFeedPage'
+import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import { AIAssistant } from './components/AIAssistant'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -39,6 +40,14 @@ function App() {
         />
         <Route path="/profile/:username" element={<UserProfilePage />} />
         <Route path="/discover" element={<UserDiscoveryPage />} />
+        <Route 
+          path="/settings" 
+          element={
+            <ProtectedRoute>
+              <ProfileSettingsPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route 
           path="/feed" 
           element={

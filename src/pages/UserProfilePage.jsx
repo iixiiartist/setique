@@ -399,7 +399,7 @@ export default function UserProfilePage() {
 
                 {isOwnProfile && (
                   <Link
-                    to="/dashboard"
+                    to="/settings"
                     className="px-6 py-3 font-bold border-4 border-black bg-blue-400 hover:bg-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                   >
                     Edit Profile
