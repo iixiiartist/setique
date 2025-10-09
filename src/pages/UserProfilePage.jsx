@@ -511,10 +511,9 @@ export default function UserProfilePage() {
               </div>
             ) : (
               datasets.map(dataset => (
-                <Link
+                <div
                   key={dataset.id}
-                  to={`/dataset/${dataset.id}`}
-                  className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-y-1 p-6"
+                  className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6"
                 >
                   <h3 className="text-xl font-bold mb-2">{dataset.title}</h3>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -528,7 +527,12 @@ export default function UserProfilePage() {
                       ${dataset.price}
                     </span>
                   </div>
-                </Link>
+                  {dataset.purchase_count > 0 && (
+                    <div className="mt-3 text-sm text-gray-600">
+                      {dataset.purchase_count} {dataset.purchase_count === 1 ? 'purchase' : 'purchases'}
+                    </div>
+                  )}
+                </div>
               ))
             )}
           </div>

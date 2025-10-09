@@ -84,12 +84,19 @@ export default function ProfileSettingsPage() {
       }
 
       // Update profile
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update(cleanedData)
         .eq('id', user.id)
+        .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase update error:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
+        throw error
+      }
+
+      console.log('Profile updated successfully:', data)
 
       // Refresh profile in context
       await refreshProfile()
@@ -106,7 +113,10 @@ export default function ProfileSettingsPage() {
       }, 1500)
     } catch (error) {
       console.error('Error updating profile:', error)
-      showStatus('error', 'Failed to update profile. Please try again.')
+      console.error('Error message:', error.message)
+      console.error('Error code:', error.code)
+      console.error('Error details:', error.details)
+      showStatus('error', `Failed to update profile: ${error.message || 'Please try again.'}`)
     } finally {
       setLoading(false)
     }
