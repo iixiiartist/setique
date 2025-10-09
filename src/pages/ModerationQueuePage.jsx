@@ -11,17 +11,41 @@ export default function ModerationQueuePage() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'flagged', 'reports'
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if user is admin
+  // Check if user is admin via admins table
   useEffect(() => {
-    if (!loading && (!profile || profile.trust_level < 3)) {
-      navigate('/dashboard');
+    async function checkAdminStatus() {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('admins')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error || !data) {
+          console.error('Not an admin:', error);
+          setIsAdmin(false);
+          setTimeout(() => navigate('/dashboard'), 2000);
+          return;
+        }
+
+        setIsAdmin(true);
+        fetchModerationData();
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        setTimeout(() => navigate('/dashboard'), 2000);
+      }
     }
-  }, [profile, loading, navigate]);
 
-  useEffect(() => {
-    fetchModerationData();
-  }, []);
+    checkAdminStatus();
+  }, [user, navigate]);
 
   async function fetchModerationData() {
     try {
@@ -183,7 +207,19 @@ export default function ModerationQueuePage() {
     }
   }
 
-  if (loading) {
+  if (!isAdmin && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-red-100 border-4 border-red-500 p-8 max-w-md text-center">
+          <h2 className="text-2xl font-black mb-2">🚫 Access Denied</h2>
+          <p className="text-lg mb-4">You don&apos;t have permission to access the moderation queue.</p>
+          <p className="text-sm text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !profile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-lg">Loading moderation queue...</p>
