@@ -223,10 +223,40 @@ export default function UserProfilePage() {
       return
     }
 
+    // Check if user already owns this dataset
+    if (userOwnsDataset(dataset.id)) {
+      alert('You already own this dataset!')
+      setSelectedDataset(null)
+      return
+    }
+
     if (dataset.price === 0) {
       // Free dataset
       try {
         setIsProcessing(true)
+        
+        // Double-check ownership before inserting
+        const { data: existingPurchase } = await supabase
+          .from('purchases')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('dataset_id', dataset.id)
+          .maybeSingle()
+
+        if (existingPurchase) {
+          alert('You already own this dataset!')
+          setSelectedDataset(null)
+          // Refresh purchases to sync state
+          const { data } = await supabase
+            .from('purchases')
+            .select('dataset_id')
+            .eq('user_id', user.id)
+            .eq('status', 'completed')
+          setUserPurchases(data?.map(p => p.dataset_id) || [])
+          setIsProcessing(false)
+          return
+        }
+
         const { error } = await supabase
           .from('purchases')
           .insert({
@@ -236,9 +266,17 @@ export default function UserProfilePage() {
             status: 'completed'
           })
 
-        if (error) throw error
+        if (error) {
+          if (error.code === '23505') {
+            // Duplicate key error
+            alert('You already own this dataset!')
+          } else {
+            throw error
+          }
+        } else {
+          alert('Dataset added to your library!')
+        }
 
-        alert('Dataset added to your library!')
         setSelectedDataset(null)
         // Refresh purchases
         const { data } = await supabase
@@ -249,7 +287,7 @@ export default function UserProfilePage() {
         setUserPurchases(data?.map(p => p.dataset_id) || [])
       } catch (error) {
         console.error('Error claiming free dataset:', error)
-        alert('Failed to add dataset to library')
+        alert('Failed to add dataset to library. Please try again.')
       } finally {
         setIsProcessing(false)
       }
@@ -795,13 +833,18 @@ export default function UserProfilePage() {
                     <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
                       {selectedDataset.price === 0 ? 'FREE' : `$${selectedDataset.price}`}
                     </div>
-                    {userOwnsDataset(selectedDataset.id) && (
+                    {(user && selectedDataset.creator_id === user.id) && (
+                      <div className="bg-purple-400 text-white font-bold border-2 border-black px-3 py-1 rounded-full text-sm">
+                        ✓ Your dataset
+                      </div>
+                    )}
+                    {(user && selectedDataset.creator_id !== user.id && userOwnsDataset(selectedDataset.id)) && (
                       <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm">
                         ✓ You own this
                       </div>
                     )}
                   </div>
-                  {userOwnsDataset(selectedDataset.id) ? (
+                  {(user && (selectedDataset.creator_id === user.id || userOwnsDataset(selectedDataset.id))) ? (
                     <button
                       className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-6 py-2 hover:bg-green-300 active:scale-95"
                       onClick={() => {
