@@ -626,6 +626,14 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="bg-white border-2 border-black px-4 py-2 font-bold hover:bg-gray-100 transition"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
           <h1 className="text-4xl font-extrabold mb-2">🔐 Admin Dashboard</h1>
           <p className="text-gray-600">Manage curator applications, users, and platform operations</p>
         </div>
