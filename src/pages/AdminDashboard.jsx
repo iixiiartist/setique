@@ -1648,25 +1648,87 @@ export default function AdminDashboard() {
               </div>
 
               {/* Admin Actions */}
-              <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedUser.id);
-                    alert('User ID copied to clipboard!');
-                  }}
-                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  📋 Copy User ID
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedUser.email || '');
-                    alert('Email copied to clipboard!');
-                  }}
-                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  📧 Copy Email
-                </button>
+              <div className="space-y-3 pt-4 border-t-2 border-gray-200">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedUser.id);
+                      alert('User ID copied to clipboard!');
+                    }}
+                    className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                  >
+                    📋 Copy User ID
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedUser.email || '');
+                      alert('Email copied to clipboard!');
+                    }}
+                    className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                  >
+                    📧 Copy Email
+                  </button>
+                </div>
+                
+                {/* Moderation Access Control */}
+                <div className="border-2 border-purple-500 rounded-lg p-4 bg-purple-50">
+                  <h4 className="font-bold mb-2">Moderation Access</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Current Trust Level: <span className="font-bold">{selectedUser.trust_level || 0}</span>
+                    {(selectedUser.trust_level >= 3) && <span className="ml-2 text-green-600">✓ Has Moderation Access</span>}
+                  </p>
+                  <div className="flex gap-2">
+                    {(selectedUser.trust_level < 3) ? (
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Grant moderation access to ${selectedUser.username || 'this user'}?`)) return;
+                          try {
+                            const { error } = await supabase
+                              .from('profiles')
+                              .update({ trust_level: 3 })
+                              .eq('id', selectedUser.id);
+                            
+                            if (error) throw error;
+                            
+                            alert('Moderation access granted!');
+                            setShowUserModal(false);
+                            fetchAdminData();
+                          } catch (error) {
+                            console.error('Error granting access:', error);
+                            alert('Failed to grant moderation access');
+                          }
+                        }}
+                        className="bg-green-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                      >
+                        🚩 Grant Moderation Access
+                      </button>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Revoke moderation access from ${selectedUser.username || 'this user'}?`)) return;
+                          try {
+                            const { error } = await supabase
+                              .from('profiles')
+                              .update({ trust_level: 1 })
+                              .eq('id', selectedUser.id);
+                            
+                            if (error) throw error;
+                            
+                            alert('Moderation access revoked!');
+                            setShowUserModal(false);
+                            fetchAdminData();
+                          } catch (error) {
+                            console.error('Error revoking access:', error);
+                            alert('Failed to revoke moderation access');
+                          }
+                        }}
+                        className="bg-red-400 text-white font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
+                      >
+                        ✕ Revoke Moderation Access
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

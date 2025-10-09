@@ -13,38 +13,48 @@ export default function ModerationQueuePage() {
   const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'flagged', 'reports'
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if user is admin via admins table
+  // Check if user has moderation access (admin table OR trust_level >= 3)
   useEffect(() => {
-    async function checkAdminStatus() {
+    async function checkModerationAccess() {
       if (!user) {
         navigate('/login');
         return;
       }
 
       try {
-        const { data, error } = await supabase
+        // Check if user is in admins table
+        const { data: adminData } = await supabase
           .from('admins')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (error || !data) {
-          console.error('Not an admin:', error);
+        // Check if user has trust_level >= 3 (moderator/admin)
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('trust_level')
+          .eq('id', user.id)
+          .single();
+
+        const hasAdminAccess = !!adminData;
+        const hasModeratorAccess = profileData?.trust_level >= 3;
+
+        if (hasAdminAccess || hasModeratorAccess) {
+          setIsAdmin(true);
+          fetchModerationData();
+        } else {
+          console.log('User does not have moderation access');
           setIsAdmin(false);
           setTimeout(() => navigate('/dashboard'), 2000);
-          return;
         }
-
-        setIsAdmin(true);
-        fetchModerationData();
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error checking moderation access:', error);
         setIsAdmin(false);
         setTimeout(() => navigate('/dashboard'), 2000);
       }
     }
 
-    checkAdminStatus();
+    checkModerationAccess();
   }, [user, navigate]);
 
   async function fetchModerationData() {

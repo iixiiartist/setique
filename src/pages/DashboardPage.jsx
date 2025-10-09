@@ -88,6 +88,7 @@ function DashboardPage() {
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false)
+  const [hasModerationAccess, setHasModerationAccess] = useState(false)
   
   // Bounty creation modal state
   const [showBountyModal, setShowBountyModal] = useState(false)
@@ -210,6 +211,13 @@ function DashboardPage() {
       // Process admin status (already fetched in parallel)
       if (!adminResult.error && adminResult.data) {
         setIsAdmin(true);
+      }
+
+      // Check if user has moderation access (admin OR trust_level >= 3)
+      const hasAdminAccess = !adminResult.error && adminResult.data;
+      const hasModeratorTrustLevel = profile?.trust_level >= 3;
+      if (hasAdminAccess || hasModeratorTrustLevel) {
+        setHasModerationAccess(true);
       }
       
       // Verify Stripe account if needed (background, non-blocking)
@@ -733,6 +741,15 @@ function DashboardPage() {
               <TrendingUp className="h-4 w-4" />
               Activity Feed
             </button>
+            {hasModerationAccess && (
+              <button
+                onClick={() => navigate('/moderation')}
+                className="font-bold text-red-600 hover:text-red-700 transition flex items-center gap-1"
+                title="Moderation Queue"
+              >
+                🚩 Moderation
+              </button>
+            )}
             <button
               onClick={handleSignOut}
               className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1"
