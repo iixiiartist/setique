@@ -10,6 +10,7 @@ import UserProfilePage from './pages/UserProfilePage'
 import UserDiscoveryPage from './pages/UserDiscoveryPage'
 import ActivityFeedPage from './pages/ActivityFeedPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
+import ModerationQueuePage from './pages/ModerationQueuePage'
 import { AIAssistant } from './components/AIAssistant'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -45,6 +46,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfileSettingsPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/moderation" 
+          element={
+            <ProtectedRoute>
+              <ModerationQueuePage />
             </ProtectedRoute>
           } 
         />

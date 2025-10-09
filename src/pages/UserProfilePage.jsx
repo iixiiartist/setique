@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { stripePromise } from '../lib/stripe'
 import { CheckCircle, AlertCircle, X } from '../components/Icons'
+import ReportButton from '../components/ReportButton'
 
 export default function UserProfilePage() {
   const { username } = useParams()
@@ -828,7 +829,7 @@ export default function UserProfilePage() {
                     {selectedDataset.notes}
                   </div>
                 )}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
                       {selectedDataset.price === 0 ? 'FREE' : `$${selectedDataset.price}`}
@@ -864,6 +865,15 @@ export default function UserProfilePage() {
                     </button>
                   )}
                 </div>
+                {/* Report button - only show if not own dataset */}
+                {user && selectedDataset.creator_id !== user.id && (
+                  <div className="flex justify-end">
+                    <ReportButton 
+                      datasetId={selectedDataset.id} 
+                      datasetTitle={selectedDataset.title}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
