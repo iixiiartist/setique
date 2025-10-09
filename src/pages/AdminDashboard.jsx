@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TrustLevelManager from '../components/TrustLevelManager';
+import FeedbackManagement from '../components/FeedbackManagement';
 
 export default function AdminDashboard() {
   console.log('🔵 AdminDashboard component loaded');
@@ -746,6 +747,16 @@ export default function AdminDashboard() {
               🚩 Moderation Queue
             </button>
             <button
+              onClick={() => setActiveTab('feedback')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap border-r-2 border-black ${
+                activeTab === 'feedback' 
+                  ? 'bg-cyan-300' 
+                  : 'bg-white hover:bg-gray-50'
+              }`}
+            >
+              💬 Feedback
+            </button>
+            <button
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-4 font-bold transition whitespace-nowrap ${
                 activeTab === 'activity' 
@@ -1440,6 +1451,13 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'feedback' && (
+              <div>
+                <h2 className="text-2xl font-extrabold mb-6">User Feedback</h2>
+                <FeedbackManagement />
               </div>
             )}
 

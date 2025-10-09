@@ -8,6 +8,7 @@ import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import { AIAssistant } from '../components/AIAssistant'
 import { TagInput } from '../components/TagInput'
+import FeedbackModal from '../components/FeedbackModal'
 import {
   Star,
   Database,
@@ -43,6 +44,7 @@ function HomePage() {
   const [checkoutIdx, setCheckoutIdx] = useState(null)
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   
   // Check URL parameters for auth modal (supports /login and /signup routes)
   useEffect(() => {
@@ -705,19 +707,7 @@ function HomePage() {
             </button>
           )}
           <button
-            onClick={() => {
-              const email = 'joseph@anconsulting.us'
-              const subject = 'Setique Beta Feedback'
-              const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}`
-              
-              // Try to open mailto link
-              window.location.href = mailtoLink
-              
-              // Also show alert with email address as backup
-              setTimeout(() => {
-                alert(`Send feedback to: ${email}\n\nSubject: ${subject}\n\nIf your email client didn't open, please email us directly at the address above.`)
-              }, 500)
-            }}
+            onClick={() => setFeedbackModalOpen(true)}
             className="bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-4 py-2 rounded-full border-2 border-black shadow-[3px_3px_0_#000] hover:shadow-[4px_4px_0_#000] transition-all text-sm flex items-center gap-2"
             aria-label="Send beta feedback"
           >
@@ -1932,6 +1922,12 @@ function HomePage() {
           // Refresh data after successful submission
           fetchBounties()
         }}
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal 
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
       />
 
       {/* AI Assistant */}
