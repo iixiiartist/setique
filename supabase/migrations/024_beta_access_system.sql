@@ -76,6 +76,11 @@ CREATE POLICY "Admins can create beta access"
     )
   );
 
+-- System/trigger can insert beta access records (for automatic signup creation)
+CREATE POLICY "System can create beta access"
+  ON beta_access FOR INSERT
+  WITH CHECK (true);
+
 -- Function to generate unique access code
 CREATE OR REPLACE FUNCTION generate_access_code()
 RETURNS TEXT AS $$
