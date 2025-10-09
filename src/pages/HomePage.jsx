@@ -433,7 +433,7 @@ function HomePage() {
       if (error) throw error
 
       alert(
-        `Published "${newTitle}"! Your dataset is now live on the marketplace.`
+        `Published "${newTitle}"! Your dataset is now live in the ecosystem.`
       )
       
       // Reset form and clear localStorage draft
@@ -730,7 +730,7 @@ function HomePage() {
             <br /> Better AI.
           </h2>
           <p className="text-lg sm:text-2xl text-black/80 font-semibold mb-12">
-            A marketplace where everyday creators monetize their expertise and AI builders
+            An ecosystem where everyday creators monetize their expertise and AI builders
             discover unique datasets. Turn your niche knowledge into income or find
             cross-domain data that gives your AI the edge.
           </p>
@@ -1206,7 +1206,7 @@ function HomePage() {
                         <li>• <strong>$250-$500+:</strong> Large/expert datasets, rare/unique data</li>
                       </ul>
                       <p className="text-xs font-semibold mt-3 text-black/60 italic">
-                        💡 Tip: Check similar datasets on the marketplace to see competitive pricing!
+                        💡 Tip: Check similar datasets in the ecosystem to see competitive pricing!
                       </p>
                     </div>
                   </div>
@@ -1377,7 +1377,7 @@ function HomePage() {
                       • Well-labeled with useful metadata<br/>
                       • Hard to recreate (requires expertise or time)<br/>
                       • Addresses a real need in AI training<br/><br/>
-                      Check the marketplace to see what's selling and what gaps exist!
+                      Check the ecosystem to see what's selling and what gaps exist!
                     </p>
                   </details>
 
@@ -1698,7 +1698,7 @@ function HomePage() {
                 disabled={!isCreatorFormValid || isUploading}
                 className="w-full bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold py-4 rounded-full border-4 border-black hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 active:scale-100"
               >
-                {isUploading ? `Uploading... ${uploadProgress}%` : 'Publish to Marketplace'}
+                {isUploading ? `Uploading... ${uploadProgress}%` : 'Publish to Ecosystem'}
               </button>
             </div>
           </div>

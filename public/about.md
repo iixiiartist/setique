@@ -1,8 +1,8 @@
-# About Setique - The Curated Dataset Marketplace
+# About Setique - The Curated Dataset Ecosystem
 
 ## What is Setique?
 
-Setique (setique.com) is a marketplace platform that connects data curators with businesses, researchers, and developers who need high-quality training datasets for artificial intelligence and machine learning projects.
+Setique (setique.com) is an ecosystem platform that connects data curators with businesses, researchers, and developers who need high-quality training datasets for artificial intelligence and machine learning projects.
 
 ## Platform Overview
 
