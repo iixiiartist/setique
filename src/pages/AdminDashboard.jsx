@@ -58,7 +58,10 @@ export default function AdminDashboard() {
     totalBounties: 0,
     openBounties: 0,
     assignedBounties: 0,
-    completedBounties: 0
+    completedBounties: 0,
+    pendingModeration: 0,
+    flaggedDatasets: 0,
+    pendingReports: 0
   });
 
   const checkAdminStatus = async () => {
@@ -232,6 +235,13 @@ export default function AdminDashboard() {
       if (deletionError) {
         console.error('Error fetching deletion requests:', deletionError);
       }
+
+      // Fetch moderation stats
+      const [pendingModerationData, flaggedDatasetsData, pendingReportsData] = await Promise.all([
+        supabase.from('datasets').select('id', { count: 'exact', head: true }).eq('moderation_status', 'pending'),
+        supabase.from('datasets').select('id', { count: 'exact', head: true }).eq('moderation_status', 'flagged'),
+        supabase.from('dataset_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+      ]);
       
       // Fetch related data separately
       if (deletionRequestsData && deletionRequestsData.length > 0) {
@@ -272,7 +282,10 @@ export default function AdminDashboard() {
         totalBounties: bountiesData?.length || 0,
         openBounties: bountiesData?.filter(b => b.status === 'open').length || 0,
         assignedBounties: bountiesData?.filter(b => b.status === 'assigned').length || 0,
-        completedBounties: bountiesData?.filter(b => b.status === 'completed').length || 0
+        completedBounties: bountiesData?.filter(b => b.status === 'completed').length || 0,
+        pendingModeration: pendingModerationData.count || 0,
+        flaggedDatasets: flaggedDatasetsData.count || 0,
+        pendingReports: pendingReportsData.count || 0
       });
 
       // Done loading admin data
@@ -718,6 +731,12 @@ export default function AdminDashboard() {
               )}
             </button>
             <button
+              onClick={() => navigate('/moderation')}
+              className="px-6 py-4 font-bold transition whitespace-nowrap bg-white hover:bg-gray-50 border-r-2 border-black"
+            >
+              🚩 Moderation Queue
+            </button>
+            <button
               onClick={() => setActiveTab('activity')}
               className={`px-6 py-4 font-bold transition whitespace-nowrap ${
                 activeTab === 'activity' 
@@ -752,6 +771,33 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* Moderation Stats */}
+                {(stats.pendingModeration > 0 || stats.flaggedDatasets > 0 || stats.pendingReports > 0) && (
+                  <div className="border-2 border-red-500 rounded-xl p-6 bg-red-50">
+                    <h3 className="text-xl font-extrabold mb-3 text-red-900">🚩 Moderation Queue</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-sm font-bold text-red-800 mb-1">Pending Review</div>
+                        <div className="text-3xl font-extrabold text-red-900">{stats.pendingModeration}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-red-800 mb-1">Flagged Datasets</div>
+                        <div className="text-3xl font-extrabold text-red-900">{stats.flaggedDatasets}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-red-800 mb-1">Open Reports</div>
+                        <div className="text-3xl font-extrabold text-red-900">{stats.pendingReports}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate('/moderation')}
+                      className="mt-4 bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                    >
+                      Review Moderation Queue →
+                    </button>
+                  </div>
+                )}
+
                 {/* Recent Activity Summary */}
                 <div>
                   <h3 className="text-xl font-extrabold mb-3">Recent Activity</h3>
@@ -777,6 +823,14 @@ export default function AdminDashboard() {
                         className="bg-yellow-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
                       >
                         Review {pendingCurators.length} Pending Curator{pendingCurators.length !== 1 ? 's' : ''}
+                      </button>
+                    )}
+                    {(stats.pendingModeration > 0 || stats.flaggedDatasets > 0 || stats.pendingReports > 0) && (
+                      <button
+                        onClick={() => navigate('/moderation')}
+                        className="bg-red-400 text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                      >
+                        🚩 Moderation Queue ({stats.pendingModeration + stats.flaggedDatasets + stats.pendingReports})
                       </button>
                     )}
                     <button
