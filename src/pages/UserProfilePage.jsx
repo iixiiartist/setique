@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { CheckCircle, AlertCircle } from '../components/Icons'
+import { stripePromise } from '../lib/stripe'
+import { CheckCircle, AlertCircle, X } from '../components/Icons'
 
 export default function UserProfilePage() {
   const { username } = useParams()
@@ -20,6 +21,9 @@ export default function UserProfilePage() {
   const [following, setFollowing] = useState([])
   const [profileFollowsViewer, setProfileFollowsViewer] = useState(false)
   const [mutualConnectionIds, setMutualConnectionIds] = useState([])
+  const [selectedDataset, setSelectedDataset] = useState(null)
+  const [userPurchases, setUserPurchases] = useState([])
+  const [isProcessing, setIsProcessing] = useState(false)
   const statusTimerRef = useRef(null)
   
   const isOwnProfile = user?.id === profile?.id
@@ -187,6 +191,93 @@ export default function UserProfilePage() {
   useEffect(() => {
     fetchUserProfile()
   }, [fetchUserProfile])
+
+  // Fetch user's purchases
+  useEffect(() => {
+    const fetchUserPurchases = async () => {
+      if (!user) {
+        setUserPurchases([])
+        return
+      }
+
+      const { data } = await supabase
+        .from('purchases')
+        .select('dataset_id')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+
+      setUserPurchases(data?.map(p => p.dataset_id) || [])
+    }
+
+    fetchUserPurchases()
+  }, [user])
+
+  const userOwnsDataset = (datasetId) => {
+    return userPurchases.includes(datasetId)
+  }
+
+  const handleBuyDataset = async (dataset) => {
+    if (!user) {
+      alert('Please sign in to purchase datasets')
+      navigate('/login')
+      return
+    }
+
+    if (dataset.price === 0) {
+      // Free dataset
+      try {
+        setIsProcessing(true)
+        const { error } = await supabase
+          .from('purchases')
+          .insert({
+            user_id: user.id,
+            dataset_id: dataset.id,
+            amount: 0,
+            status: 'completed'
+          })
+
+        if (error) throw error
+
+        alert('Dataset added to your library!')
+        setSelectedDataset(null)
+        // Refresh purchases
+        const { data } = await supabase
+          .from('purchases')
+          .select('dataset_id')
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+        setUserPurchases(data?.map(p => p.dataset_id) || [])
+      } catch (error) {
+        console.error('Error claiming free dataset:', error)
+        alert('Failed to add dataset to library')
+      } finally {
+        setIsProcessing(false)
+      }
+    } else {
+      // Paid dataset - create Stripe checkout
+      try {
+        setIsProcessing(true)
+        const response = await fetch('/.netlify/functions/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            datasetId: dataset.id,
+            userId: user.id,
+            price: dataset.price,
+            title: dataset.title
+          })
+        })
+
+        const { sessionId } = await response.json()
+        const stripe = await stripePromise
+        await stripe.redirectToCheckout({ sessionId })
+      } catch (error) {
+        console.error('Error creating checkout:', error)
+        alert('Failed to create checkout session')
+        setIsProcessing(false)
+      }
+    }
+  }
 
   const handleFollowToggle = async () => {
     if (!user) {
@@ -543,9 +634,10 @@ export default function UserProfilePage() {
               </div>
             ) : (
               datasets.map(dataset => (
-                <div
+                <button
                   key={dataset.id}
-                  className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-6"
+                  onClick={() => setSelectedDataset(dataset)}
+                  className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-y-1 p-6 text-left w-full"
                 >
                   <h3 className="text-xl font-bold mb-2">{dataset.title}</h3>
                   <p className="text-gray-600 text-sm mb-3 line-clamp-2">
@@ -564,7 +656,7 @@ export default function UserProfilePage() {
                       {dataset.purchase_count} {dataset.purchase_count === 1 ? 'purchase' : 'purchases'}
                     </div>
                   )}
-                </div>
+                </button>
               ))
             )}
           </div>
@@ -652,6 +744,88 @@ export default function UserProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Dataset Detail Modal */}
+      {selectedDataset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="modal-backdrop absolute inset-0 bg-black/50"
+            onClick={() => setSelectedDataset(null)}
+          />
+          <div className="modal-panel relative bg-white text-black max-w-2xl w-full border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] p-6 z-10 max-h-[90vh] overflow-y-auto">
+            <button
+              className="absolute top-3 right-3 border-2 border-black rounded-full p-1 bg-yellow-300 active:scale-95"
+              onClick={() => setSelectedDataset(null)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h4 className="text-3xl font-extrabold mb-2">
+              {selectedDataset.title}
+            </h4>
+            <p className="text-black/80 font-semibold mb-4">
+              {selectedDataset.description}
+            </p>
+            {selectedDataset.schema_fields && selectedDataset.schema_fields.length > 0 && (
+              <div>
+                <div className="mb-4">
+                  <div className="font-extrabold mb-1">Schema</div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDataset.schema_fields.map((f) => (
+                      <span
+                        key={f}
+                        className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-yellow-200"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {selectedDataset.sample_data && (
+                  <div className="bg-black text-yellow-200 font-mono text-xs p-3 rounded-md border-2 border-black mb-4 whitespace-pre-wrap">
+                    {selectedDataset.sample_data}
+                  </div>
+                )}
+                {selectedDataset.notes && (
+                  <div className="text-sm font-bold mb-6">
+                    {selectedDataset.notes}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full">
+                      {selectedDataset.price === 0 ? 'FREE' : `$${selectedDataset.price}`}
+                    </div>
+                    {userOwnsDataset(selectedDataset.id) && (
+                      <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm">
+                        ✓ You own this
+                      </div>
+                    )}
+                  </div>
+                  {userOwnsDataset(selectedDataset.id) ? (
+                    <button
+                      className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-6 py-2 hover:bg-green-300 active:scale-95"
+                      onClick={() => {
+                        setSelectedDataset(null)
+                        navigate('/dashboard')
+                      }}
+                    >
+                      View in Library
+                    </button>
+                  ) : (
+                    <button
+                      className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-2 active:scale-95"
+                      onClick={() => handleBuyDataset(selectedDataset)}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? 'Processing...' : (selectedDataset.price === 0 ? 'Get Free' : 'Buy Now')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
