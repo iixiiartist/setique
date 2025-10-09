@@ -293,6 +293,31 @@ export default function ActivityFeedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50 py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* Navigation Bar */}
+        <div className="flex items-center justify-between">
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 px-4 py-2 font-bold border-4 border-black bg-white hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            ← Home
+          </Link>
+          <div className="flex gap-3">
+            <Link 
+              to="/discover" 
+              className="px-4 py-2 font-bold border-4 border-black bg-green-200 hover:bg-green-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
+              Discover
+            </Link>
+            <Link 
+              to="/dashboard" 
+              className="px-4 py-2 font-bold border-4 border-black bg-yellow-400 hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
+              Dashboard
+            </Link>
+          </div>
+        </div>
+
         <header className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] p-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-2">

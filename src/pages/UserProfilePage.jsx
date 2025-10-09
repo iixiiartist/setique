@@ -322,6 +322,38 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         
+        {/* Navigation Bar */}
+        <div className="mb-6 flex items-center justify-between">
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 px-4 py-2 font-bold border-4 border-black bg-white hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            ← Home
+          </Link>
+          {user && (
+            <div className="flex gap-3">
+              <Link 
+                to="/feed" 
+                className="px-4 py-2 font-bold border-4 border-black bg-blue-200 hover:bg-blue-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                Feed
+              </Link>
+              <Link 
+                to="/discover" 
+                className="px-4 py-2 font-bold border-4 border-black bg-green-200 hover:bg-green-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                Discover
+              </Link>
+              <Link 
+                to="/dashboard" 
+                className="px-4 py-2 font-bold border-4 border-black bg-yellow-400 hover:bg-yellow-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                Dashboard
+              </Link>
+            </div>
+          )}
+        </div>
+
         {/* Profile Header */}
         <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 mb-8">
           <div className="flex flex-col md:flex-row gap-6">

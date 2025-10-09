@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { CheckCircle, AlertCircle } from '../components/Icons'
@@ -140,6 +140,25 @@ export default function ProfileSettingsPage() {
   return (
     <div className="min-h-screen bg-yellow-50 py-12 px-4">
       <div className="max-w-3xl mx-auto">
+        
+        {/* Navigation Bar */}
+        <div className="mb-6 flex items-center justify-between">
+          <Link 
+            to="/dashboard" 
+            className="inline-flex items-center gap-2 px-4 py-2 font-bold border-4 border-black bg-white hover:bg-gray-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+          >
+            ← Back to Dashboard
+          </Link>
+          {profile?.username && (
+            <Link 
+              to={`/profile/${profile.username}`} 
+              className="px-4 py-2 font-bold border-4 border-black bg-blue-200 hover:bg-blue-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
+              View Profile
+            </Link>
+          )}
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-black mb-4">Edit Profile</h1>
