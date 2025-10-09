@@ -106,7 +106,7 @@ export default function ProfileSettingsPage() {
       // Navigate to profile page after a short delay
       setTimeout(() => {
         if (formData.username) {
-          navigate(`/user/${formData.username}`)
+          navigate(`/profile/${formData.username}`)
         } else {
           navigate('/dashboard')
         }
