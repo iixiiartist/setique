@@ -12,7 +12,6 @@ import UserDiscoveryPage from './pages/UserDiscoveryPage'
 import ActivityFeedPage from './pages/ActivityFeedPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ModerationQueuePage from './pages/ModerationQueuePage'
-import { AIAssistant } from './components/AIAssistant'
 import ProtectedRoute from './components/ProtectedRoute'
 import BetaProtectedRoute from './components/BetaProtectedRoute'
 
@@ -77,9 +76,6 @@ function App() {
           } 
         />
       </Routes>
-      
-      {/* AI Assistant - Available on all pages */}
-      <AIAssistant />
     </>
   )
 }
