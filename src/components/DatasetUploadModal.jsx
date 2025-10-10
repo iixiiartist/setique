@@ -339,7 +339,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                   disabled={isUploading}
                   className="hidden"
                   id="dataset-file-upload"
-                  accept=".zip,.csv,.json,.txt,.xlsx,.parquet,.h5,.pkl"
+                  accept=".csv,.json,.parquet,.xlsx,.xls,.zip,.rar,.7z,.tar,.gz,.txt,.md,.pdf,.wav,.mp3,.mp4,.avi,.mov,.mkv,.png,.jpg,.jpeg,.gif,.svg,.webp,.sql,.db,.sqlite,.h5,.hdf5,.npy,.npz,.pickle,.pkl,.arrow,.feather,.xml,.yaml,.yml,.tsv,.avro,.orc"
                 />
                 {!uploadFile && (
                   <label

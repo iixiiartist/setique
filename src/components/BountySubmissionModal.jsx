@@ -247,12 +247,12 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
               <input
                 type="file"
                 onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
-                accept=".csv,.json,.parquet,.xlsx,.zip"
+                accept=".csv,.json,.parquet,.xlsx,.xls,.zip,.rar,.7z,.tar,.gz,.txt,.md,.pdf,.wav,.mp3,.mp4,.avi,.mov,.mkv,.png,.jpg,.jpeg,.gif,.svg,.webp,.sql,.db,.sqlite,.h5,.hdf5,.npy,.npz,.pickle,.pkl,.arrow,.feather,.xml,.yaml,.yml,.tsv,.avro,.orc"
                 className="w-full px-4 py-3 border-2 border-black rounded-xl font-bold file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-bold file:bg-gradient-to-r file:from-cyan-500 file:to-pink-500 file:text-white hover:file:opacity-90"
                 required
               />
               <p className="text-sm text-black/70 mt-1">
-                Accepted formats: CSV, JSON, Parquet, Excel, ZIP • Max size: 100MB
+                Accepted formats: CSV, JSON, Excel, Parquet, ZIP/RAR, TXT, MD, PDF, Audio (WAV/MP3), Video (MP4/AVI/MOV), Images (PNG/JPG/GIF/SVG), SQL, HDF5, NumPy, Pickle, Arrow, Feather, and more • Max size: 100MB
               </p>
             </div>
 
