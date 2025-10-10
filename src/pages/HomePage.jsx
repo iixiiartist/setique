@@ -6,7 +6,6 @@ import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
-import { AIAssistant } from '../components/AIAssistant'
 import FeedbackModal from '../components/FeedbackModal'
 import {
   Star,
@@ -2082,9 +2081,6 @@ function HomePage() {
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
       />
-
-      {/* AI Assistant */}
-      <AIAssistant />
     </div>
   )
 }
