@@ -24,16 +24,21 @@ export default function BetaProtectedRoute({ children }) {
       try {
         setLoading(true)
 
-        const { data, error } = await supabase.rpc('has_beta_access')
+        const { data, error } = await supabase.rpc('has_beta_access', {
+          user_id_param: user.id
+        })
 
-        if (error) throw error
-
-        setHasAccess(data)
+        if (error) {
+          console.error('Beta access check error:', error)
+          // Fail closed - if we can't check access, deny
+          setHasAccess(false)
+        } else {
+          setHasAccess(data)
+        }
       } catch (error) {
         console.error('Error checking beta access:', error)
-        // Fail open - if we can't check access, allow through
-        // (Better to be permissive than break app)
-        setHasAccess(true)
+        // Fail closed - deny access on error
+        setHasAccess(false)
       } finally {
         setLoading(false)
       }
