@@ -70,6 +70,7 @@ export const AuthProvider = ({ children }) => {
           data: {
             username,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (error) throw error
