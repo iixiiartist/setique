@@ -36,6 +36,10 @@ function HomePage() {
   // General state
   const [query, setQuery] = useState('')
   const [modality, setModality] = useState('all')
+  
+  // Beta access state
+  const [hasBetaAccess, setHasBetaAccess] = useState(false)
+  const [checkingBetaAccess, setCheckingBetaAccess] = useState(true)
 
   // Modal state
   const [selected, setSelected] = useState(null)
@@ -52,6 +56,37 @@ function HomePage() {
       setSignInOpen(true)
     }
   }, [searchParams])
+  
+  // Check beta access when user changes
+  useEffect(() => {
+    const checkBetaAccess = async () => {
+      if (!user) {
+        setHasBetaAccess(false)
+        setCheckingBetaAccess(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase.rpc('has_beta_access', {
+          user_id_param: user.id
+        })
+        
+        if (error) {
+          console.error('Beta access check error:', error)
+          setHasBetaAccess(false)
+        } else {
+          setHasBetaAccess(data)
+        }
+      } catch (error) {
+        console.error('Error checking beta access:', error)
+        setHasBetaAccess(false)
+      } finally {
+        setCheckingBetaAccess(false)
+      }
+    }
+
+    checkBetaAccess()
+  }, [user])
 
   // Creator form state with localStorage persistence
   const [newTitle, setNewTitle] = useState(() => {
@@ -472,6 +507,13 @@ function HomePage() {
   const handleCheckout = async () => {
     if (!user) {
       setSignInOpen(true)
+      return
+    }
+
+    // Check if user has beta access
+    if (!hasBetaAccess) {
+      alert('You need to be approved for beta access to purchase datasets. Check your email for your access code!')
+      navigate('/dashboard')
       return
     }
 
@@ -1615,90 +1657,29 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Curator Form Section */}
-        <section id="curator-form" className="max-w-4xl mx-auto mb-24 pt-10">
+        {/* Publish Dataset CTA - Redirects based on auth status */}
+        <section id="curator-cta" className="max-w-4xl mx-auto mb-24 pt-10">
           <div className="bg-yellow-200 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
             <div className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] p-6 border-b-4 border-black">
               <h3 className="text-3xl font-extrabold text-white drop-shadow-[2px_2px_0_#000]">
                 Become a Data Curator
               </h3>
             </div>
-            <div className="space-y-6 p-6 text-black">
-              <input
-                placeholder="Dataset Title (e.g., 'A Photographic Archive of Brutalist Architecture in Pittsburgh')"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
-              />
-              <textarea
-                placeholder="Describe your collection's unique value. What story does it tell? Why is it essential for building a more interesting AI?"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
-                rows="3"
-              />
-              <input
-                type="number"
-                placeholder="Your Price (USD)"
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
-              />
-              <select
-                value={newModality}
-                onChange={(e) => setNewModality(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
-              >
-                <option value="vision">Vision/Image</option>
-                <option value="audio">Audio</option>
-                <option value="text">Text</option>
-                <option value="video">Video</option>
-                <option value="nlp">NLP</option>
-              </select>
-              <div>
-                <label className="font-bold mb-2 block">Tags</label>
-                <TagInput tags={newTags} setTags={setNewTags} />
-              </div>
-              
-              {/* File Upload */}
-              <div>
-                <label className="font-bold mb-2 block">Dataset File</label>
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  className="w-full bg-white border-2 border-black rounded-md font-semibold p-3"
-                  accept=".csv,.json,.zip,.tar,.gz,.mp3,.wav,.flac,.mp4,.mov,.jpg,.jpeg,.png,.txt"
-                />
-                {uploadFile && (
-                  <p className="text-sm mt-2 font-semibold">
-                    Selected: {uploadFile.name} ({(uploadFile.size / (1024 * 1024)).toFixed(2)}MB)
-                  </p>
-                )}
-                {uploadError && (
-                  <p className="text-sm mt-2 font-bold text-red-600">
-                    ⚠️ {uploadError}
-                  </p>
-                )}
-                {isUploading && (
-                  <div className="mt-3">
-                    <div className="w-full bg-white border-2 border-black rounded-full h-6 overflow-hidden">
-                      <div
-                        className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] h-full transition-all duration-300 flex items-center justify-center text-xs font-bold"
-                        style={{ width: `${uploadProgress}%` }}
-                      >
-                        {uploadProgress}%
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
+            <div className="p-8 text-center">
+              <p className="text-xl font-semibold mb-6 text-black">
+                Share your unique datasets and earn from every sale. Help build more interesting AI.
+              </p>
               <button
-                onClick={handlePublish}
-                disabled={!isCreatorFormValid || isUploading}
-                className="w-full bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold py-4 rounded-full border-4 border-black hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 active:scale-100"
+                onClick={() => {
+                  if (!user) {
+                    setSignInOpen(true)
+                  } else {
+                    navigate('/dashboard')
+                  }
+                }}
+                className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
               >
-                {isUploading ? `Uploading... ${uploadProgress}%` : 'Publish to Ecosystem'}
+                {user ? 'Go to Dashboard to Publish' : 'Sign Up to Start Curating'}
               </button>
             </div>
           </div>
@@ -1835,6 +1816,20 @@ function HomePage() {
                           >
                             View in Library
                           </button>
+                        ) : !user ? (
+                          <button
+                            onClick={() => setSignInOpen(true)}
+                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
+                          >
+                            Sign Up to Buy
+                          </button>
+                        ) : !hasBetaAccess ? (
+                          <button
+                            onClick={() => navigate('/dashboard')}
+                            className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95"
+                          >
+                            Get Beta Access
+                          </button>
                         ) : (
                           <button
                             onClick={() => setCheckoutIdx(datasets.indexOf(d))}
@@ -1860,144 +1855,33 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Bounties Section - Continued in next part */}
-        <section id="bounties" className="max-w-5xl mx-auto mb-24 pt-10">
+        {/* Post Bounty CTA - Redirects based on auth status */}
+        <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
           <div className="bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0_#000]">
             <div className="p-6 border-b-4 border-black bg-gradient-to-r from-yellow-300 to-pink-300">
               <h3 className="text-4xl font-extrabold text-black">
                 Commission a Custom Dataset
               </h3>
               <p className="font-semibold text-black/80 mt-1">
-                Post a bounty and have our community of curators build the exact
-                dataset your AI model needs.
+                Post a bounty and have our community of curators build the exact dataset your AI model needs.
               </p>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="lg:col-span-2 space-y-2">
-                  <label className="font-extrabold text-lg">Bounty Title</label>
-                  <input
-                    value={bountyTitle}
-                    onChange={(e) => setBountyTitle(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                    placeholder="e.g., 1,000 Photos of Ugly Holiday Sweaters"
-                  />
-                </div>
-                <div className="lg:col-span-2 space-y-2">
-                  <label className="font-extrabold text-lg">
-                    Detailed Description
-                  </label>
-                  <textarea
-                    value={bountyDesc}
-                    onChange={(e) => setBountyDesc(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                    rows="4"
-                    placeholder="Describe what you need. What are the key characteristics? What makes a submission good or bad? Provide context."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="font-extrabold text-lg">Data Modality</label>
-                  <select
-                    value={bountyModality}
-                    onChange={(e) => setBountyModality(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                  >
-                    <option value="image">Image</option>
-                    <option value="audio">Audio</option>
-                    <option value="text">Text</option>
-                    <option value="video">Video</option>
-                    <option value="tabular">Tabular (CSV/JSON)</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="font-extrabold text-lg">
-                    Required Quantity
-                  </label>
-                  <input
-                    value={bountyQuantity}
-                    onChange={(e) => setBountyQuantity(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                    placeholder="e.g., 1,000 images"
-                  />
-                </div>
-                <div className="lg:col-span-2 space-y-2">
-                  <label className="font-extrabold text-lg">
-                    Labels / Tags (Press Enter to add)
-                  </label>
-                  <TagInput tags={bountyTags} setTags={setBountyTags} />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="font-extrabold text-lg">Budget (USD)</label>
-                  <input
-                    type="number"
-                    value={bountyBudget}
-                    onChange={(e) => setBountyBudget(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                    placeholder="e.g., 500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="font-extrabold text-lg">Deadline</label>
-                  <input
-                    type="date"
-                    value={bountyDeadline}
-                    onChange={(e) => setBountyDeadline(e.target.value)}
-                    className="w-full bg-white border-2 border-black font-semibold p-3 rounded-md"
-                  />
-                </div>
-              </div>
+            <div className="p-8 text-center">
+              <p className="text-xl font-semibold mb-6 text-black">
+                Can't find what you need? Commission expert curators to build custom datasets tailored to your AI project.
+              </p>
               <button
-                onClick={handleBountyPost}
-                disabled={!isBountyFormValid}
-                className="w-full mt-6 bg-[linear-gradient(90deg,#00ffff,#ff00c3,#ffea00)] text-black font-extrabold text-lg px-8 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                onClick={() => {
+                  if (!user) {
+                    setSignInOpen(true)
+                  } else {
+                    navigate('/dashboard')
+                  }
+                }}
+                className="bg-[linear-gradient(90deg,#00ffff,#ff00c3,#ffea00)] text-black font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
               >
-                Post Bounty
+                {user ? 'Go to Dashboard to Post Bounty' : 'Sign Up to Post Bounty'}
               </button>
-            </div>
-          </div>
-
-          <div className="mt-12">
-            <h4 className="text-3xl font-extrabold mb-4 text-black drop-shadow-[2px_2px_0_#fff]">
-              Active Bounties
-            </h4>
-            <div className="space-y-4">
-              {bounties.length > 0 ? (
-                bounties.map((bounty, idx) => (
-                  <div
-                    key={bounty.id}
-                    onClick={() => setSelectedBounty(idx)}
-                    className="bg-white/50 border-2 border-black rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer hover:bg-yellow-200/50 transition"
-                  >
-                    <div>
-                      <span className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-cyan-200 uppercase">
-                        {bounty.modality}
-                      </span>
-                      <h5 className="font-extrabold text-lg mt-2">
-                        {bounty.title.startsWith('(DEMO)') ? bounty.title : bounty.title}
-                      </h5>
-                      <p className="text-sm text-black/70 font-semibold">
-                        {bounty.description.substring(0, 100)}...
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-extrabold text-2xl">
-                        ${bounty.budget}
-                      </div>
-                      {bounty.quantity && (
-                        <div className="font-semibold text-sm">
-                          for {bounty.quantity}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center font-semibold text-black/70">
-                  No active bounties yet. Be the first to post one!
-                </p>
-              )}
             </div>
           </div>
         </section>
