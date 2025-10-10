@@ -42,12 +42,16 @@ export default function AuthCallbackPage() {
           return;
         }
 
-        // Success!
+        // Success! Email confirmed
         setStatus('success');
-        setMessage('Email confirmed! Redirecting...');
+        setMessage('Email confirmed! Please log in to continue.');
         
-        // Redirect to home where BetaAccessGate will show
-        setTimeout(() => navigate('/'), 2000);
+        // Sign out immediately so they have to log in
+        // This ensures BetaAccessGate runs on login
+        await supabase.auth.signOut();
+        
+        // Redirect to login page
+        setTimeout(() => navigate('/login'), 2000);
 
       } catch (error) {
         console.error('Auth callback error:', error);
