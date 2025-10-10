@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Clock, DollarSign } from './Icons';
 
-export default function ProposalSubmissionModal({ isOpen, onClose, request, curatorProfile, onSuccess }) {
+export default function ProposalSubmissionModal({ isOpen, onClose, request, curatorProfile, userProfile, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   
   const [proposalText, setProposalText] = useState('');
@@ -33,10 +33,13 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
 
   if (!isOpen || !request) return null;
 
+  // Map trust_level integer to tier string
+  const trustLevelMap = ['newcomer', 'verified', 'expert', 'master'];
+  const userTierString = trustLevelMap[userProfile?.trust_level || 0];
+  
   // Check if user meets tier requirement
   const requiredTier = request.minimum_curator_tier || 'newcomer';
-  const userTier = curatorProfile?.badge_level || 'newcomer';
-  const meetsTierRequirement = tierHierarchy[userTier] >= tierHierarchy[requiredTier];
+  const meetsTierRequirement = tierHierarchy[userTierString] >= tierHierarchy[requiredTier];
   const tierInfo = tierBadgeInfo[requiredTier];
 
   const handleSubmit = async (e) => {
@@ -48,16 +51,17 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
     }
 
     if (!curatorProfile || curatorProfile.certification_status !== 'approved') {
-      alert('You must be an approved Pro Curator to submit proposals');
+      alert('⚠️ You must be an approved Pro Curator to submit proposals.\n\nBounties can only be fulfilled by certified Pro Curators who have completed the verification process.\n\nVisit the Pro Curator section to apply!');
       return;
     }
 
-    // Check tier requirements
+    // Check tier requirements using trust_level
     const requiredTier = request.minimum_curator_tier || 'newcomer';
-    const userTier = curatorProfile.badge_level || 'newcomer';
+    const trustLevelMap = ['newcomer', 'verified', 'expert', 'master'];
+    const userTierString = trustLevelMap[userProfile?.trust_level || 0];
     
-    if (tierHierarchy[userTier] < tierHierarchy[requiredTier]) {
-      alert(`⚠️ This bounty requires ${tierDisplayNames[requiredTier]}+ curator status.\n\nYour current tier: ${tierDisplayNames[userTier]}\n\nRank up by completing more datasets to unlock access to this bounty!`);
+    if (tierHierarchy[userTierString] < tierHierarchy[requiredTier]) {
+      alert(`⚠️ Tier Requirement Not Met\n\nThis bounty requires ${tierDisplayNames[requiredTier]}+ trust level.\n\nYour current trust level: ${tierDisplayNames[userTierString]}\n\n💡 Rank up by:\n• Uploading quality datasets\n• Getting positive feedback\n• Completing more transactions\n\nHigher trust levels unlock access to premium bounties with better rewards!`);
       return;
     }
 
@@ -123,13 +127,13 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
                 <div>
                   <h3 className="font-extrabold text-yellow-900 mb-1">Tier Requirement Not Met</h3>
                   <p className="text-sm text-yellow-800 mb-2">
-                    This bounty requires <span className="font-bold">{tierDisplayNames[requiredTier]}+</span> curator status.
+                    This bounty requires <span className="font-bold">{tierDisplayNames[requiredTier]}+</span> trust level.
                   </p>
                   <p className="text-sm text-yellow-800">
-                    Your current tier: <span className="font-bold">{tierDisplayNames[userTier]}</span>
+                    Your current trust level: <span className="font-bold">{tierDisplayNames[userTierString]}</span>
                   </p>
                   <p className="text-xs text-yellow-700 mt-2 font-semibold">
-                    💡 Complete more datasets to rank up and unlock access to premium bounties!
+                    💡 Upload quality datasets and earn positive feedback to rank up and unlock premium bounties!
                   </p>
                 </div>
               </div>

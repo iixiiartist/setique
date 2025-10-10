@@ -1466,7 +1466,7 @@ function DashboardPage() {
                   <div>
                     <h3 className="text-2xl font-extrabold mb-1">Available Bounties</h3>
                     <p className="text-sm text-black/70">
-                      Browse open bounties and submit proposals {curatorProfile && `(Your tier: ${curatorProfile.badge_level || 'newcomer'})`}
+                      Browse open bounties and submit proposals {profile && `(Your tier: ${['newcomer', 'verified', 'expert', 'master'][profile.trust_level || 0]})`}
                     </p>
                   </div>
                 </div>
@@ -1475,19 +1475,15 @@ function DashboardPage() {
                   <div className="space-y-4 mb-8">
                     {openCurationRequests.map((bounty) => {
                       const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
-                      const userTier = curatorProfile?.badge_level || 'newcomer';
-                      const tierHierarchy = {
-                        newcomer: 0,
-                        verified: 1,
-                        expert: 2,
-                        master: 3
-                      };
-                      const canApply = tierHierarchy[userTier] >= tierHierarchy[bounty.minimum_curator_tier || 'newcomer'];
+                      // Map trust_level integer to tier string
+                      const trustLevelMap = ['newcomer', 'verified', 'expert', 'master'];
+                      const userTierString = trustLevelMap[profile?.trust_level || 0];
+                      const userTierInfo = tierDisplayInfo[userTierString];
                       
                       return (
                         <div
                           key={bounty.id}
-                          className={`bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-2 border-black rounded-xl p-4 ${!canApply ? 'opacity-75' : ''}`}
+                          className="bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-2 border-black rounded-xl p-4"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
@@ -1497,13 +1493,11 @@ function DashboardPage() {
                                   💰 ${bounty.budget_min} - ${bounty.budget_max}
                                 </span>
                                 <span className={`border-2 rounded-full px-3 py-1 ${tierInfo.color}`}>
-                                  {tierInfo.badge} {tierInfo.label}
+                                  {tierInfo.badge} {tierInfo.label} Required
                                 </span>
-                                {!canApply && (
-                                  <span className="bg-red-100 text-red-800 border-2 border-red-600 rounded-full px-3 py-1">
-                                    🔒 Tier Required
-                                  </span>
-                                )}
+                                <span className={`border-2 rounded-full px-3 py-1 ${userTierInfo.color}`}>
+                                  � Your Tier: {userTierInfo.label}
+                                </span>
                               </div>
                               <p className="text-sm text-black/70 mb-2">
                                 Posted by {bounty.profiles?.username || 'Anonymous'} • {new Date(bounty.created_at).toLocaleDateString()}
@@ -1515,34 +1509,20 @@ function DashboardPage() {
                           </div>
 
                           <div className="flex gap-3 mt-3">
-                            {canApply ? (
-                              <>
-                                {curatorProfile ? (
-                                  <button
-                                    onClick={() => {
-                                      setSelectedRequestForProposal(bounty)
-                                      setProposalSubmissionOpen(true)
-                                    }}
-                                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
-                                  >
-                                    📝 Submit Proposal
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => navigate('/pro-curator')}
-                                    className="bg-purple-500 text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:bg-purple-600 transition"
-                                  >
-                                    Become Pro Curator to Apply
-                                  </button>
-                                )}
-                              </>
-                            ) : (
-                              <div className="bg-yellow-50 border-2 border-yellow-600 rounded-lg px-4 py-2 flex items-center gap-2">
-                                <span className="text-sm font-bold text-yellow-900">
-                                  ⚠️ Requires {tierInfo.label} status to apply. Complete more datasets to rank up!
-                                </span>
-                              </div>
-                            )}
+                            <button
+                              onClick={() => {
+                                if (!user) {
+                                  alert('Please sign in to submit proposals')
+                                  navigate('/?auth=signin')
+                                  return
+                                }
+                                setSelectedRequestForProposal(bounty)
+                                setProposalSubmissionOpen(true)
+                              }}
+                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
+                            >
+                              📝 Submit Proposal
+                            </button>
                           </div>
                         </div>
                       );
@@ -2392,6 +2372,7 @@ function DashboardPage() {
         }}
         request={selectedRequestForProposal}
         curatorProfile={curatorProfile}
+        userProfile={profile}
         onSuccess={fetchDashboardData}
       />
 
