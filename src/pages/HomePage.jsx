@@ -49,6 +49,7 @@ function HomePage() {
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   
   // Check URL parameters for auth modal (supports /login and /signup routes)
   useEffect(() => {
@@ -703,14 +704,16 @@ function HomePage() {
         </div>
       )}
 
-      <header className="flex flex-col sm:flex-row items-center justify-between mb-12">
+      <header className="flex items-center justify-between mb-12">
         <a
           href="#"
-          className="text-5xl font-extrabold tracking-tighter text-black bg-[linear-gradient(90deg,#ff00c3,#00ffff,#ffea00)] bg-clip-text text-transparent drop-shadow-[2px_2px_0_#000] mb-4 sm:mb-0 no-underline"
+          className="text-4xl sm:text-5xl font-extrabold tracking-tighter text-black bg-[linear-gradient(90deg,#ff00c3,#00ffff,#ffea00)] bg-clip-text text-transparent drop-shadow-[2px_2px_0_#000] no-underline"
         >
           SETIQUE
         </a>
-        <nav className="flex items-center gap-4">
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-4">
           <a
             href="#marketplace"
             className="font-bold text-black hover:text-pink-600 transition"
@@ -754,7 +757,7 @@ function HomePage() {
             aria-label="Send beta feedback"
           >
             <span className="text-lg">💬</span>
-            <span className="hidden sm:inline">Feedback</span>
+            <span>Feedback</span>
           </button>
           <a
             href="#pro-curator"
@@ -763,7 +766,91 @@ function HomePage() {
             Pro Curator
           </a>
         </nav>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden bg-white border-2 border-black rounded-lg p-2 hover:bg-gray-100 transition"
+          aria-label="Toggle menu"
+        >
+          <div className="w-6 h-5 flex flex-col justify-between">
+            <span className={`block h-0.5 w-full bg-black transition-all ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+            <span className={`block h-0.5 w-full bg-black transition-all ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`block h-0.5 w-full bg-black transition-all ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+          </div>
+        </button>
       </header>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden mb-8 bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0_#000] p-4 space-y-3">
+          <a
+            href="#marketplace"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block font-bold text-black hover:text-pink-600 transition py-2"
+          >
+            Marketplace
+          </a>
+          <a
+            href="#bounties"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block font-bold text-black hover:text-pink-600 transition py-2"
+          >
+            Bounties
+          </a>
+          {user ? (
+            <>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  navigate('/dashboard')
+                }}
+                className="w-full text-left font-bold text-black hover:text-cyan-600 transition flex items-center gap-2 py-2"
+              >
+                <User className="h-4 w-4" />
+                Dashboard
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  handleSignOut()
+                }}
+                className="w-full text-left font-bold text-black hover:text-pink-600 transition flex items-center gap-2 py-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false)
+                setSignInOpen(true)
+              }}
+              className="w-full text-left font-bold text-black hover:text-pink-600 transition py-2"
+            >
+              Sign In
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false)
+              setFeedbackModalOpen(true)
+            }}
+            className="w-full bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold px-4 py-2 rounded-full border-2 border-black shadow-[3px_3px_0_#000] transition-all text-sm flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">💬</span>
+            Feedback
+          </button>
+          <a
+            href="#pro-curator"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-bold hover:opacity-90 transition px-5 py-2 rounded-full shadow-lg border-2 border-black text-sm"
+          >
+            Pro Curator
+          </a>
+        </div>
+      )}
 
       <main>
         <section id="hero" className="text-center max-w-5xl mx-auto mb-16">
