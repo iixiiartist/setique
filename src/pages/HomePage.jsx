@@ -400,7 +400,7 @@ function HomePage() {
                 <span className="font-extrabold text-lg">BETA VERSION</span>
               </div>
               <p className="text-sm font-semibold">
-                Platform in active development. All transactions in test mode. 
+                Platform in active development. All transactions are live and real. 
                 <a 
                   href="mailto:joseph@anconsulting.us" 
                   className="underline ml-1 hover:text-cyan-600 transition"
