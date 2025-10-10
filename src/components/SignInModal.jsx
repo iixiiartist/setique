@@ -41,7 +41,8 @@ export const SignInModal = ({ isOpen, onClose }) => {
         if (error) {
           setError(error.message)
         } else {
-          alert('Account created! Please check your email to verify your account.')
+          // Don't show alert, just close and let them access the app
+          // BetaProtectedRoute will show them the beta gate
           onClose()
         }
       } else {
