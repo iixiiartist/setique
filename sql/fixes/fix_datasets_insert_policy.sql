@@ -10,6 +10,7 @@ DROP POLICY IF EXISTS "Users can create datasets" ON datasets;
 DROP POLICY IF EXISTS "Enable insert for authenticated users" ON datasets;
 DROP POLICY IF EXISTS "Users can view all datasets" ON datasets;
 DROP POLICY IF EXISTS "Public can view active datasets" ON datasets;
+DROP POLICY IF EXISTS "Users can view their own datasets" ON datasets;
 DROP POLICY IF EXISTS "Users can update their own datasets" ON datasets;
 DROP POLICY IF EXISTS "Users can delete their own datasets" ON datasets;
 
