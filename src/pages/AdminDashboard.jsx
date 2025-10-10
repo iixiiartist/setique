@@ -625,20 +625,20 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-white border-2 border-black px-4 py-2 font-bold hover:bg-gray-100 transition"
+              className="bg-white border-2 border-black px-4 py-2 font-bold hover:bg-gray-100 transition text-sm sm:text-base w-fit"
             >
               ← Back to Dashboard
             </button>
           </div>
-          <h1 className="text-4xl font-extrabold mb-2">🔐 Admin Dashboard</h1>
-          <p className="text-gray-600">Manage curator applications, users, and platform operations</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">🔐 Admin Dashboard</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Manage curator applications, users, and platform operations</p>
         </div>
 
         {/* Stats Cards */}

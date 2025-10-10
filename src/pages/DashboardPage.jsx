@@ -87,6 +87,9 @@ function DashboardPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
   
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false)
   const [hasModerationAccess, setHasModerationAccess] = useState(false)
@@ -719,49 +722,103 @@ function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-pink-400 to-cyan-300 text-black font-sans">
       {/* Header */}
       <header className="border-b-4 border-black bg-white/90 backdrop-blur sticky top-0 z-40">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <a href="/" className="no-underline">
-            <h1 className="text-3xl font-extrabold tracking-tighter">
-              <span className="bg-[linear-gradient(90deg,#ff00c3,#00ffff,#ffea00)] bg-clip-text text-transparent drop-shadow-[2px_2px_0_#000]">
-                SETIQUE
-              </span>
-            </h1>
-          </a>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 font-bold text-black">
-              {profile?.username || user.email}
-            </div>
-            <button
-              onClick={() => navigate('/')}
-              className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1"
-            >
-              <Home className="h-4 w-4" />
-              Home
-            </button>
-            <button
-              onClick={() => navigate('/feed')}
-              className="font-bold text-black hover:text-purple-600 transition flex items-center gap-1"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Activity Feed
-            </button>
-            {hasModerationAccess && (
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <a href="/" className="no-underline">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tighter">
+                <span className="bg-[linear-gradient(90deg,#ff00c3,#00ffff,#ffea00)] bg-clip-text text-transparent drop-shadow-[2px_2px_0_#000]">
+                  SETIQUE
+                </span>
+              </h1>
+            </a>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-4">
+              <div className="flex items-center gap-2 font-bold text-black text-sm">
+                {profile?.username || user.email}
+              </div>
               <button
-                onClick={() => navigate('/moderation')}
-                className="font-bold text-red-600 hover:text-red-700 transition flex items-center gap-1"
-                title="Moderation Queue"
+                onClick={() => navigate('/')}
+                className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1 text-sm"
               >
-                🚩 Moderation
+                <Home className="h-4 w-4" />
+                Home
               </button>
-            )}
+              <button
+                onClick={() => navigate('/feed')}
+                className="font-bold text-black hover:text-purple-600 transition flex items-center gap-1 text-sm"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Activity Feed
+              </button>
+              {hasModerationAccess && (
+                <button
+                  onClick={() => navigate('/moderation')}
+                  className="font-bold text-red-600 hover:text-red-700 transition flex items-center gap-1 text-sm"
+                  title="Moderation Queue"
+                >
+                  🚩 Moderation
+                </button>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1 text-sm"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
             <button
-              onClick={handleSignOut}
-              className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex flex-col gap-1.5 p-2 hover:bg-gray-100 rounded transition-colors"
+              aria-label="Toggle menu"
             >
-              <LogOut className="h-4 w-4" />
-              Sign Out
+              <span className={`block h-0.5 w-6 bg-black transition-all ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+              <span className={`block h-0.5 w-6 bg-black transition-all ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`block h-0.5 w-6 bg-black transition-all ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
             </button>
           </div>
+
+          {/* Mobile Dropdown Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 py-4 border-t-2 border-black space-y-3">
+              <div className="px-4 py-2 font-bold text-black bg-gray-100 rounded">
+                {profile?.username || user.email}
+              </div>
+              <button
+                onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+                className="w-full text-left px-4 py-2 font-bold text-black hover:bg-cyan-100 rounded transition flex items-center gap-2"
+              >
+                <Home className="h-4 w-4" />
+                Home
+              </button>
+              <button
+                onClick={() => { navigate('/feed'); setMobileMenuOpen(false); }}
+                className="w-full text-left px-4 py-2 font-bold text-black hover:bg-purple-100 rounded transition flex items-center gap-2"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Activity Feed
+              </button>
+              {hasModerationAccess && (
+                <button
+                  onClick={() => { navigate('/moderation'); setMobileMenuOpen(false); }}
+                  className="w-full text-left px-4 py-2 font-bold text-red-600 hover:bg-red-100 rounded transition flex items-center gap-2"
+                  title="Moderation Queue"
+                >
+                  🚩 Moderation
+                </button>
+              )}
+              <button
+                onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
+                className="w-full text-left px-4 py-2 font-bold text-black hover:bg-pink-100 rounded transition flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          )}
         </nav>
       </header>
 
