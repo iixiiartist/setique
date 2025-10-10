@@ -9,7 +9,35 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
   const [estimatedDays, setEstimatedDays] = useState('');
   const [suggestedPrice, setSuggestedPrice] = useState('');
 
+  // Tier hierarchy for validation
+  const tierHierarchy = {
+    newcomer: 0,
+    verified: 1,
+    expert: 2,
+    master: 3
+  };
+
+  const tierDisplayNames = {
+    newcomer: 'Newcomer',
+    verified: 'Verified',
+    expert: 'Expert',
+    master: 'Master'
+  };
+
+  const tierBadgeInfo = {
+    newcomer: { label: 'Open to All', badge: '🌟', color: 'bg-gray-100 text-gray-800 border-gray-600' },
+    verified: { label: 'Verified+', badge: '✓', color: 'bg-blue-100 text-blue-800 border-blue-600' },
+    expert: { label: 'Expert+', badge: '✓✓', color: 'bg-purple-100 text-purple-800 border-purple-600' },
+    master: { label: 'Master Only', badge: '⭐', color: 'bg-yellow-100 text-yellow-800 border-yellow-600' }
+  };
+
   if (!isOpen || !request) return null;
+
+  // Check if user meets tier requirement
+  const requiredTier = request.minimum_curator_tier || 'newcomer';
+  const userTier = curatorProfile?.badge_level || 'newcomer';
+  const meetsTierRequirement = tierHierarchy[userTier] >= tierHierarchy[requiredTier];
+  const tierInfo = tierBadgeInfo[requiredTier];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +49,15 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
 
     if (!curatorProfile || curatorProfile.certification_status !== 'approved') {
       alert('You must be an approved Pro Curator to submit proposals');
+      return;
+    }
+
+    // Check tier requirements
+    const requiredTier = request.minimum_curator_tier || 'newcomer';
+    const userTier = curatorProfile.badge_level || 'newcomer';
+    
+    if (tierHierarchy[userTier] < tierHierarchy[requiredTier]) {
+      alert(`⚠️ This bounty requires ${tierDisplayNames[requiredTier]}+ curator status.\n\nYour current tier: ${tierDisplayNames[userTier]}\n\nRank up by completing more datasets to unlock access to this bounty!`);
       return;
     }
 
@@ -78,6 +115,27 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Tier Requirement Warning */}
+          {!meetsTierRequirement && (
+            <div className="bg-yellow-50 border-2 border-yellow-600 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <h3 className="font-extrabold text-yellow-900 mb-1">Tier Requirement Not Met</h3>
+                  <p className="text-sm text-yellow-800 mb-2">
+                    This bounty requires <span className="font-bold">{tierDisplayNames[requiredTier]}+</span> curator status.
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    Your current tier: <span className="font-bold">{tierDisplayNames[userTier]}</span>
+                  </p>
+                  <p className="text-xs text-yellow-700 mt-2 font-semibold">
+                    💡 Complete more datasets to rank up and unlock access to premium bounties!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Request Details */}
           <div className="bg-gray-50 border-2 border-black rounded-xl p-4">
             <h3 className="font-extrabold mb-2">Request Details</h3>
@@ -91,6 +149,9 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
                   Budget: ${request.budget_min || '0'} - ${request.budget_max || '∞'}
                 </span>
               )}
+              <span className={`px-3 py-1 border-2 rounded-full text-xs font-bold ${tierInfo.color}`}>
+                {tierInfo.badge} {tierInfo.label}
+              </span>
             </div>
           </div>
 
@@ -191,10 +252,11 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !meetsTierRequirement}
               className="flex-1 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!meetsTierRequirement ? `Requires ${tierDisplayNames[requiredTier]}+ curator status` : ''}
             >
-              {submitting ? 'Submitting...' : '🚀 Submit Proposal'}
+              {submitting ? 'Submitting...' : !meetsTierRequirement ? '🔒 Tier Requirement Not Met' : '🚀 Submit Proposal'}
             </button>
           </div>
         </form>

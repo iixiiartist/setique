@@ -36,6 +36,13 @@ const badgeColors = {
   master: 'bg-yellow-100 text-yellow-800 border-yellow-800'
 };
 
+const tierDisplayInfo = {
+  newcomer: { label: 'Open to All', badge: '🌟', color: 'bg-gray-100 text-gray-800 border-gray-600' },
+  verified: { label: 'Verified+', badge: '✓', color: 'bg-blue-100 text-blue-800 border-blue-600' },
+  expert: { label: 'Expert+', badge: '✓✓', color: 'bg-purple-100 text-purple-800 border-purple-600' },
+  master: { label: 'Master Only', badge: '⭐', color: 'bg-yellow-100 text-yellow-800 border-yellow-600' }
+};
+
 function DashboardPage() {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
@@ -1475,7 +1482,9 @@ function DashboardPage() {
 
               {myBounties.length > 0 ? (
                 <div className="space-y-4">
-                  {myBounties.map((bounty) => (
+                  {myBounties.map((bounty) => {
+                    const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
+                    return (
                     <div
                       key={bounty.id}
                       className="bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 border-2 border-black rounded-xl p-4"
@@ -1484,12 +1493,15 @@ function DashboardPage() {
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
                           <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
-                          <div className="flex gap-3 text-sm font-semibold text-black/70">
+                          <div className="flex gap-3 text-sm font-semibold text-black/70 flex-wrap">
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
                               {bounty.modality}
                             </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
                               ${bounty.budget_min} - ${bounty.budget_max}
+                            </span>
+                            <span className={`border-2 rounded-full px-3 py-1 ${tierInfo.color}`}>
+                              {tierInfo.badge} {tierInfo.label}
                             </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
                               {bounty.curator_proposals?.length || 0} proposals
@@ -1576,7 +1588,8 @@ function DashboardPage() {
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 max-w-xl mx-auto">
