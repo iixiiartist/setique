@@ -72,7 +72,7 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
       // Upload file to Supabase storage
       const fileExt = formData.file.name.split('.').pop()
       const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const filePath = `datasets/${fileName}`
+      const filePath = `${user.id}/${fileName}` // Use user ID as folder per storage policy
 
       const { error: uploadError } = await supabase.storage
         .from('datasets')
