@@ -1639,14 +1639,15 @@ function HomePage() {
         </section>
 
         {/* Active Bounties Section - Visible to All */}
-        {bounties.length > 0 && (
-          <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
-            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-              <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
-            </h3>
-            <p className="text-lg font-semibold mb-8 text-black/80">
-              Get paid to curate datasets! Browse open bounties from companies looking for custom data.
-            </p>
+        <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
+          <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+            <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
+          </h3>
+          <p className="text-lg font-semibold mb-8 text-black/80">
+            Get paid to curate datasets! Browse open bounties from companies looking for custom data.
+          </p>
+          
+          {bounties.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {bounties.slice(0, 6).map((bounty) => (
                 <div
@@ -1689,8 +1690,30 @@ function HomePage() {
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">
+              <div className="text-6xl mb-4">💼</div>
+              <h4 className="text-2xl font-extrabold text-black mb-3">
+                No Active Bounties Right Now
+              </h4>
+              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
+                Be the first to post a bounty! Commission our community of expert curators to build the custom dataset your AI project needs.
+              </p>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setSignInOpen(true)
+                  } else {
+                    navigate('/dashboard')
+                  }
+                }}
+                className="bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+              >
+                {user ? 'Post a Bounty' : 'Sign In to Post Bounty'}
+              </button>
+            </div>
+          )}
+        </section>
 
         {/* Post Bounty CTA - Redirects based on auth status */}
         <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
