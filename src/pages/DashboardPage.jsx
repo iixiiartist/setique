@@ -7,6 +7,7 @@ import ProCuratorProfile from '../components/ProCuratorProfile'
 import CurationRequestModal from '../components/CurationRequestModal'
 import ProposalsModal from '../components/ProposalsModal'
 import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
+import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import CuratorSubmissionModal from '../components/CuratorSubmissionModal'
 import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import DeletionRequestModal from '../components/DeletionRequestModal'
@@ -79,6 +80,10 @@ function DashboardPage() {
   const [selectedRequestForProposal, setSelectedRequestForProposal] = useState(null)
   const [curatorProfile, setCuratorProfile] = useState(null)
   const [curatorAssignedRequests, setCuratorAssignedRequests] = useState([])
+  
+  // Bounty submission modal state (for custom dataset uploads to bounties)
+  const [bountySubmissionOpen, setBountySubmissionOpen] = useState(false)
+  const [selectedBountyForSubmission, setSelectedBountyForSubmission] = useState(null)
   
   // Curator submission modal state
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false)
@@ -1512,16 +1517,16 @@ function DashboardPage() {
                             <button
                               onClick={() => {
                                 if (!user) {
-                                  alert('Please sign in to submit proposals')
+                                  alert('Please sign in to submit to bounties')
                                   navigate('/?auth=signin')
                                   return
                                 }
-                                setSelectedRequestForProposal(bounty)
-                                setProposalSubmissionOpen(true)
+                                setSelectedBountyForSubmission(bounty)
+                                setBountySubmissionOpen(true)
                               }}
                               className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
                             >
-                              📝 Submit Proposal
+                              📝 Submit Dataset
                             </button>
                           </div>
                         </div>
@@ -2373,6 +2378,17 @@ function DashboardPage() {
         request={selectedRequestForProposal}
         curatorProfile={curatorProfile}
         userProfile={profile}
+        onSuccess={fetchDashboardData}
+      />
+
+      {/* Bounty Submission Modal - For custom dataset uploads to bounties */}
+      <BountySubmissionModal
+        isOpen={bountySubmissionOpen}
+        onClose={() => {
+          setBountySubmissionOpen(false)
+          setSelectedBountyForSubmission(null)
+        }}
+        bounty={selectedBountyForSubmission}
         onSuccess={fetchDashboardData}
       />
 
