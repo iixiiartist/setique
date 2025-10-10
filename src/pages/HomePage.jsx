@@ -26,6 +26,13 @@ const badgeColors = {
   master: 'bg-yellow-100 text-yellow-800 border-yellow-800'
 };
 
+const tierDisplayInfo = {
+  newcomer: { label: 'Open to All', badge: '🌟', color: 'bg-gray-100 text-gray-800 border-gray-600' },
+  verified: { label: 'Verified+', badge: '✓', color: 'bg-blue-100 text-blue-800 border-blue-600' },
+  expert: { label: 'Expert+', badge: '✓✓', color: 'bg-purple-100 text-purple-800 border-purple-600' },
+  master: { label: 'Master Only', badge: '⭐', color: 'bg-yellow-100 text-yellow-800 border-yellow-600' }
+};
+
 function HomePage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
@@ -1649,7 +1656,9 @@ function HomePage() {
           
           {bounties.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bounties.slice(0, 6).map((bounty) => (
+              {bounties.slice(0, 6).map((bounty) => {
+                const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
+                return (
                 <div
                   key={bounty.id}
                   className="bg-gradient-to-br from-green-100 to-cyan-100 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6 hover:scale-105 transition-transform"
@@ -1662,6 +1671,15 @@ function HomePage() {
                       ${bounty.budget_min}-${bounty.budget_max}
                     </div>
                   </div>
+                  
+                  {/* Tier Badge */}
+                  <div className="mb-3">
+                    <span className={`text-xs font-bold px-2 py-1 border-2 rounded-full inline-flex items-center gap-1 ${tierInfo.color}`}>
+                      <span>{tierInfo.badge}</span>
+                      <span>{tierInfo.label}</span>
+                    </span>
+                  </div>
+
                   <p className="text-sm font-semibold text-black/80 mb-4 line-clamp-3">
                     {bounty.description}
                   </p>
@@ -1688,7 +1706,8 @@ function HomePage() {
                     View Details
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">

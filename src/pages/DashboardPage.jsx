@@ -101,7 +101,8 @@ function DashboardPage() {
     description: '',
     modality: 'text',
     budget_min: '',
-    budget_max: ''
+    budget_max: '',
+    minimum_curator_tier: 'verified' // Default to Verified+ (recommended)
   })
 
   const fetchDashboardData = useCallback(async () => {
@@ -616,7 +617,8 @@ function DashboardPage() {
           budget_max: parseFloat(newBounty.budget_max),
           status: 'open',
           target_quality: 'standard',
-          specialties_needed: []
+          specialties_needed: [],
+          minimum_curator_tier: newBounty.minimum_curator_tier
         }
       ])
 
@@ -629,7 +631,8 @@ function DashboardPage() {
         description: '',
         modality: 'text',
         budget_min: '',
-        budget_max: ''
+        budget_max: '',
+        minimum_curator_tier: 'verified'
       })
       await fetchDashboardData()
     } catch (error) {
@@ -2378,6 +2381,79 @@ function DashboardPage() {
                     placeholder="200"
                     className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
                   />
+                </div>
+              </div>
+
+              <div className="border-4 border-black rounded-xl p-4 bg-gradient-to-br from-cyan-50 to-purple-50">
+                <label className="block font-bold mb-3 flex items-center gap-2">
+                  🎯 Curator Access Level *
+                </label>
+                <p className="text-sm font-semibold text-gray-700 mb-4">
+                  Who can apply to this bounty?
+                </p>
+                
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-white/50 transition">
+                    <input
+                      type="radio"
+                      name="curator_tier"
+                      value="newcomer"
+                      checked={newBounty.minimum_curator_tier === 'newcomer'}
+                      onChange={(e) => setNewBounty({...newBounty, minimum_curator_tier: e.target.value})}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-black">Open to All Curators</div>
+                      <div className="text-sm text-gray-600">Get more applicants. Best for simpler tasks.</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-white/50 transition border-2 border-cyan-400 bg-cyan-50/50">
+                    <input
+                      type="radio"
+                      name="curator_tier"
+                      value="verified"
+                      checked={newBounty.minimum_curator_tier === 'verified'}
+                      onChange={(e) => setNewBounty({...newBounty, minimum_curator_tier: e.target.value})}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-black flex items-center gap-2">
+                        Verified+ Curators Only <span className="text-xs bg-cyan-200 px-2 py-0.5 rounded-full border border-black">Recommended</span>
+                      </div>
+                      <div className="text-sm text-gray-600">Quality-vetted curators with proven track record.</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-white/50 transition">
+                    <input
+                      type="radio"
+                      name="curator_tier"
+                      value="expert"
+                      checked={newBounty.minimum_curator_tier === 'expert'}
+                      onChange={(e) => setNewBounty({...newBounty, minimum_curator_tier: e.target.value})}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-black">Expert+ Curators Only</div>
+                      <div className="text-sm text-gray-600">Experienced curators for complex datasets. Higher quality, fewer applicants.</div>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-white/50 transition">
+                    <input
+                      type="radio"
+                      name="curator_tier"
+                      value="master"
+                      checked={newBounty.minimum_curator_tier === 'master'}
+                      onChange={(e) => setNewBounty({...newBounty, minimum_curator_tier: e.target.value})}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-bold text-black">Master Curators Only ⭐</div>
+                      <div className="text-sm text-gray-600">Top-tier experts only. Premium work. Very selective, highest quality.</div>
+                    </div>
+                  </label>
                 </div>
               </div>
 
