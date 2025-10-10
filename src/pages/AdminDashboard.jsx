@@ -642,7 +642,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-white border-2 border-black rounded-xl p-4">
             <div className="text-sm font-bold text-gray-600 mb-1">Total Users</div>
             <div className="text-3xl font-extrabold">{stats.totalUsers}</div>
@@ -667,7 +667,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="bg-white border-2 border-black rounded-xl overflow-hidden">
-          <div className="flex border-b-2 border-black overflow-x-auto">
+          <div className="flex border-b-2 border-black overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-6 py-4 font-bold transition whitespace-nowrap ${
@@ -963,7 +963,7 @@ export default function AdminDashboard() {
                   <h3 className="text-2xl font-extrabold mb-4">All Curators</h3>
                   <div className="space-y-3">
                     {allCurators.map((curator) => (
-                      <div key={curator.id} className="border border-gray-300 rounded-lg p-4 flex justify-between items-center">
+                      <div key={curator.id} className="border border-gray-300 rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                         <div>
                           <div className="font-bold">{curator.display_name}</div>
                           <div className="text-sm text-gray-600">
@@ -1012,7 +1012,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {allUsers.map((userProfile) => (
-                      <div key={userProfile.id} className="border-2 border-black rounded-lg p-4 flex justify-between items-center hover:bg-gray-50 transition">
+                      <div key={userProfile.id} className="border-2 border-black rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 hover:bg-gray-50 transition">
                         <div className="flex-1">
                           <div className="font-bold text-lg">{userProfile.username || 'Anonymous User'}</div>
                           <div className="text-sm text-gray-600">{userProfile.email || 'No email'}</div>
@@ -1124,7 +1124,7 @@ export default function AdminDashboard() {
                 <h3 className="text-2xl font-extrabold mb-4">Bounty Management</h3>
                 
                 {/* Bounty Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-blue-100 border-2 border-blue-600 rounded-xl p-4">
                     <div className="text-sm font-bold text-blue-800">Total Bounties</div>
                     <div className="text-3xl font-extrabold text-blue-800">{stats.totalBounties}</div>

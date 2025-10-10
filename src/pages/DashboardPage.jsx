@@ -768,10 +768,10 @@ function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-4xl font-extrabold">
+                <h2 className="text-3xl md:text-4xl font-extrabold">
                   Welcome back, {profile?.username || 'there'}! 👋
                 </h2>
                 {profile && <TrustLevelBadge level={profile.trust_level || 0} size="md" />}
@@ -780,11 +780,11 @@ function DashboardPage() {
                 Here&apos;s what&apos;s happening with your data economy
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {profile?.username && (
                 <a
                   href={`/profile/${profile.username}`}
-                  className="bg-purple-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
+                  className="bg-purple-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center justify-center gap-2 text-center"
                 >
                   👤 View Profile
                 </a>
@@ -792,7 +792,7 @@ function DashboardPage() {
               {isAdmin && (
                 <a
                   href="/admin"
-                  className="bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center gap-2"
+                  className="bg-red-500 text-white font-bold px-6 py-3 rounded-full border-2 border-black shadow-[4px_4px_0_#000] hover:scale-105 transition flex items-center justify-center gap-2 text-center"
                 >
                   🔐 Admin Dashboard
                 </a>
@@ -802,7 +802,7 @@ function DashboardPage() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-yellow-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6">
             <Database className="h-8 w-8 mb-2 text-pink-600" />
             <div className="text-3xl font-extrabold">{myDatasets.length}</div>
@@ -826,7 +826,7 @@ function DashboardPage() {
         </div>
 
         {/* Tabs - Accessible tab navigation with ARIA attributes */}
-        <div className="flex gap-2 mb-6 overflow-x-auto" role="tablist" aria-label="Dashboard sections">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist" aria-label="Dashboard sections">
           <button
             onClick={() => setActiveTab('overview')}
             role="tab"
