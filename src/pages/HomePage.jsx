@@ -1960,7 +1960,7 @@ function HomePage() {
       )}
 
       {/* Bounty Detail Modal */}
-      {selectedBounty !== null && bounties[selectedBounty] && (
+      {selectedBounty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="modal-backdrop absolute inset-0 bg-black/50"
@@ -1976,19 +1976,16 @@ function HomePage() {
             
             {/* Bounty Header */}
             <div className="mb-4">
-              <span className="text-xs font-extrabold px-3 py-1 border-2 border-black rounded-full bg-cyan-300 uppercase inline-block mb-3">
-                {bounties[selectedBounty].modality} Bounty
-              </span>
               <h4 className="text-3xl font-extrabold mb-2">
-                {bounties[selectedBounty].title.startsWith('(DEMO)') ? bounties[selectedBounty].title : bounties[selectedBounty].title}
+                {selectedBounty.title}
               </h4>
               <div className="flex items-center gap-2 text-sm font-semibold text-black/70">
                 <span>
-                  Posted by {bounties[selectedBounty].profiles?.username || 'Anonymous'}
+                  Posted by {selectedBounty.profiles?.username || 'Anonymous'}
                 </span>
                 <span>•</span>
                 <span>
-                  {new Date(bounties[selectedBounty].created_at).toLocaleDateString()}
+                  {new Date(selectedBounty.created_at).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -1997,15 +1994,9 @@ function HomePage() {
             <div className="bg-white border-2 border-black rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-sm font-bold text-black/60 uppercase">Total Budget</div>
-                  <div className="text-4xl font-extrabold">${bounties[selectedBounty].budget}</div>
+                  <div className="text-sm font-bold text-black/60 uppercase">Budget Range</div>
+                  <div className="text-4xl font-extrabold">${selectedBounty.budget_min || 0} - ${selectedBounty.budget_max || 0}</div>
                 </div>
-                {bounties[selectedBounty].quantity && (
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-black/60 uppercase">Quantity</div>
-                    <div className="text-2xl font-extrabold">{bounties[selectedBounty].quantity}</div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -2014,41 +2005,24 @@ function HomePage() {
               <h5 className="font-extrabold text-lg mb-2">📋 Description</h5>
               <div className="bg-white/80 border-2 border-black rounded-xl p-4">
                 <p className="font-semibold text-black/80 whitespace-pre-wrap">
-                  {bounties[selectedBounty].description}
+                  {selectedBounty.description}
                 </p>
               </div>
             </div>
 
-            {/* Tags */}
-            {bounties[selectedBounty].tags && bounties[selectedBounty].tags.length > 0 && (
+            {/* Specialties */}
+            {selectedBounty.specialties_needed && selectedBounty.specialties_needed.length > 0 && (
               <div className="mb-4">
-                <h5 className="font-extrabold text-lg mb-2">🏷️ Tags</h5>
+                <h5 className="font-extrabold text-lg mb-2">🏷️ Specialties</h5>
                 <div className="flex flex-wrap gap-2">
-                  {bounties[selectedBounty].tags.map((tag) => (
+                  {selectedBounty.specialties_needed.map((specialty, idx) => (
                     <span
-                      key={tag}
+                      key={idx}
                       className="text-xs font-extrabold px-3 py-1 border-2 border-black rounded-full bg-pink-200"
                     >
-                      {tag}
+                      #{specialty}
                     </span>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* Deadline */}
-            {bounties[selectedBounty].deadline && (
-              <div className="mb-4">
-                <h5 className="font-extrabold text-lg mb-2">⏰ Deadline</h5>
-                <div className="bg-white/80 border-2 border-black rounded-xl p-3">
-                  <p className="font-bold">
-                    {new Date(bounties[selectedBounty].deadline).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
                 </div>
               </div>
             )}
@@ -2058,23 +2032,15 @@ function HomePage() {
               <h5 className="font-extrabold text-lg mb-2">✅ Requirements</h5>
               <div className="bg-white/80 border-2 border-black rounded-xl p-4 space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-lg">📦</span>
+                  <span className="text-lg">🎯</span>
                   <span className="font-semibold text-sm">
-                    Data Type: <strong>{bounties[selectedBounty].modality}</strong>
+                    Quality Level: <strong>{selectedBounty.target_quality || 'standard'}</strong>
                   </span>
                 </div>
-                {bounties[selectedBounty].quantity && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-lg">📊</span>
-                    <span className="font-semibold text-sm">
-                      Quantity: <strong>{bounties[selectedBounty].quantity}</strong>
-                    </span>
-                  </div>
-                )}
                 <div className="flex items-start gap-2">
-                  <span className="text-lg">💰</span>
+                  <span className="text-lg">�</span>
                   <span className="font-semibold text-sm">
-                    Payment: <strong>${bounties[selectedBounty].budget} upon approval</strong>
+                    Payment: <strong>${selectedBounty.budget_min || 0} - ${selectedBounty.budget_max || 0} upon approval</strong>
                   </span>
                 </div>
               </div>
@@ -2090,11 +2056,11 @@ function HomePage() {
                     return
                   }
                   // Open submission modal
-                  setSubmissionBounty(bounties[selectedBounty])
+                  setSubmissionBounty(selectedBounty)
                 }}
                 className="flex-1 bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 active:scale-95 transition"
               >
-                Submit Your Dataset
+                Submit Proposal
               </button>
               <button
                 onClick={() => setSelectedBounty(null)}

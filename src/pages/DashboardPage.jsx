@@ -1459,7 +1459,106 @@ function DashboardPage() {
 
           {/* My Bounties Tab */}
           {activeTab === 'bounties' && (
-            <div>
+            <div className="space-y-8">
+              {/* Available Bounties Section */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-2xl font-extrabold mb-1">Available Bounties</h3>
+                    <p className="text-sm text-black/70">
+                      Browse open bounties and submit proposals {curatorProfile && `(Your tier: ${curatorProfile.badge_level || 'newcomer'})`}
+                    </p>
+                  </div>
+                </div>
+
+                {openCurationRequests && openCurationRequests.length > 0 ? (
+                  <div className="space-y-4 mb-8">
+                    {openCurationRequests.map((bounty) => {
+                      const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
+                      const userTier = curatorProfile?.badge_level || 'newcomer';
+                      const tierHierarchy = {
+                        newcomer: 0,
+                        verified: 1,
+                        expert: 2,
+                        master: 3
+                      };
+                      const canApply = tierHierarchy[userTier] >= tierHierarchy[bounty.minimum_curator_tier || 'newcomer'];
+                      
+                      return (
+                        <div
+                          key={bounty.id}
+                          className={`bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-2 border-black rounded-xl p-4 ${!canApply ? 'opacity-75' : ''}`}
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
+                              <div className="flex gap-3 text-sm font-semibold text-black/70 flex-wrap mb-2">
+                                <span className="bg-white border-2 border-black rounded-full px-3 py-1">
+                                  💰 ${bounty.budget_min} - ${bounty.budget_max}
+                                </span>
+                                <span className={`border-2 rounded-full px-3 py-1 ${tierInfo.color}`}>
+                                  {tierInfo.badge} {tierInfo.label}
+                                </span>
+                                {!canApply && (
+                                  <span className="bg-red-100 text-red-800 border-2 border-red-600 rounded-full px-3 py-1">
+                                    🔒 Tier Required
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-black/70 mb-2">
+                                Posted by {bounty.profiles?.username || 'Anonymous'} • {new Date(bounty.created_at).toLocaleDateString()}
+                              </p>
+                              <p className="text-sm text-black/80">
+                                {bounty.description?.substring(0, 150)}{bounty.description?.length > 150 ? '...' : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-3 mt-3">
+                            {canApply ? (
+                              <>
+                                {curatorProfile ? (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedRequestForProposal(bounty)
+                                      setProposalSubmissionOpen(true)
+                                    }}
+                                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
+                                  >
+                                    📝 Submit Proposal
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => navigate('/pro-curator')}
+                                    className="bg-purple-500 text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:bg-purple-600 transition"
+                                  >
+                                    Become Pro Curator to Apply
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <div className="bg-yellow-50 border-2 border-yellow-600 rounded-lg px-4 py-2 flex items-center gap-2">
+                                <span className="text-sm font-bold text-yellow-900">
+                                  ⚠️ Requires {tierInfo.label} status to apply. Complete more datasets to rank up!
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-white border-2 border-black rounded-xl p-8 text-center mb-8">
+                    <p className="text-sm font-bold text-black/60">
+                      No available bounties at the moment. Check back soon!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bounties I Posted Section */}
+              <div>
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="text-2xl font-extrabold mb-1">Bounties I Posted</h3>
@@ -1611,6 +1710,7 @@ function DashboardPage() {
                   </button>
                 </div>
               )}
+              </div>
             </div>
           )}
 

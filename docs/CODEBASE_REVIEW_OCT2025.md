@@ -343,9 +343,9 @@ SELECT * FROM schema_migrations ORDER BY version;
 
 ## 📈 PROGRESS TRACKING
 
-- [ ] Fix bounty creation (remove modality)
-- [ ] Verify bounty creation works
-- [ ] Extract tier constants to shared file
+- [x] Fix bounty creation (remove modality) - COMPLETED 
+- [ ] Verify bounty creation works - READY FOR TESTING
+- [x] Extract tier constants to shared file - COMPLETED
 - [ ] Update DATABASE_SCHEMA_REFERENCE.md
 - [ ] Test tier system end-to-end
 - [ ] Document completed fixes
