@@ -106,7 +106,6 @@ function DashboardPage() {
   const [newBounty, setNewBounty] = useState({
     title: '',
     description: '',
-    modality: 'text',
     budget_min: '',
     budget_max: '',
     minimum_curator_tier: 'verified' // Default to Verified+ (recommended)
@@ -619,7 +618,6 @@ function DashboardPage() {
           creator_id: user.id,
           title: newBounty.title,
           description: newBounty.description,
-          modality: newBounty.modality,
           budget_min: parseFloat(newBounty.budget_min) || parseFloat(newBounty.budget_max) * 0.8,
           budget_max: parseFloat(newBounty.budget_max),
           status: 'open',
@@ -636,7 +634,6 @@ function DashboardPage() {
       setNewBounty({
         title: '',
         description: '',
-        modality: 'text',
         budget_min: '',
         budget_max: '',
         minimum_curator_tier: 'verified'
@@ -1494,9 +1491,6 @@ function DashboardPage() {
                         <div className="flex-1">
                           <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
                           <div className="flex gap-3 text-sm font-semibold text-black/70 flex-wrap">
-                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              {bounty.modality}
-                            </span>
                             <span className="bg-white border-2 border-black rounded-full px-3 py-1">
                               ${bounty.budget_min} - ${bounty.budget_max}
                             </span>
@@ -2357,21 +2351,6 @@ function DashboardPage() {
                   rows={4}
                   className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
                 />
-              </div>
-
-              <div>
-                <label className="block font-bold mb-2">Data Type *</label>
-                <select
-                  value={newBounty.modality}
-                  onChange={(e) => setNewBounty({...newBounty, modality: e.target.value})}
-                  className="w-full border-2 border-black rounded-lg px-4 py-3 font-semibold"
-                >
-                  <option value="text">Text</option>
-                  <option value="image">Image</option>
-                  <option value="audio">Audio</option>
-                  <option value="video">Video</option>
-                  <option value="tabular">Tabular</option>
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
