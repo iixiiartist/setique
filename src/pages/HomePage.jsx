@@ -7,7 +7,6 @@ import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import { AIAssistant } from '../components/AIAssistant'
-import { TagInput } from '../components/TagInput'
 import FeedbackModal from '../components/FeedbackModal'
 import {
   Star,
@@ -39,7 +38,6 @@ function HomePage() {
   
   // Beta access state
   const [hasBetaAccess, setHasBetaAccess] = useState(false)
-  const [checkingBetaAccess, setCheckingBetaAccess] = useState(true)
 
   // Modal state
   const [selected, setSelected] = useState(null)
@@ -63,7 +61,6 @@ function HomePage() {
     const checkBetaAccess = async () => {
       if (!user) {
         setHasBetaAccess(false)
-        setCheckingBetaAccess(false)
         return
       }
 
@@ -81,59 +78,12 @@ function HomePage() {
       } catch (error) {
         console.error('Error checking beta access:', error)
         setHasBetaAccess(false)
-      } finally {
-        setCheckingBetaAccess(false)
       }
     }
 
     checkBetaAccess()
   }, [user])
 
-  // Creator form state with localStorage persistence
-  const [newTitle, setNewTitle] = useState(() => {
-    return localStorage.getItem('draft_dataset_title') || ''
-  })
-  const [newDesc, setNewDesc] = useState(() => {
-    return localStorage.getItem('draft_dataset_desc') || ''
-  })
-  const [newPrice, setNewPrice] = useState(() => {
-    return localStorage.getItem('draft_dataset_price') || ''
-  })
-  const [newModality, setNewModality] = useState(() => {
-    return localStorage.getItem('draft_dataset_modality') || 'vision'
-  })
-  const [newTags, setNewTags] = useState(() => {
-    const saved = localStorage.getItem('draft_dataset_tags')
-    return saved ? JSON.parse(saved) : []
-  })
-  
-  // Auto-save form to localStorage
-  useEffect(() => {
-    localStorage.setItem('draft_dataset_title', newTitle)
-  }, [newTitle])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_dataset_desc', newDesc)
-  }, [newDesc])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_dataset_price', newPrice)
-  }, [newPrice])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_dataset_modality', newModality)
-  }, [newModality])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_dataset_tags', JSON.stringify(newTags))
-  }, [newTags])
-  
-  // File upload state
-  const [uploadFile, setUploadFile] = useState(null)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadError, setUploadError] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
-  
   // Beta banner state
   const [showBetaBanner, setShowBetaBanner] = useState(() => {
     // Check localStorage to see if user dismissed banner
@@ -145,67 +95,6 @@ function HomePage() {
     localStorage.setItem('betaBannerDismissed', 'true')
     setShowBetaBanner(false)
   }
-  
-  // Allow price = 0 for demo datasets
-  const numericNewPrice = newPrice === '' ? NaN : parseFloat(newPrice)
-  const isCreatorFormValid =
-    newTitle.trim() !== '' && newDesc.trim() !== '' && !isNaN(numericNewPrice) && numericNewPrice >= 0 && uploadFile !== null
-
-  // Bounty form state with localStorage persistence
-  const [bountyTitle, setBountyTitle] = useState(() => {
-    return localStorage.getItem('draft_bounty_title') || ''
-  })
-  const [bountyDesc, setBountyDesc] = useState(() => {
-    return localStorage.getItem('draft_bounty_desc') || ''
-  })
-  const [bountyModality, setBountyModality] = useState(() => {
-    return localStorage.getItem('draft_bounty_modality') || 'image'
-  })
-  const [bountyQuantity, setBountyQuantity] = useState(() => {
-    return localStorage.getItem('draft_bounty_quantity') || ''
-  })
-  const [bountyBudget, setBountyBudget] = useState(() => {
-    return localStorage.getItem('draft_bounty_budget') || ''
-  })
-  const [bountyTags, setBountyTags] = useState(() => {
-    const saved = localStorage.getItem('draft_bounty_tags')
-    return saved ? JSON.parse(saved) : []
-  })
-  const [bountyDeadline, setBountyDeadline] = useState(() => {
-    return localStorage.getItem('draft_bounty_deadline') || ''
-  })
-  
-  // Auto-save bounty form to localStorage
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_title', bountyTitle)
-  }, [bountyTitle])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_desc', bountyDesc)
-  }, [bountyDesc])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_modality', bountyModality)
-  }, [bountyModality])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_quantity', bountyQuantity)
-  }, [bountyQuantity])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_budget', bountyBudget)
-  }, [bountyBudget])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_tags', JSON.stringify(bountyTags))
-  }, [bountyTags])
-  
-  useEffect(() => {
-    localStorage.setItem('draft_bounty_deadline', bountyDeadline)
-  }, [bountyDeadline])
-  
-  const isBountyFormValid =
-    bountyTitle.trim() && bountyBudget && bountyTags.length > 0
 
   // Data from Supabase
   const [datasets, setDatasets] = useState([])
@@ -379,132 +268,6 @@ function HomePage() {
     }
   }, [selected, checkoutIdx, isSignInOpen])
 
-  // Validate file type based on modality
-  const validateFile = (file, modality) => {
-    const allowedTypes = {
-      vision: ['image/jpeg', 'image/png', 'application/zip', 'application/x-tar', 'application/gzip'],
-      audio: ['audio/mpeg', 'audio/wav', 'audio/flac', 'application/zip'],
-      text: ['text/csv', 'application/json', 'application/zip', 'text/plain'],
-      video: ['video/mp4', 'video/quicktime', 'application/zip'],
-      nlp: ['text/csv', 'application/json', 'application/zip']
-    }
-    
-    const allowed = allowedTypes[modality] || []
-    const maxSize = 500 * 1024 * 1024 // 500MB
-    
-    if (!allowed.includes(file.type) && file.type !== '') {
-      return `Invalid file type for ${modality}. Allowed: ${allowed.join(', ')}`
-    }
-    
-    if (file.size > maxSize) {
-      return `File too large. Maximum size is 500MB. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`
-    }
-    
-    return null
-  }
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    
-    const error = validateFile(file, newModality)
-    if (error) {
-      setUploadError(error)
-      setUploadFile(null)
-      return
-    }
-    
-    setUploadFile(file)
-    setUploadError('')
-  }
-
-  const handlePublish = async () => {
-    if (!user) {
-      setSignInOpen(true)
-      return
-    }
-
-    if (!uploadFile) {
-      alert('Please select a file to upload')
-      return
-    }
-
-    setIsUploading(true)
-    setUploadProgress(0)
-    
-    try {
-      // Upload file to Supabase Storage
-      const fileExt = uploadFile.name.split('.').pop()
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('datasets')
-        .upload(fileName, uploadFile, {
-          cacheControl: '3600',
-          upsert: false,
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100
-            setUploadProgress(Math.round(percentage))
-          }
-        })
-
-      if (uploadError) throw uploadError
-
-      // Create dataset record with storage path
-      const { error } = await supabase.from('datasets').insert([
-        {
-          creator_id: user.id,
-          title: newTitle,
-          description: newDesc,
-          price: isNaN(numericNewPrice) ? 0 : numericNewPrice,
-          modality: newModality,
-          tags: newTags,
-          accent_color: getAccentColor(newModality),
-          download_url: uploadData.path,
-          file_size: uploadFile.size,
-          is_active: true,
-        },
-      ])
-
-      if (error) throw error
-
-      alert(
-        `Published "${newTitle}"! Your dataset is now live in the ecosystem.`
-      )
-      
-      // Reset form and clear localStorage draft
-      setNewTitle('')
-      setNewDesc('')
-      setNewPrice('')
-      setNewTags([])
-      setUploadFile(null)
-      setUploadProgress(0)
-      localStorage.removeItem('draft_dataset_title')
-      localStorage.removeItem('draft_dataset_desc')
-      localStorage.removeItem('draft_dataset_price')
-      localStorage.removeItem('draft_dataset_modality')
-      localStorage.removeItem('draft_dataset_tags')
-      
-      fetchDatasets()
-    } catch (error) {
-      console.error('Error publishing dataset:', error)
-      alert('Error publishing dataset: ' + error.message)
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  const getAccentColor = (mod) => {
-    const colors = {
-      vision: 'bg-yellow-200',
-      audio: 'bg-cyan-200',
-      text: 'bg-pink-200',
-      video: 'bg-yellow-200',
-      nlp: 'bg-pink-200',
-    }
-    return colors[mod] || 'bg-yellow-200'
-  }
-
   const handleCheckout = async () => {
     if (!user) {
       setSignInOpen(true)
@@ -619,52 +382,6 @@ function HomePage() {
     }
   }
 
-  const handleBountyPost = async () => {
-    if (!user) {
-      setSignInOpen(true)
-      return
-    }
-
-    try {
-      // Insert into curation_requests (new system)
-      const { error } = await supabase.from('curation_requests').insert([
-        {
-          creator_id: user.id,
-          title: bountyTitle,
-          description: bountyDesc,
-          modality: bountyModality,
-          budget_min: parseFloat(bountyBudget) * 0.8, // Set min to 80% of budget
-          budget_max: parseFloat(bountyBudget),
-          status: 'open',
-          target_quality: 'standard',
-          specialties_needed: bountyTags,
-        },
-      ])
-
-      if (error) throw error
-
-      alert(
-        `Bounty "${bountyTitle}" posted with a budget of $${bountyBudget}!`
-      )
-      setBountyTitle('')
-      setBountyDesc('')
-      setBountyQuantity('')
-      setBountyBudget('')
-      setBountyTags([])
-      setBountyDeadline('')
-      localStorage.removeItem('draft_bounty_title')
-      localStorage.removeItem('draft_bounty_desc')
-      localStorage.removeItem('draft_bounty_modality')
-      localStorage.removeItem('draft_bounty_quantity')
-      localStorage.removeItem('draft_bounty_budget')
-      localStorage.removeItem('draft_bounty_tags')
-      localStorage.removeItem('draft_bounty_deadline')
-      fetchBounties()
-    } catch (error) {
-      console.error('Error posting bounty:', error)
-      alert('Error posting bounty: ' + error.message)
-    }
-  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -1560,12 +1277,20 @@ function HomePage() {
                   Don't overthink it! Pick something you know, start small with 50 examples, and improve as you go. 
                   Every expert curator started exactly where you are now. Your unique knowledge is valuable—let's monetize it!
                 </p>
-                <a
-                  href="#upload"
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      setSignInOpen(true)
+                    } else if (!hasBetaAccess) {
+                      navigate('/dashboard')
+                    } else {
+                      navigate('/dashboard')
+                    }
+                  }}
                   className="inline-block bg-white text-black font-extrabold px-8 py-4 rounded-full border-3 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all text-lg"
                 >
-                  Upload Your First Dataset →
-                </a>
+                  {!user ? 'Sign Up to Start' : !hasBetaAccess ? 'Complete Beta Access' : 'Upload Your First Dataset →'}
+                </button>
               </div>
             </div>
           </div>
@@ -1744,34 +1469,6 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Publish Dataset CTA - Redirects based on auth status */}
-        <section id="curator-cta" className="max-w-4xl mx-auto mb-24 pt-10">
-          <div className="bg-yellow-200 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
-            <div className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] p-6 border-b-4 border-black">
-              <h3 className="text-3xl font-extrabold text-white drop-shadow-[2px_2px_0_#000]">
-                Become a Data Curator
-              </h3>
-            </div>
-            <div className="p-8 text-center">
-              <p className="text-xl font-semibold mb-6 text-black">
-                Share your unique datasets and earn from every sale. Help build more interesting AI.
-              </p>
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setSignInOpen(true)
-                  } else {
-                    navigate('/dashboard')
-                  }
-                }}
-                className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-              >
-                {user ? 'Go to Dashboard to Publish' : 'Sign Up to Start Curating'}
-              </button>
-            </div>
-          </div>
-        </section>
-
         {/* Featured Section */}
         {datasets.length > 0 && (
           <section id="featured" className="max-w-7xl mx-auto mb-24">
@@ -1941,6 +1638,60 @@ function HomePage() {
             )}
           </div>
         </section>
+
+        {/* Active Bounties Section - Visible to All */}
+        {bounties.length > 0 && (
+          <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
+            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+              <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
+            </h3>
+            <p className="text-lg font-semibold mb-8 text-black/80">
+              Get paid to curate datasets! Browse open bounties from companies looking for custom data.
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bounties.slice(0, 6).map((bounty) => (
+                <div
+                  key={bounty.id}
+                  className="bg-gradient-to-br from-green-100 to-cyan-100 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6 hover:scale-105 transition-transform"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <h4 className="text-xl font-extrabold text-black pr-2">
+                      {bounty.title}
+                    </h4>
+                    <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm whitespace-nowrap">
+                      ${bounty.budget_min}-${bounty.budget_max}
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-black/80 mb-4 line-clamp-3">
+                    {bounty.description}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {bounty.specialties_needed?.slice(0, 3).map((specialty, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs font-bold px-2 py-1 bg-white border-2 border-black rounded-full"
+                      >
+                        #{specialty}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-semibold text-black/70 mb-4">
+                    <span>Posted by {bounty.profiles?.username || 'Anonymous'}</span>
+                    <span className="uppercase bg-yellow-200 px-2 py-1 rounded border-2 border-black">
+                      {bounty.status}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedBounty(bounty)}
+                    className="w-full bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 transition-opacity active:scale-95"
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Post Bounty CTA - Redirects based on auth status */}
         <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
