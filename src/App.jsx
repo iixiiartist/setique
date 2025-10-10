@@ -14,6 +14,7 @@ import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ModerationQueuePage from './pages/ModerationQueuePage'
 import { AIAssistant } from './components/AIAssistant'
 import ProtectedRoute from './components/ProtectedRoute'
+import BetaProtectedRoute from './components/BetaProtectedRoute'
 
 function App() {
   return (
@@ -28,7 +29,9 @@ function App() {
           path="/dashboard" 
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <BetaProtectedRoute>
+                <DashboardPage />
+              </BetaProtectedRoute>
             </ProtectedRoute>
           } 
         />
@@ -47,7 +50,9 @@ function App() {
           path="/settings" 
           element={
             <ProtectedRoute>
-              <ProfileSettingsPage />
+              <BetaProtectedRoute>
+                <ProfileSettingsPage />
+              </BetaProtectedRoute>
             </ProtectedRoute>
           } 
         />
@@ -55,7 +60,9 @@ function App() {
           path="/moderation" 
           element={
             <ProtectedRoute>
-              <ModerationQueuePage />
+              <BetaProtectedRoute>
+                <ModerationQueuePage />
+              </BetaProtectedRoute>
             </ProtectedRoute>
           } 
         />
@@ -63,7 +70,9 @@ function App() {
           path="/feed" 
           element={
             <ProtectedRoute>
-              <ActivityFeedPage />
+              <BetaProtectedRoute>
+                <ActivityFeedPage />
+              </BetaProtectedRoute>
             </ProtectedRoute>
           } 
         />
