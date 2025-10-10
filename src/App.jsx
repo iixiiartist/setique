@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
+import AuthCallbackPage from './pages/AuthCallbackPage'
 import SuccessPage from './pages/SuccessPage'
 import DashboardPage from './pages/DashboardPage'
 import MarketplacePage from './pages/MarketplacePage'
@@ -21,6 +22,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/success" element={<SuccessPage />} />
         <Route 
           path="/dashboard" 
