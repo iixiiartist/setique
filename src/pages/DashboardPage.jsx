@@ -680,13 +680,27 @@ function DashboardPage() {
     }
 
     try {
-      const { error } = await supabase
+      console.log('🗑️ Attempting to delete submission:', { submissionId, userId: user.id })
+      
+      const { data, error } = await supabase
         .from('bounty_submissions')
         .delete()
         .eq('id', submissionId)
         .eq('creator_id', user.id) // Only allow deleting own submissions
+        .select() // Return deleted row to confirm
 
-      if (error) throw error
+      console.log('🗑️ Delete result:', { data, error })
+
+      if (error) {
+        console.error('❌ Delete error details:', error)
+        throw error
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ No rows were deleted - check RLS policies')
+        alert('⚠️ Could not delete submission. You may not have permission or the submission may already be deleted.')
+        return
+      }
 
       alert('✅ Submission deleted successfully!')
       

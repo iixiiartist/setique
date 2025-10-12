@@ -630,12 +630,26 @@ export default function AdminDashboard() {
     }
 
     try {
-      const { error } = await supabase
+      console.log('🗑️ Admin attempting to delete submission:', { submissionId, adminUserId: user.id });
+      
+      const { data, error } = await supabase
         .from('bounty_submissions')
         .delete()
-        .eq('id', submissionId);
+        .eq('id', submissionId)
+        .select(); // Return deleted row to confirm
 
-      if (error) throw error;
+      console.log('🗑️ Admin delete result:', { data, error });
+
+      if (error) {
+        console.error('❌ Admin delete error details:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('⚠️ Admin: No rows were deleted - check RLS policies or admin permissions');
+        alert('⚠️ Could not delete submission. Check admin permissions or RLS policies.');
+        return;
+      }
 
       alert('✅ Bounty submission deleted successfully!');
       await fetchAdminData();
