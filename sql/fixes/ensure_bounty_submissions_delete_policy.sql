@@ -66,4 +66,8 @@ WHERE tablename = 'bounty_submissions'
     AND cmd = 'DELETE'
 ORDER BY policyname;
 
-RAISE NOTICE 'Bounty submissions DELETE policies created successfully';
+-- Success message
+DO $$
+BEGIN
+    RAISE NOTICE 'Bounty submissions DELETE policies created successfully';
+END $$;
