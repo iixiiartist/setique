@@ -45,6 +45,9 @@ export default function AdminDashboard() {
   const [selectedBounty, setSelectedBounty] = useState(null);
   const [showBountyModal, setShowBountyModal] = useState(false);
   
+  // Bounty Submissions
+  const [allBountySubmissions, setAllBountySubmissions] = useState([]);
+  
   // Confirm Dialog
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
 
@@ -198,6 +201,27 @@ export default function AdminDashboard() {
       
       if (bountiesError) {
         console.error('Error fetching bounties:', bountiesError);
+      }
+      
+      // Fetch bounty submissions
+      console.log('🔍 Fetching bounty submissions...');
+      const { data: submissionsData, error: submissionsError } = await supabase
+        .from('bounty_submissions')
+        .select(`
+          *,
+          datasets (id, title, description, price, file_url),
+          curation_requests (id, title, budget_max),
+          profiles (id, username, email)
+        `)
+        .order('submitted_at', { ascending: false });
+      
+      console.log('📊 Admin bounty submissions fetch:', { submissionsData, submissionsError });
+      
+      if (submissionsError) {
+        console.error('Error fetching bounty submissions:', submissionsError);
+        setAllBountySubmissions([]);
+      } else {
+        setAllBountySubmissions(submissionsData || []);
       }
       
       // Fetch profile data for each bounty creator
@@ -598,6 +622,69 @@ export default function AdminDashboard() {
         }
       }
     });
+  };
+
+  const handleAdminDeleteBountySubmission = async (submissionId, datasetTitle, creatorUsername) => {
+    if (!window.confirm(`🗑️ Admin Delete: Remove submission "${datasetTitle}" by ${creatorUsername}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .delete()
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      alert('✅ Bounty submission deleted successfully!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error deleting bounty submission:', error);
+      alert('Failed to delete bounty submission: ' + error.message);
+    }
+  };
+
+  const handleAdminApproveSubmission = async (submissionId, datasetTitle) => {
+    if (!window.confirm(`✅ Approve submission "${datasetTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .update({ status: 'approved' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      alert('✅ Submission approved!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      alert('Failed to approve submission: ' + error.message);
+    }
+  };
+
+  const handleAdminRejectSubmission = async (submissionId, datasetTitle) => {
+    if (!window.confirm(`❌ Reject submission "${datasetTitle}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .update({ status: 'rejected' })
+        .eq('id', submissionId);
+
+      if (error) throw error;
+
+      alert('❌ Submission rejected!');
+      await fetchAdminData();
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      alert('Failed to reject submission: ' + error.message);
+    }
   };
 
   // Show loading while auth is loading
@@ -1143,6 +1230,159 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* BOUNTY SUBMISSIONS SECTION */}
+                <div className="mb-8 bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-600 rounded-xl p-6">
+                  <h4 className="text-2xl font-extrabold mb-4 text-cyan-800">📦 Bounty Submissions ({allBountySubmissions.length})</h4>
+                  
+                  {allBountySubmissions.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No bounty submissions yet.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Pending Submissions */}
+                      <div>
+                        <h5 className="text-lg font-bold mb-3 text-yellow-700">
+                          ⏳ Pending Review ({allBountySubmissions.filter(s => s.status === 'pending').length})
+                        </h5>
+                        {allBountySubmissions.filter(s => s.status === 'pending').map((submission) => (
+                          <div key={submission.id} className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4 mb-3">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h6 className="font-extrabold text-lg mb-1">
+                                  {submission.datasets?.title || 'Untitled Dataset'}
+                                </h6>
+                                <p className="text-sm font-semibold text-black/70 mb-2">
+                                  → Bounty: <strong>{submission.curation_requests?.title}</strong>
+                                </p>
+                                <div className="flex gap-4 text-sm mb-2">
+                                  <span className="text-gray-700">
+                                    👤 <strong>{submission.profiles?.username || 'Unknown'}</strong>
+                                  </span>
+                                  <span className="text-gray-700">
+                                    💰 Dataset Price: <strong>${submission.datasets?.price}</strong>
+                                  </span>
+                                  <span className="text-gray-700">
+                                    🎯 Bounty Budget: <strong>${submission.curation_requests?.budget_max}</strong>
+                                  </span>
+                                </div>
+                                {submission.notes && (
+                                  <div className="bg-white/60 border border-yellow-300 rounded p-2 mb-2">
+                                    <p className="text-sm italic">&quot;{submission.notes}&quot;</p>
+                                  </div>
+                                )}
+                                <p className="text-xs text-black/50">
+                                  Submitted {new Date(submission.submitted_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <div className="ml-4 flex flex-col gap-2">
+                                <button
+                                  onClick={() => handleAdminApproveSubmission(submission.id, submission.datasets?.title)}
+                                  className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                                >
+                                  ✅ Approve
+                                </button>
+                                <button
+                                  onClick={() => handleAdminRejectSubmission(submission.id, submission.datasets?.title)}
+                                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                                >
+                                  ❌ Reject
+                                </button>
+                                <button
+                                  onClick={() => handleAdminDeleteBountySubmission(
+                                    submission.id,
+                                    submission.datasets?.title,
+                                    submission.profiles?.username
+                                  )}
+                                  className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                                >
+                                  🗑️ Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Approved Submissions */}
+                      <div>
+                        <h5 className="text-lg font-bold mb-3 text-green-700">
+                          ✅ Approved ({allBountySubmissions.filter(s => s.status === 'approved').length})
+                        </h5>
+                        {allBountySubmissions.filter(s => s.status === 'approved').map((submission) => (
+                          <div key={submission.id} className="bg-green-50 border-2 border-green-400 rounded-lg p-4 mb-3">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h6 className="font-extrabold text-lg mb-1">
+                                  {submission.datasets?.title || 'Untitled Dataset'}
+                                </h6>
+                                <p className="text-sm font-semibold text-black/70 mb-2">
+                                  → Bounty: <strong>{submission.curation_requests?.title}</strong>
+                                </p>
+                                <div className="flex gap-4 text-sm">
+                                  <span className="text-gray-700">👤 {submission.profiles?.username || 'Unknown'}</span>
+                                  <span className="text-gray-700">💰 ${submission.datasets?.price}</span>
+                                  <span className="text-xs text-black/50">
+                                    {new Date(submission.submitted_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleAdminDeleteBountySubmission(
+                                  submission.id,
+                                  submission.datasets?.title,
+                                  submission.profiles?.username
+                                )}
+                                className="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Rejected Submissions */}
+                      <div>
+                        <h5 className="text-lg font-bold mb-3 text-red-700">
+                          ❌ Rejected ({allBountySubmissions.filter(s => s.status === 'rejected').length})
+                        </h5>
+                        {allBountySubmissions.filter(s => s.status === 'rejected').map((submission) => (
+                          <div key={submission.id} className="bg-red-50 border-2 border-red-400 rounded-lg p-4 mb-3">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h6 className="font-extrabold text-lg mb-1">
+                                  {submission.datasets?.title || 'Untitled Dataset'}
+                                </h6>
+                                <p className="text-sm font-semibold text-black/70 mb-2">
+                                  → Bounty: <strong>{submission.curation_requests?.title}</strong>
+                                </p>
+                                <div className="flex gap-4 text-sm">
+                                  <span className="text-gray-700">👤 {submission.profiles?.username || 'Unknown'}</span>
+                                  <span className="text-gray-700">💰 ${submission.datasets?.price}</span>
+                                  <span className="text-xs text-black/50">
+                                    {new Date(submission.submitted_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleAdminDeleteBountySubmission(
+                                  submission.id,
+                                  submission.datasets?.title,
+                                  submission.profiles?.username
+                                )}
+                                className="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* BOUNTIES LIST */}
+                <h4 className="text-2xl font-extrabold mb-4 mt-8">🎯 Bounties</h4>
                 {allBounties.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <p>No bounties yet.</p>

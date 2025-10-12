@@ -674,6 +674,30 @@ function DashboardPage() {
     }
   }
 
+  const handleDeleteBountySubmission = async (submissionId, datasetTitle) => {
+    if (!window.confirm(`Delete your submission "${datasetTitle}"? This cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bounty_submissions')
+        .delete()
+        .eq('id', submissionId)
+        .eq('creator_id', user.id) // Only allow deleting own submissions
+
+      if (error) throw error
+
+      alert('✅ Submission deleted successfully!')
+      
+      // Refresh submissions
+      await fetchDashboardData()
+    } catch (error) {
+      console.error('Error deleting bounty submission:', error)
+      alert('Failed to delete submission: ' + error.message)
+    }
+  }
+
   const handleConnectStripe = async () => {
     setConnectingStripe(true)
     setConnectError(null)
@@ -1736,7 +1760,7 @@ function DashboardPage() {
                             Submitted {new Date(submission.submitted_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <div className="ml-4">
+                        <div className="ml-4 flex flex-col gap-2">
                           {submission.status === 'pending' && (
                             <span className="bg-yellow-100 border-2 border-yellow-600 text-yellow-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
                               ⏳ Pending Review
@@ -1752,6 +1776,12 @@ function DashboardPage() {
                               ✗ Rejected
                             </span>
                           )}
+                          <button
+                            onClick={() => handleDeleteBountySubmission(submission.id, submission.datasets?.title)}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
+                          >
+                            🗑️ Delete
+                          </button>
                         </div>
                       </div>
                     </div>
