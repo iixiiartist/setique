@@ -1504,7 +1504,9 @@ function HomePage() {
         )}
 
         {/* Marketplace Section */}
-        <section id="marketplace" className="max-w-7xl mx-auto mb-24 pt-10">
+        {/* Marketplace Section - Beta Access Required */}
+        {hasBetaAccess ? (
+          <section id="marketplace" className="max-w-7xl mx-auto mb-24 pt-10">
           <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
             <Database className="h-10 w-10 text-pink-600" /> The Marketplace
           </h3>
@@ -1644,8 +1646,40 @@ function HomePage() {
             )}
           </div>
         </section>
+        ) : (
+          <section id="marketplace" className="max-w-7xl mx-auto mb-24 pt-10">
+            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+              <Database className="h-10 w-10 text-pink-600" /> The Marketplace
+            </h3>
+            <div className="bg-gradient-to-br from-yellow-50 to-pink-50 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-12 text-center">
+              <div className="text-6xl mb-4">🔒</div>
+              <h4 className="text-3xl font-extrabold text-black mb-4">
+                Beta Access Required
+              </h4>
+              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
+                The marketplace is currently in private beta. {user ? 'Your beta access request is being reviewed!' : 'Sign up to join the waiting list and get early access.'}
+              </p>
+              {!user ? (
+                <button
+                  onClick={() => setSignInOpen(true)}
+                  className="bg-gradient-to-r from-cyan-400 to-pink-400 text-white font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+                >
+                  Sign Up for Beta Access
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-gradient-to-r from-yellow-400 to-pink-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+                >
+                  Check Your Beta Status
+                </button>
+              )}
+            </div>
+          </section>
+        )}
 
-        {/* Active Bounties Section - Visible to All */}
+        {/* Active Bounties Section - Beta Access Required */}
+        {hasBetaAccess ? (
         <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
           <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
             <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
@@ -1733,6 +1767,37 @@ function HomePage() {
             </div>
           )}
         </section>
+        ) : (
+          <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
+            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+              <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
+            </h3>
+            <div className="bg-gradient-to-br from-green-50 to-cyan-50 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-12 text-center">
+              <div className="text-6xl mb-4">🔒</div>
+              <h4 className="text-3xl font-extrabold text-black mb-4">
+                Beta Access Required
+              </h4>
+              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
+                Commission custom datasets from expert curators! {user ? 'Your beta access request is being reviewed.' : 'Sign up to join the waiting list and get early access to bounties.'}
+              </p>
+              {!user ? (
+                <button
+                  onClick={() => setSignInOpen(true)}
+                  className="bg-gradient-to-r from-cyan-400 to-green-400 text-white font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+                >
+                  Sign Up for Beta Access
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-gradient-to-r from-yellow-400 to-green-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+                >
+                  Check Your Beta Status
+                </button>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Post Bounty CTA - Redirects based on auth status */}
         <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
