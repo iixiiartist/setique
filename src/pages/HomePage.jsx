@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -16,7 +16,6 @@ import {
   Database,
   Zap,
   X,
-  Search,
   Archive,
   CircleDollarSign,
   BrainCircuit,
@@ -43,10 +42,6 @@ function HomePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // General state
-  const [query, setQuery] = useState('')
-  const [modality, setModality] = useState('all')
-  
   // Beta access state
   const [hasBetaAccess, setHasBetaAccess] = useState(false)
 
@@ -149,7 +144,7 @@ function HomePage() {
 
   const fetchDatasets = async () => {
     try {
-      // Try with partnerships first
+      // Fetch top 5 datasets by favorite count for featured section
       let { data, error } = await supabase
         .from('datasets')
         .select(
@@ -168,7 +163,8 @@ function HomePage() {
         `
         )
         .eq('is_active', true)
-        .order('created_at', { ascending: false })
+        .order('favorite_count', { ascending: false })
+        .limit(5)
 
       // If partnership query fails (table doesn't exist), try without it
       if (error) {
@@ -182,7 +178,8 @@ function HomePage() {
           `
           )
           .eq('is_active', true)
-          .order('created_at', { ascending: false })
+          .order('favorite_count', { ascending: false })
+          .limit(5)
         
         data = simpleQuery.data
         error = simpleQuery.error
@@ -197,12 +194,13 @@ function HomePage() {
 
   const fetchBounties = async () => {
     try {
+      // Fetch top 5 newest bounties for featured section
       const { data, error } = await supabase
         .from('curation_requests')
         .select('*')
         .eq('status', 'open')
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(5)
 
       if (error) throw error
       
@@ -260,18 +258,6 @@ function HomePage() {
       console.error('Error fetching top curators:', error)
     }
   }
-
-  const filtered = useMemo(
-    () =>
-      datasets.filter(
-        (d) =>
-          (d.title + d.description + d.tags.join(' '))
-            .toLowerCase()
-            .includes(query.toLowerCase()) &&
-          (modality === 'all' || d.tags.some((tag) => tag === modality))
-      ),
-    [datasets, query, modality]
-  )
 
   useEffect(() => {
     const isModalOpen = selected !== null || checkoutIdx !== null || isSignInOpen
@@ -1517,275 +1503,253 @@ function HomePage() {
           </section>
         )}
 
-        {/* Marketplace Section */}
-        {/* Marketplace Section - Beta Access Required */}
-        {hasBetaAccess ? (
-          <section id="marketplace" className="max-w-7xl mx-auto mb-24 pt-10">
-          <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-            <Database className="h-10 w-10 text-pink-600" /> The Marketplace
+        {/* Featured Datasets Section */}
+        <section id="featured-datasets" className="max-w-7xl mx-auto mb-24 pt-10">
+          <h3 className="text-4xl sm:text-5xl font-extrabold mb-4 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+            <Database className="h-10 w-10 text-pink-600" /> Featured Datasets
           </h3>
-          <div className="mb-8 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-            <div className="md:col-span-6">
-              <div className="relative flex items-center">
-                <Search className="h-5 w-5 text-black/60 absolute left-4 pointer-events-none" />
-                <input
-                  className="w-full bg-white border-2 border-black rounded-full py-2.5 pl-11 pr-10 font-semibold shadow-inner"
-                  placeholder="Search for anything..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-                {query && (
-                  <button
-                    onClick={() => setQuery('')}
-                    className="absolute right-3 p-1 rounded-full hover:bg-black/10 transition-colors"
+          <p className="text-lg font-semibold text-black/80 mb-8">
+            Discover our most popular unique datasets curated by experts
+          </p>
+          
+          {datasets.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {datasets.map((d) => (
+                  <div
+                    key={d.id}
+                    className={`${d.accent_color} border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] hover:scale-105 transition-transform flex flex-col`}
                   >
-                    <X className="h-4 w-4 text-black/60" />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="md:col-span-3">
-              <select
-                className="w-full bg-white border-2 border-black rounded-full px-4 py-2.5 font-extrabold appearance-none"
-                value={modality}
-                onChange={(e) => setModality(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                <option value="vision">Vision</option>
-                <option value="audio">Audio</option>
-                <option value="text">Text</option>
-                <option value="nlp">NLP</option>
-                <option value="video">Video</option>
-              </select>
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filtered.length > 0 ? (
-              filtered.map((d) => (
-                <div
-                  key={d.id}
-                  className={`${d.accent_color} border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] hover:scale-105 transition-transform flex flex-col`}
-                >
-                  <div className="p-6 pb-2">
-                    <h3 className="text-2xl font-extrabold text-black uppercase">
-                      {d.title}
-                    </h3>
-                    {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
-                          <Star className="w-3 h-3 mr-1 fill-current" />
-                          PRO CURATOR
-                        </span>
-                        <span className="text-xs font-semibold text-black/70">
-                          by {d.dataset_partnerships[0].pro_curators.display_name}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6 pt-2 flex flex-col flex-grow">
-                    <p className="text-black/80 mb-4 text-sm leading-relaxed font-semibold flex-grow">
-                      {d.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {d.tags.map((t) => (
-                        <span
-                          key={t}
-                          onClick={() => setModality(t)}
-                          className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-white cursor-pointer hover:bg-yellow-200 transition-colors"
-                        >
-                          #{t}
-                        </span>
-                      ))}
+                    <div className="p-6 pb-2">
+                      <h4 className="text-2xl font-extrabold text-black uppercase">
+                        {d.title}
+                      </h4>
+                      {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            PRO CURATOR
+                          </span>
+                          <span className="text-xs font-semibold text-black/70">
+                            by {d.dataset_partnerships[0].pro_curators.display_name}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Card footer with better layout */}
-                    <div className="flex flex-col gap-3 mt-auto">
-                      {/* Row 1: Price, status badges, and social actions */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-sm">
-                            {d.price === 0 ? 'FREE' : `$${d.price}`}
-                          </div>
-                          {userOwnsDataset(d.id) && (
-                            <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
-                              ✓ Owned
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FavoriteButton 
-                            datasetId={d.id}
-                            datasetTitle={d.title}
-                            ownerId={d.user_id}
-                            initialCount={d.favorite_count || 0}
-                            size="sm"
-                          />
-                          <button
-                            onClick={() => {
-                              setDatasetToShare(d)
-                              setShareModalOpen(true)
-                            }}
-                            className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
-                            aria-label="Share dataset"
+                    <div className="p-6 pt-2 flex flex-col flex-grow">
+                      <p className="text-black/80 mb-4 text-sm leading-relaxed font-semibold flex-grow">
+                        {d.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {d.tags.slice(0, 3).map((t) => (
+                          <span
+                            key={t}
+                            className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-white"
                           >
-                            <Share2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                            #{t}
+                          </span>
+                        ))}
                       </div>
                       
-                      {/* Row 2: Action buttons */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setSelected(datasets.indexOf(d))}
-                          className="bg-white text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-200 text-sm transition-colors active:scale-95 flex-1"
-                        >
-                          Details
-                        </button>
-                        {userOwnsDataset(d.id) ? (
+                      {/* Card footer */}
+                      <div className="flex flex-col gap-3 mt-auto">
+                        {/* Row 1: Price, status badges, and social actions */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-sm">
+                              {d.price === 0 ? 'FREE' : `$${d.price}`}
+                            </div>
+                            {userOwnsDataset(d.id) && (
+                              <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
+                                ✓ Owned
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <FavoriteButton 
+                              datasetId={d.id}
+                              datasetTitle={d.title}
+                              ownerId={d.user_id}
+                              initialCount={d.favorite_count || 0}
+                              size="sm"
+                            />
+                            <button
+                              onClick={() => {
+                                setDatasetToShare(d)
+                                setShareModalOpen(true)
+                              }}
+                              className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
+                              aria-label="Share dataset"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Row 2: Action buttons */}
+                        <div className="flex gap-2">
                           <button
-                            onClick={() => navigate('/dashboard')}
-                            className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95 flex-1"
+                            onClick={() => setSelected(datasets.indexOf(d))}
+                            className="bg-white text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-200 text-sm transition-colors active:scale-95 flex-1"
                           >
-                            View in Library
+                            Details
                           </button>
-                        ) : !user ? (
-                          <button
-                            onClick={() => setSignInOpen(true)}
-                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
-                          >
-                            Sign Up to Buy
-                          </button>
-                        ) : !hasBetaAccess ? (
-                          <button
-                            onClick={() => navigate('/dashboard')}
-                            className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95 flex-1"
-                          >
-                            Get Beta Access
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setCheckoutIdx(datasets.indexOf(d))}
-                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
-                          >
-                            {d.price === 0 ? 'Get Free' : 'Buy Now'}
-                          </button>
-                        )}
+                          {userOwnsDataset(d.id) ? (
+                            <button
+                              onClick={() => navigate('/dashboard')}
+                              className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95 flex-1"
+                            >
+                              View in Library
+                            </button>
+                          ) : !user ? (
+                            <button
+                              onClick={() => setSignInOpen(true)}
+                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
+                            >
+                              Sign Up to Buy
+                            </button>
+                          ) : !hasBetaAccess ? (
+                            <button
+                              onClick={() => navigate('/dashboard')}
+                              className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95 flex-1"
+                            >
+                              Get Beta Access
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setCheckoutIdx(datasets.indexOf(d))}
+                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
+                            >
+                              {d.price === 0 ? 'Get Free' : 'Buy Now'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="md:col-span-3 text-center font-bold text-xl text-black/70 py-10 bg-black/5 rounded-2xl border-2 border-black border-dashed">
-                <h3>No datasets found. An opportunity for a curator?</h3>
-                <p className="text-sm font-normal mt-2">
-                  If you can't find it, it's because the right expert hasn't
-                  created it yet. That could be you.
+                ))}
+              </div>
+              
+              {/* View All CTA */}
+              <div className="text-center">
+                <button
+                  onClick={() => navigate('/datasets')}
+                  className="bg-gradient-to-r from-pink-400 to-cyan-400 text-white font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all"
+                >
+                  View All Datasets →
+                </button>
+                <p className="mt-4 text-sm font-semibold text-black/70">
+                  Browse hundreds of specialized datasets from expert curators
                 </p>
               </div>
-            )}
-          </div>
-        </section>
-        ) : (
-          <section id="marketplace" className="max-w-7xl mx-auto mb-24 pt-10">
-            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-              <Database className="h-10 w-10 text-pink-600" /> The Marketplace
-            </h3>
-            <div className="bg-gradient-to-br from-yellow-50 to-pink-50 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-12 text-center">
-              <div className="text-6xl mb-4">🔒</div>
-              <h4 className="text-3xl font-extrabold text-black mb-4">
-                Beta Access Required
+            </>
+          ) : (
+            <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">
+              <div className="text-6xl mb-4">�</div>
+              <h4 className="text-2xl font-extrabold text-black mb-3">
+                No Datasets Available Yet
               </h4>
               <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
-                The marketplace is currently in private beta. {user ? 'Your beta access request is being reviewed!' : 'Sign up to join the waiting list and get early access.'}
+                Be the first to curate! Share your expertise and earn 80% revenue share.
               </p>
-              {!user ? (
-                <button
-                  onClick={() => setSignInOpen(true)}
-                  className="bg-gradient-to-r from-cyan-400 to-pink-400 text-white font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-                >
-                  Sign Up for Beta Access
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="bg-gradient-to-r from-yellow-400 to-pink-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-                >
-                  Check Your Beta Status
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  if (!user) {
+                    setSignInOpen(true)
+                  } else {
+                    navigate('/dashboard')
+                  }
+                }}
+                className="bg-gradient-to-r from-cyan-400 to-pink-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
+              >
+                {user ? 'Start Curating' : 'Sign Up to Curate'}
+              </button>
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
-        {/* Active Bounties Section - Beta Access Required */}
-        {hasBetaAccess ? (
-        <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
-          <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-            <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
+        {/* Featured Bounties Section */}
+        <section id="featured-bounties" className="max-w-7xl mx-auto mb-24 pt-10">
+          <h3 className="text-4xl sm:text-5xl font-extrabold mb-4 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
+            <CircleDollarSign className="h-10 w-10 text-green-600" /> Featured Bounties
           </h3>
-          <p className="text-lg font-semibold mb-8 text-black/80">
-            Get paid to curate datasets! Browse open bounties from companies looking for custom data.
+          <p className="text-lg font-semibold text-black/80 mb-8">
+            Get paid to curate custom datasets - check out our newest opportunities
           </p>
           
           {bounties.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bounties.slice(0, 6).map((bounty) => {
-                const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
-                return (
-                <div
-                  key={bounty.id}
-                  className="bg-gradient-to-br from-green-100 to-cyan-100 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6 hover:scale-105 transition-transform"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h4 className="text-xl font-extrabold text-black pr-2">
-                      {bounty.title}
-                    </h4>
-                    <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm whitespace-nowrap">
-                      ${bounty.budget_min}-${bounty.budget_max}
-                    </div>
-                  </div>
-                  
-                  {/* Tier Badge */}
-                  <div className="mb-3">
-                    <span className={`text-xs font-bold px-2 py-1 border-2 rounded-full inline-flex items-center gap-1 ${tierInfo.color}`}>
-                      <span>{tierInfo.badge}</span>
-                      <span>{tierInfo.label}</span>
-                    </span>
-                  </div>
-
-                  <p className="text-sm font-semibold text-black/80 mb-4 line-clamp-3">
-                    {bounty.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {bounty.specialties_needed?.slice(0, 3).map((specialty, idx) => (
-                      <span
-                        key={idx}
-                        className="text-xs font-bold px-2 py-1 bg-white border-2 border-black rounded-full"
-                      >
-                        #{specialty}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-semibold text-black/70 mb-4">
-                    <span>Posted by {bounty.profiles?.username || 'Anonymous'}</span>
-                    <span className="uppercase bg-yellow-200 px-2 py-1 rounded border-2 border-black">
-                      {bounty.status}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setSelectedBounty(bounty)}
-                    className="w-full bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 transition-opacity active:scale-95"
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {bounties.map((bounty) => {
+                  const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
+                  return (
+                  <div
+                    key={bounty.id}
+                    className="bg-gradient-to-br from-green-100 to-cyan-100 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6 hover:scale-105 transition-transform"
                   >
-                    View Details
-                  </button>
-                </div>
-                );
-              })}
-            </div>
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="text-xl font-extrabold text-black pr-2">
+                        {bounty.title}
+                      </h4>
+                      <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm whitespace-nowrap">
+                        ${bounty.budget_min}-${bounty.budget_max}
+                      </div>
+                    </div>
+                    
+                    {/* Tier Badge */}
+                    <div className="mb-3">
+                      <span className={`text-xs font-bold px-2 py-1 border-2 rounded-full inline-flex items-center gap-1 ${tierInfo.color}`}>
+                        <span>{tierInfo.badge}</span>
+                        <span>{tierInfo.label}</span>
+                      </span>
+                    </div>
+
+                    <p className="text-sm font-semibold text-black/80 mb-4 line-clamp-3">
+                      {bounty.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {bounty.specialties_needed?.slice(0, 3).map((specialty, idx) => (
+                        <span
+                          key={idx}
+                          className="text-xs font-bold px-2 py-1 bg-white border-2 border-black rounded-full"
+                        >
+                          #{specialty}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-semibold text-black/70 mb-4">
+                      <span>Posted by {bounty.profiles?.username || 'Anonymous'}</span>
+                      <span className="uppercase bg-yellow-200 px-2 py-1 rounded border-2 border-black">
+                        {bounty.status}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedBounty(bounty)}
+                      className="w-full bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 transition-opacity active:scale-95"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                  );
+                })}
+              </div>
+              
+              {/* View All CTA */}
+              <div className="text-center">
+                <button
+                  onClick={() => navigate('/bounties')}
+                  className="bg-gradient-to-r from-green-400 to-cyan-400 text-white font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all"
+                >
+                  View All Bounties →
+                </button>
+                <p className="mt-4 text-sm font-semibold text-black/70">
+                  See all open bounties and earn money curating custom datasets
+                </p>
+              </div>
+            </>
           ) : (
             <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">
-              <div className="text-6xl mb-4">💼</div>
+              <div className="text-6xl mb-4">�</div>
               <h4 className="text-2xl font-extrabold text-black mb-3">
                 No Active Bounties Right Now
               </h4>
@@ -1807,39 +1771,8 @@ function HomePage() {
             </div>
           )}
         </section>
-        ) : (
-          <section id="bounties" className="max-w-7xl mx-auto mb-24 pt-10">
-            <h3 className="text-4xl sm:text-5xl font-extrabold mb-6 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-              <CircleDollarSign className="h-10 w-10 text-green-600" /> Active Bounties
-            </h3>
-            <div className="bg-gradient-to-br from-green-50 to-cyan-50 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-12 text-center">
-              <div className="text-6xl mb-4">🔒</div>
-              <h4 className="text-3xl font-extrabold text-black mb-4">
-                Beta Access Required
-              </h4>
-              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
-                Commission custom datasets from expert curators! {user ? 'Your beta access request is being reviewed.' : 'Sign up to join the waiting list and get early access to bounties.'}
-              </p>
-              {!user ? (
-                <button
-                  onClick={() => setSignInOpen(true)}
-                  className="bg-gradient-to-r from-cyan-400 to-green-400 text-white font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-                >
-                  Sign Up for Beta Access
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="bg-gradient-to-r from-yellow-400 to-green-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-                >
-                  Check Your Beta Status
-                </button>
-              )}
-            </div>
-          </section>
-        )}
 
-        {/* Post Bounty CTA - Redirects based on auth status */}
+        {/* Post Bounty CTA */}
         <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
           <div className="bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0_#000]">
             <div className="p-6 border-b-4 border-black bg-gradient-to-r from-yellow-300 to-pink-300">
