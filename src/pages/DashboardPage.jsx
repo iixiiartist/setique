@@ -119,6 +119,9 @@ function DashboardPage() {
     budget_max: '',
     minimum_curator_tier: 'verified' // Default to Verified+ (recommended)
   })
+  
+  // Dataset detail modal state
+  const [selectedDatasetForDetail, setSelectedDatasetForDetail] = useState(null)
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
@@ -2415,7 +2418,7 @@ function DashboardPage() {
                               size="md"
                             />
                             <button
-                              onClick={() => navigate(`/dataset/${dataset.id}`)}
+                              onClick={() => setSelectedDatasetForDetail(dataset)}
                               className="px-4 py-2 bg-cyan-400 text-black font-bold rounded-full border-2 border-black hover:bg-cyan-500 transition whitespace-nowrap"
                             >
                               View Details
@@ -2749,6 +2752,96 @@ function DashboardPage() {
                   className="px-6 py-3 border-4 border-black rounded-xl font-bold hover:bg-gray-100"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dataset Detail Modal */}
+      {selectedDatasetForDetail && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedDatasetForDetail(null)}>
+          <div 
+            className="bg-white border-4 border-black rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-[12px_12px_0_#000]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-cyan-300 to-pink-300 border-b-4 border-black p-6 flex justify-between items-start">
+              <div className="flex-1">
+                <h2 className="text-3xl font-black mb-2">{selectedDatasetForDetail.title}</h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="px-3 py-1 rounded-full text-sm font-bold border-2 border-black bg-yellow-100 text-yellow-800">
+                    {selectedDatasetForDetail.modality}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-sm font-bold border-2 border-black bg-purple-100 text-purple-800">
+                    ${selectedDatasetForDetail.price}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDatasetForDetail(null)}
+                className="text-3xl font-bold hover:opacity-70 transition-opacity"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {/* Description */}
+              <div>
+                <h3 className="text-xl font-extrabold mb-2">Description</h3>
+                <p className="text-black/80 leading-relaxed">{selectedDatasetForDetail.description}</p>
+              </div>
+
+              {/* Tags */}
+              {selectedDatasetForDetail.tags && selectedDatasetForDetail.tags.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-extrabold mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDatasetForDetail.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 rounded-full text-sm font-bold border-2 border-black bg-gray-100"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 border-2 border-black rounded-xl p-4">
+                  <div className="text-sm font-bold text-black/60 mb-1">File Size</div>
+                  <div className="text-lg font-extrabold">
+                    {selectedDatasetForDetail.file_size 
+                      ? `${(selectedDatasetForDetail.file_size / (1024 * 1024)).toFixed(2)} MB`
+                      : 'N/A'}
+                  </div>
+                </div>
+                <div className="bg-gray-50 border-2 border-black rounded-xl p-4">
+                  <div className="text-sm font-bold text-black/60 mb-1">Published</div>
+                  <div className="text-lg font-extrabold">
+                    {new Date(selectedDatasetForDetail.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t-2 border-black">
+                <FavoriteButton
+                  datasetId={selectedDatasetForDetail.id}
+                  initialCount={selectedDatasetForDetail.favorite_count || 0}
+                  size="lg"
+                />
+                <button
+                  onClick={() => setSelectedDatasetForDetail(null)}
+                  className="flex-1 bg-white border-2 border-black rounded-full px-6 py-3 font-extrabold hover:bg-gray-100 transition"
+                >
+                  Close
                 </button>
               </div>
             </div>
