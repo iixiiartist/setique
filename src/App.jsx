@@ -5,6 +5,8 @@ import SignUpPage from './pages/SignUpPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import SuccessPage from './pages/SuccessPage'
 import DashboardPage from './pages/DashboardPage'
+import DatasetsPage from './pages/DatasetsPage'
+import BountiesPage from './pages/BountiesPage'
 import MarketplacePage from './pages/MarketplacePage'
 import AdminDashboard from './pages/AdminDashboard'
 import UserProfilePage from './pages/UserProfilePage'
@@ -36,6 +38,8 @@ function App() {
           } 
         />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/datasets" element={<DatasetsPage />} />
+        <Route path="/bounties" element={<BountiesPage />} />
         <Route 
           path="/admin" 
           element={
