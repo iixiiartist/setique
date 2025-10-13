@@ -38,6 +38,39 @@ export default function BountiesPage() {
   const [bounties, setBounties] = useState([])
   const [loading, setLoading] = useState(true)
 
+  // Set page title and meta tags for SEO
+  useEffect(() => {
+    document.title = 'Active Bounties - Commission Custom Datasets | Setique'
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Browse open dataset bounties and get paid to curate custom AI training data. Commission expert curators to build specialized datasets for your machine learning projects.')
+    }
+    
+    // Update Open Graph tags
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', 'Active Bounties - Setique')
+    
+    const ogDescription = document.querySelector('meta[property="og:description"]')
+    if (ogDescription) ogDescription.setAttribute('content', 'Get paid to curate datasets or commission custom AI training data from expert curators.')
+    
+    // Update Twitter tags
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitle) twitterTitle.setAttribute('content', 'Active Bounties - Setique')
+    
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]')
+    if (twitterDescription) twitterDescription.setAttribute('content', 'Get paid to curate datasets or commission custom AI training data from expert curators.')
+    
+    // Cleanup: restore defaults when component unmounts
+    return () => {
+      document.title = 'Setique - Discover Unique AI Training Data You Won\'t Find Anywhere Else'
+      if (metaDescription) {
+        metaDescription.setAttribute('content', 'Setique - Unique Data. Better AI. An ecosystem where AI builders discover unique datasets AND everyday creators earn from their expertise.')
+      }
+    }
+  }, [])
+
   // Check beta access when user changes
   useEffect(() => {
     const checkBetaAccess = async () => {

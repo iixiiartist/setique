@@ -50,6 +50,39 @@ export default function DatasetsPage() {
   const [datasets, setDatasets] = useState([])
   const [userPurchases, setUserPurchases] = useState([])
 
+  // Set page title and meta tags for SEO
+  useEffect(() => {
+    document.title = 'Dataset Marketplace - Unique AI Training Data | Setique'
+    
+    // Update meta description
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Browse unique AI training datasets curated by experts. Premium data for computer vision, NLP, audio, video, and text ML models. Discover specialized datasets you won\'t find anywhere else.')
+    }
+    
+    // Update Open Graph tags
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', 'Dataset Marketplace - Setique')
+    
+    const ogDescription = document.querySelector('meta[property="og:description"]')
+    if (ogDescription) ogDescription.setAttribute('content', 'Browse unique AI training datasets curated by experts. Premium data for ML and AI development.')
+    
+    // Update Twitter tags
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitle) twitterTitle.setAttribute('content', 'Dataset Marketplace - Setique')
+    
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]')
+    if (twitterDescription) twitterDescription.setAttribute('content', 'Browse unique AI training datasets curated by experts. Premium data for ML and AI development.')
+    
+    // Cleanup: restore defaults when component unmounts
+    return () => {
+      document.title = 'Setique - Discover Unique AI Training Data You Won\'t Find Anywhere Else'
+      if (metaDescription) {
+        metaDescription.setAttribute('content', 'Setique - Unique Data. Better AI. An ecosystem where AI builders discover unique datasets AND everyday creators earn from their expertise.')
+      }
+    }
+  }, [])
+
   // Check beta access when user changes
   useEffect(() => {
     const checkBetaAccess = async () => {
