@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { logBountySubmission } from '../lib/activityTracking'
 
 export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
   const { user, profile } = useAuth()
@@ -106,7 +107,7 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
       if (datasetError) throw datasetError
 
       // Create bounty submission record
-      const { error: submissionError } = await supabase
+      const { data: submissionData, error: submissionError } = await supabase
         .from('bounty_submissions')
         .insert([{
           request_id: bounty.id,
@@ -115,8 +116,20 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
           notes: `Custom dataset created for bounty: ${bounty.title}`,
           status: 'pending'
         }])
+        .select()
 
       if (submissionError) throw submissionError
+
+      // Log activity for social feed
+      if (submissionData && submissionData[0]) {
+        await logBountySubmission(
+          user.id,
+          submissionData[0].id,
+          bounty.id,
+          bounty.title,
+          formData.title
+        )
+      }
 
       // Success!
       onSuccess?.()

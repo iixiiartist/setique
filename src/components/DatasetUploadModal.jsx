@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { logDatasetPublished } from '../lib/activityTracking'
 import { X, Upload } from './Icons'
 import { TagInput } from './TagInput'
 
@@ -122,7 +123,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
       if (uploadError) throw uploadError
 
       // Create dataset record with storage path
-      const { error: insertError } = await supabase.from('datasets').insert([
+      const { data: insertedDataset, error: insertError } = await supabase.from('datasets').insert([
         {
           creator_id: user.id,
           title: title.trim(),
@@ -135,9 +136,20 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           file_size: uploadFile.size,
           is_active: true,
         },
-      ])
+      ]).select()
 
       if (insertError) throw insertError
+
+      // Log activity for social feed
+      if (insertedDataset && insertedDataset[0]) {
+        await logDatasetPublished(
+          user.id,
+          insertedDataset[0].id,
+          title.trim(),
+          numericPrice,
+          modality
+        )
+      }
 
       alert(`✅ Published "${title}"! Your dataset is now live on the marketplace.`)
       

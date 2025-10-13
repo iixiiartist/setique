@@ -13,6 +13,9 @@ import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import DeletionRequestModal from '../components/DeletionRequestModal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TrustLevelBadge from '../components/TrustLevelBadge'
+import ActivityFeed from '../components/ActivityFeed'
+import FavoriteButton from '../components/FavoriteButton'
+import { logBountyCreated } from '../lib/activityTracking'
 import {
   Database,
   ShoppingBag,
@@ -65,6 +68,7 @@ function DashboardPage() {
   
   // Buyer data
   const [myPurchases, setMyPurchases] = useState([])
+  const [myFavorites, setMyFavorites] = useState([])
   
   // Bounty data
   const [myBounties, setMyBounties] = useState([])
@@ -127,7 +131,8 @@ function DashboardPage() {
         earningsResult,
         payoutResult,
         purchasesResult,
-        adminResult
+        adminResult,
+        favoritesResult
       ] = await Promise.all([
         // Fetch user's created datasets with partnership info
         supabase
@@ -177,7 +182,17 @@ function DashboardPage() {
           .from('admins')
           .select('*')
           .eq('user_id', user.id)
-          .maybeSingle()
+          .maybeSingle(),
+        
+        // Fetch user's favorited datasets
+        supabase
+          .from('dataset_favorites')
+          .select(`
+            *,
+            datasets (*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
       ]);
 
       const datasets = datasetsResult.data || [];
@@ -223,6 +238,9 @@ function DashboardPage() {
       
       // Process purchases (already fetched in parallel)
       setMyPurchases(purchasesResult.data || []);
+      
+      // Process favorites (already fetched in parallel)
+      setMyFavorites(favoritesResult.data || []);
 
       // Process admin status (already fetched in parallel)
       if (!adminResult.error && adminResult.data) {
@@ -618,7 +636,7 @@ function DashboardPage() {
     }
 
     try {
-      const { error } = await supabase.from('curation_requests').insert([
+      const { data: createdBounty, error } = await supabase.from('curation_requests').insert([
         {
           creator_id: user.id,
           title: newBounty.title,
@@ -630,9 +648,19 @@ function DashboardPage() {
           specialties_needed: [],
           minimum_curator_tier: newBounty.minimum_curator_tier
         }
-      ])
+      ]).select()
 
       if (error) throw error
+
+      // Log activity for social feed
+      if (createdBounty && createdBounty[0]) {
+        await logBountyCreated(
+          user.id,
+          createdBounty[0].id,
+          newBounty.title,
+          parseFloat(newBounty.budget_max)
+        )
+      }
 
       alert(`Bounty "${newBounty.title}" posted successfully!`)
       setShowBountyModal(false)
@@ -1031,6 +1059,30 @@ function DashboardPage() {
             <Star className="h-4 w-4 fill-current" />
             Pro Curator
           </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            role="tab"
+            aria-selected={activeTab === 'activity'}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
+              activeTab === 'activity'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            Activity Feed
+          </button>
+          <button
+            onClick={() => setActiveTab('favorites')}
+            role="tab"
+            aria-selected={activeTab === 'favorites'}
+            className={`px-6 py-3 rounded-full font-extrabold border-2 border-black transition ${
+              activeTab === 'favorites'
+                ? 'bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white'
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+          >
+            My Favorites
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -1041,13 +1093,13 @@ function DashboardPage() {
 
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 border-2 border-black rounded-xl bg-yellow-100">
                 <p className="font-bold text-black/80 max-w-2xl">
-                  Check out what the curators and buyers you follow are doing in the new Activity Feed. Track fresh datasets, trending purchases, and more—without leaving your dashboard.
+                  Check out what the curators and buyers you follow are doing in the Activity Feed tab. Track fresh datasets, trending purchases, and more!
                 </p>
                 <button
-                  onClick={() => navigate('/feed')}
+                  onClick={() => setActiveTab('activity')}
                   className="self-start md:self-auto bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
                 >
-                  Open Activity Feed
+                  View Activity Feed
                 </button>
               </div>
               
@@ -2280,6 +2332,101 @@ function DashboardPage() {
               )}
               
               <ProCuratorProfile />
+            </div>
+          )}
+
+          {/* Activity Feed Tab */}
+          {activeTab === 'activity' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-extrabold">Activity Feed</h3>
+                <p className="text-sm text-black/70">
+                  See what curators and buyers you follow are up to
+                </p>
+              </div>
+              
+              <ActivityFeed />
+            </div>
+          )}
+
+          {/* Favorites Tab */}
+          {activeTab === 'favorites' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-extrabold">My Favorites</h3>
+                <p className="text-sm text-black/70">
+                  {myFavorites.length} dataset{myFavorites.length !== 1 ? 's' : ''} bookmarked
+                </p>
+              </div>
+
+              {myFavorites.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 border-2 border-black rounded-xl">
+                  <p className="text-lg font-bold text-black/60">
+                    No favorites yet!
+                  </p>
+                  <p className="text-sm text-black/50 mt-2">
+                    Browse datasets and click the heart icon to save them here
+                  </p>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="mt-4 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
+                  >
+                    Browse Datasets
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {myFavorites.map(favorite => {
+                    const dataset = favorite.datasets;
+                    if (!dataset) return null;
+                    
+                    return (
+                      <div
+                        key={favorite.id}
+                        className="bg-white border-4 border-black rounded-xl p-6 shadow-[4px_4px_0_#000] hover:shadow-[8px_8px_0_#000] transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h4 className="text-xl font-extrabold">{dataset.title}</h4>
+                              <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-yellow-100 text-yellow-800">
+                                {dataset.modality}
+                              </span>
+                            </div>
+                            
+                            <p className="text-black/70 mb-4 line-clamp-2">
+                              {dataset.description}
+                            </p>
+                            
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="font-bold text-lg text-purple-600">
+                                ${dataset.price}
+                              </span>
+                              <span className="text-black/60">
+                                Added {new Date(favorite.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col gap-2">
+                            <FavoriteButton
+                              datasetId={dataset.id}
+                              initialCount={dataset.favorite_count || 0}
+                              size="md"
+                            />
+                            <button
+                              onClick={() => navigate(`/dataset/${dataset.id}`)}
+                              className="px-4 py-2 bg-cyan-400 text-black font-bold rounded-full border-2 border-black hover:bg-cyan-500 transition whitespace-nowrap"
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

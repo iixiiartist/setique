@@ -45,7 +45,7 @@ exports.handler = async (event) => {
       // Get purchase record
       const { data: purchase, error: purchaseSelectError } = await supabase
         .from('purchases')
-        .select('*, datasets!inner(creator_id)')
+        .select('*, datasets!inner(creator_id, title)')
         .eq('stripe_session_id', session.id)
         .single()
 
@@ -61,6 +61,23 @@ exports.handler = async (event) => {
         .eq('stripe_session_id', session.id)
 
       if (purchaseError) throw purchaseError
+
+      // Log activity for social feed
+      try {
+        await supabase.rpc('log_user_activity', {
+          p_user_id: userId,
+          p_activity_type: 'dataset_purchased',
+          p_target_id: datasetId,
+          p_target_type: 'dataset',
+          p_metadata: {
+            title: purchase.datasets.title,
+            price: parseFloat(purchase.amount)
+          }
+        })
+      } catch (activityError) {
+        // Don't fail the webhook if activity logging fails
+        console.error('Failed to log purchase activity:', activityError)
+      }
 
       // Calculate creator earnings
       const totalAmount = parseFloat(purchase.amount)

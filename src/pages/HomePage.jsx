@@ -7,6 +7,9 @@ import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import FeedbackModal from '../components/FeedbackModal'
+import FavoriteButton from '../components/FavoriteButton'
+import ShareModal from '../components/ShareModal'
+import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
   Database,
@@ -18,6 +21,7 @@ import {
   BrainCircuit,
   LogOut,
   User,
+  Share2,
 } from '../components/Icons'
 
 const badgeColors = {
@@ -54,6 +58,8 @@ function HomePage() {
   const [isProcessing, setProcessing] = useState(false)
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [datasetToShare, setDatasetToShare] = useState(null)
   
   // Check URL parameters for auth modal (supports /login and /signup routes)
   useEffect(() => {
@@ -331,6 +337,9 @@ function HomePage() {
           setProcessing(false)
           return
         }
+
+        // Log activity for social feed
+        await logDatasetPurchased(user.id, dataset.id, dataset.title, 0)
 
         // Show success message and refresh
         alert(`✅ ${dataset.title} added to your library!`)
@@ -1593,6 +1602,21 @@ function HomePage() {
                             ✓ Owned
                           </div>
                         )}
+                        <FavoriteButton 
+                          datasetId={d.id} 
+                          initialCount={d.favorite_count || 0}
+                          size="sm"
+                        />
+                        <button
+                          onClick={() => {
+                            setDatasetToShare(d)
+                            setShareModalOpen(true)
+                          }}
+                          className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
+                          aria-label="Share dataset"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </button>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -2153,6 +2177,16 @@ function HomePage() {
       <FeedbackModal 
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => {
+          setShareModalOpen(false)
+          setDatasetToShare(null)
+        }}
+        dataset={datasetToShare}
       />
     </div>
   )

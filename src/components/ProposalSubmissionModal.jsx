@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { logProposalSubmitted } from '../lib/activityTracking';
 import { X, Clock, DollarSign } from './Icons';
 
 export default function ProposalSubmissionModal({ isOpen, onClose, request, curatorProfile, userProfile, onSuccess }) {
@@ -67,7 +68,7 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data: proposalData, error } = await supabase
         .from('curator_proposals')
         .insert([{
           request_id: request.id,
@@ -76,9 +77,20 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
           estimated_completion_days: parseInt(estimatedDays),
           suggested_price: parseFloat(suggestedPrice),
           status: 'pending'
-        }]);
+        }])
+        .select();
 
       if (error) throw error;
+
+      // Log activity for social feed
+      if (proposalData && proposalData[0] && userProfile) {
+        await logProposalSubmitted(
+          userProfile.id,
+          proposalData[0].id,
+          request.id,
+          request.title
+        );
+      }
 
       alert('✅ Proposal submitted successfully!');
       resetForm();

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { stripePromise } from '../lib/stripe'
+import { logUserFollowed } from '../lib/activityTracking'
 import { CheckCircle, AlertCircle, X } from '../components/Icons'
 import ReportButton from '../components/ReportButton'
 import TrustLevelBadge from '../components/TrustLevelBadge'
@@ -364,6 +365,10 @@ export default function UserProfilePage() {
           .single()
 
         if (error) throw error
+        
+        // Log activity for social feed
+        await logUserFollowed(user.id, profile.id, profile.username || profile.display_name)
+        
         setIsFollowing(true)
         setProfile(prev =>
           prev
