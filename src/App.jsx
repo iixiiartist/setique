@@ -12,6 +12,7 @@ import UserDiscoveryPage from './pages/UserDiscoveryPage'
 import ActivityFeedPage from './pages/ActivityFeedPage'
 import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ModerationQueuePage from './pages/ModerationQueuePage'
+import NotificationsPage from './pages/NotificationsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import BetaProtectedRoute from './components/BetaProtectedRoute'
 
@@ -71,6 +72,16 @@ function App() {
             <ProtectedRoute>
               <BetaProtectedRoute>
                 <ActivityFeedPage />
+              </BetaProtectedRoute>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/notifications" 
+          element={
+            <ProtectedRoute>
+              <BetaProtectedRoute>
+                <NotificationsPage />
               </BetaProtectedRoute>
             </ProtectedRoute>
           } 

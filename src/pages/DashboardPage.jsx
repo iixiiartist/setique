@@ -15,6 +15,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import TrustLevelBadge from '../components/TrustLevelBadge'
 import ActivityFeed from '../components/ActivityFeed'
 import FavoriteButton from '../components/FavoriteButton'
+import NotificationBell from '../components/NotificationBell'
 import { logBountyCreated } from '../lib/activityTracking'
 import {
   Database,
@@ -818,6 +819,10 @@ function DashboardPage() {
               <div className="flex items-center gap-2 font-bold text-black text-sm">
                 {profile?.username || user.email}
               </div>
+              
+              {/* Notification Bell */}
+              <NotificationBell />
+              
               <button
                 onClick={() => navigate('/')}
                 className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1 text-sm"
@@ -2414,6 +2419,8 @@ function DashboardPage() {
                           <div className="flex flex-col gap-2">
                             <FavoriteButton
                               datasetId={dataset.id}
+                              datasetTitle={dataset.title}
+                              ownerId={dataset.user_id}
                               initialCount={dataset.favorite_count || 0}
                               size="md"
                             />
@@ -2834,6 +2841,8 @@ function DashboardPage() {
               <div className="flex gap-3 pt-4 border-t-2 border-black">
                 <FavoriteButton
                   datasetId={selectedDatasetForDetail.id}
+                  datasetTitle={selectedDatasetForDetail.title}
+                  ownerId={selectedDatasetForDetail.user_id}
                   initialCount={selectedDatasetForDetail.favorite_count || 0}
                   size="lg"
                 />

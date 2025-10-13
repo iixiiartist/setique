@@ -1,8 +1,10 @@
 import { supabase } from './supabase';
+import { createNotification, generateNotificationMessage } from './notificationService';
 
 /**
  * Activity Tracking Utilities
  * Helper functions to log user activities for the activity feed
+ * Also creates notifications for relevant users
  */
 
 /**
@@ -68,28 +70,78 @@ export async function logDatasetPublished(userId, datasetId, datasetTitle, price
 
 /**
  * Log dataset purchase activity
+ * Also notifies the dataset owner
  */
-export async function logDatasetPurchased(userId, datasetId, datasetTitle, price) {
-  return logActivity(
+export async function logDatasetPurchased(userId, datasetId, datasetTitle, price, ownerId = null) {
+  const activityId = await logActivity(
     userId,
     'dataset_purchased',
     datasetId,
     'dataset',
     { title: datasetTitle, price }
   );
+
+  // Notify the dataset owner if ownerId is provided
+  if (ownerId && ownerId !== userId) {
+    // Get purchaser's username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    const username = profileData?.username || 'Someone';
+    const message = generateNotificationMessage('dataset_purchased', username, { datasetName: datasetTitle });
+    
+    await createNotification(
+      ownerId,
+      userId,
+      'dataset_purchased',
+      datasetId,
+      'dataset',
+      message
+    );
+  }
+
+  return activityId;
 }
 
 /**
  * Log user follow activity
+ * Also notifies the followed user
  */
 export async function logUserFollowed(userId, followedUserId, followedUsername) {
-  return logActivity(
+  const activityId = await logActivity(
     userId,
     'user_followed',
     followedUserId,
     'user',
     { username: followedUsername }
   );
+
+  // Notify the followed user
+  if (followedUserId !== userId) {
+    // Get follower's username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    const username = profileData?.username || 'Someone';
+    const message = generateNotificationMessage('user_followed', username);
+    
+    await createNotification(
+      followedUserId,
+      userId,
+      'user_followed',
+      userId,
+      'user',
+      message
+    );
+  }
+
+  return activityId;
 }
 
 /**
@@ -107,41 +159,116 @@ export async function logBountyCreated(userId, bountyId, bountyTitle, budgetMax)
 
 /**
  * Log bounty submission activity
+ * Also notifies the bounty creator
  */
-export async function logBountySubmission(userId, submissionId, bountyId, bountyTitle, datasetTitle) {
-  return logActivity(
+export async function logBountySubmission(userId, submissionId, bountyId, bountyTitle, datasetTitle, bountyCreatorId = null) {
+  const activityId = await logActivity(
     userId,
     'bounty_submission',
     submissionId,
     'submission',
     { bounty_id: bountyId, bounty_title: bountyTitle, dataset_title: datasetTitle }
   );
+
+  // Notify the bounty creator if provided
+  if (bountyCreatorId && bountyCreatorId !== userId) {
+    // Get submitter's username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    const username = profileData?.username || 'Someone';
+    const message = generateNotificationMessage('bounty_submission', username, { bountyTitle });
+    
+    await createNotification(
+      bountyCreatorId,
+      userId,
+      'bounty_submission',
+      bountyId,
+      'bounty',
+      message
+    );
+  }
+
+  return activityId;
 }
 
 /**
  * Log proposal submission activity
+ * Also notifies the bounty creator
  */
-export async function logProposalSubmitted(userId, proposalId, bountyId, bountyTitle) {
-  return logActivity(
+export async function logProposalSubmitted(userId, proposalId, bountyId, bountyTitle, bountyCreatorId = null) {
+  const activityId = await logActivity(
     userId,
     'proposal_submitted',
     proposalId,
     'proposal',
     { bounty_id: bountyId, bounty_title: bountyTitle }
   );
+
+  // Notify the bounty creator if provided
+  if (bountyCreatorId && bountyCreatorId !== userId) {
+    // Get proposer's username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    const username = profileData?.username || 'Someone';
+    const message = generateNotificationMessage('proposal_submitted', username, { bountyTitle });
+    
+    await createNotification(
+      bountyCreatorId,
+      userId,
+      'proposal_submitted',
+      bountyId,
+      'bounty',
+      message
+    );
+  }
+
+  return activityId;
 }
 
 /**
  * Log dataset favorite activity
+ * Also notifies the dataset owner
  */
-export async function logDatasetFavorited(userId, datasetId, datasetTitle) {
-  return logActivity(
+export async function logDatasetFavorited(userId, datasetId, datasetTitle, ownerId = null) {
+  const activityId = await logActivity(
     userId,
     'dataset_favorited',
     datasetId,
     'dataset',
     { title: datasetTitle }
   );
+
+  // Notify the dataset owner if provided
+  if (ownerId && ownerId !== userId) {
+    // Get user's username
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    const username = profileData?.username || 'Someone';
+    const message = generateNotificationMessage('dataset_favorited', username, { datasetName: datasetTitle });
+    
+    await createNotification(
+      ownerId,
+      userId,
+      'dataset_favorited',
+      datasetId,
+      'dataset',
+      message
+    );
+  }
+
+  return activityId;
 }
 
 /**

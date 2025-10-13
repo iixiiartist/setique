@@ -120,14 +120,15 @@ export function BountySubmissionModal({ isOpen, onClose, bounty, onSuccess }) {
 
       if (submissionError) throw submissionError
 
-      // Log activity for social feed
+      // Log activity for social feed and send notification
       if (submissionData && submissionData[0]) {
         await logBountySubmission(
           user.id,
           submissionData[0].id,
           bounty.id,
           bounty.title,
-          formData.title
+          formData.title,
+          bounty.user_id // bounty creator ID
         )
       }
 

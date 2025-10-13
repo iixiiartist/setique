@@ -62,8 +62,9 @@ exports.handler = async (event) => {
 
       if (purchaseError) throw purchaseError
 
-      // Log activity for social feed
+      // Log activity for social feed and send notification
       try {
+        // Log the activity
         await supabase.rpc('log_user_activity', {
           p_user_id: userId,
           p_activity_type: 'dataset_purchased',
@@ -74,6 +75,29 @@ exports.handler = async (event) => {
             price: parseFloat(purchase.amount)
           }
         })
+
+        // Send notification to dataset owner
+        const datasetOwnerId = purchase.datasets.user_id
+        if (datasetOwnerId && datasetOwnerId !== userId) {
+          // Get purchaser's username
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', userId)
+            .single()
+
+          const username = profileData?.username || 'Someone'
+          const message = `${username} purchased your dataset "${purchase.datasets.title}"`
+
+          await supabase.rpc('create_notification', {
+            p_user_id: datasetOwnerId,
+            p_actor_id: userId,
+            p_activity_type: 'dataset_purchased',
+            p_target_id: datasetId,
+            p_target_type: 'dataset',
+            p_message: message
+          })
+        }
       } catch (activityError) {
         // Don't fail the webhook if activity logging fails
         console.error('Failed to log purchase activity:', activityError)

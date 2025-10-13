@@ -9,6 +9,7 @@ import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import FeedbackModal from '../components/FeedbackModal'
 import FavoriteButton from '../components/FavoriteButton'
 import ShareModal from '../components/ShareModal'
+import NotificationBell from '../components/NotificationBell'
 import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
@@ -338,8 +339,8 @@ function HomePage() {
           return
         }
 
-        // Log activity for social feed
-        await logDatasetPurchased(user.id, dataset.id, dataset.title, 0)
+        // Log activity for social feed and send notification
+        await logDatasetPurchased(user.id, dataset.id, dataset.title, 0, dataset.user_id)
 
         // Show success message and refresh
         alert(`✅ ${dataset.title} added to your library!`)
@@ -460,6 +461,9 @@ function HomePage() {
           </a>
           {user ? (
             <>
+              {/* Notification Bell */}
+              <NotificationBell />
+              
               <button
                 onClick={() => navigate('/dashboard')}
                 className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1"
@@ -1609,7 +1613,9 @@ function HomePage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <FavoriteButton 
-                            datasetId={d.id} 
+                            datasetId={d.id}
+                            datasetTitle={d.title}
+                            ownerId={d.user_id}
                             initialCount={d.favorite_count || 0}
                             size="sm"
                           />

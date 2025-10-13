@@ -82,13 +82,14 @@ export default function ProposalSubmissionModal({ isOpen, onClose, request, cura
 
       if (error) throw error;
 
-      // Log activity for social feed
+      // Log activity for social feed and send notification
       if (proposalData && proposalData[0] && userProfile) {
         await logProposalSubmitted(
           userProfile.id,
           proposalData[0].id,
           request.id,
-          request.title
+          request.title,
+          request.user_id // bounty creator ID
         );
       }
 

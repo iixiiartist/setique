@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { logDatasetFavorited } from '../lib/activityTracking';
 import { useAuth } from '../contexts/AuthContext';
 import PropTypes from 'prop-types';
 
@@ -11,8 +12,9 @@ import PropTypes from 'prop-types';
  * - Heart icon that fills when favorited
  * - Shows favorite count
  * - Handles authentication
+ * - Notifies dataset owner
  */
-export default function FavoriteButton({ datasetId, initialCount = 0, size = 'md', showCount = true }) {
+export default function FavoriteButton({ datasetId, datasetTitle, ownerId, initialCount = 0, size = 'md', showCount = true }) {
   const { user } = useAuth();
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(initialCount);
@@ -103,14 +105,9 @@ export default function FavoriteButton({ datasetId, initialCount = 0, size = 'md
 
         if (error) throw error;
 
-        // Log activity
+        // Log activity with notification
         try {
-          await supabase.rpc('log_user_activity', {
-            p_user_id: user.id,
-            p_activity_type: 'dataset_favorited',
-            p_target_id: datasetId,
-            p_target_type: 'dataset'
-          });
+          await logDatasetFavorited(user.id, datasetId, datasetTitle || 'a dataset', ownerId);
         } catch (activityError) {
           console.warn('Failed to log activity:', activityError);
         }
@@ -170,6 +167,8 @@ export default function FavoriteButton({ datasetId, initialCount = 0, size = 'md
 
 FavoriteButton.propTypes = {
   datasetId: PropTypes.string.isRequired,
+  datasetTitle: PropTypes.string,
+  ownerId: PropTypes.string,
   initialCount: PropTypes.number,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   showCount: PropTypes.bool
