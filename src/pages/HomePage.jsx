@@ -433,18 +433,18 @@ function HomePage() {
         
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-4">
-          <a
-            href="#marketplace"
+          <button
+            onClick={() => navigate('/datasets')}
             className="font-bold text-black hover:text-pink-600 transition"
           >
-            Marketplace
-          </a>
-          <a
-            href="#bounties"
+            Datasets
+          </button>
+          <button
+            onClick={() => navigate('/bounties')}
             className="font-bold text-black hover:text-pink-600 transition"
           >
             Bounties
-          </a>
+          </button>
           {user ? (
             <>
               <button
@@ -507,20 +507,24 @@ function HomePage() {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="lg:hidden mb-8 bg-white border-4 border-black rounded-2xl shadow-[8px_8px_0_#000] p-4 space-y-3">
-          <a
-            href="#marketplace"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block font-bold text-black hover:text-pink-600 transition py-2"
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false)
+              navigate('/datasets')
+            }}
+            className="w-full text-left block font-bold text-black hover:text-pink-600 transition py-2"
           >
-            Marketplace
-          </a>
-          <a
-            href="#bounties"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block font-bold text-black hover:text-pink-600 transition py-2"
+            Datasets
+          </button>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false)
+              navigate('/bounties')
+            }}
+            className="w-full text-left block font-bold text-black hover:text-pink-600 transition py-2"
           >
             Bounties
-          </a>
+          </button>
           {user ? (
             <>
               <button

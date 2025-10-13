@@ -1425,10 +1425,10 @@ function DashboardPage() {
                     You haven&apos;t purchased any datasets yet
                   </p>
                   <button
-                    onClick={() => navigate('/#marketplace')}
+                    onClick={() => navigate('/datasets')}
                     className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
                   >
-                    Browse Marketplace
+                    Browse Datasets
                   </button>
                 </div>
               )}
