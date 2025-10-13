@@ -1592,64 +1592,73 @@ function HomePage() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-center justify-between gap-2 mt-auto">
-                      <div className="flex items-center gap-2">
-                        <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow">
-                          {d.price === 0 ? 'FREE' : `$${d.price}`}
-                        </div>
-                        {userOwnsDataset(d.id) && (
-                          <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
-                            ✓ Owned
+                    
+                    {/* Card footer with better layout */}
+                    <div className="flex flex-col gap-3 mt-auto">
+                      {/* Row 1: Price, status badges, and social actions */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-sm">
+                            {d.price === 0 ? 'FREE' : `$${d.price}`}
                           </div>
-                        )}
-                        <FavoriteButton 
-                          datasetId={d.id} 
-                          initialCount={d.favorite_count || 0}
-                          size="sm"
-                        />
-                        <button
-                          onClick={() => {
-                            setDatasetToShare(d)
-                            setShareModalOpen(true)
-                          }}
-                          className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
-                          aria-label="Share dataset"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
+                          {userOwnsDataset(d.id) && (
+                            <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
+                              ✓ Owned
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FavoriteButton 
+                            datasetId={d.id} 
+                            initialCount={d.favorite_count || 0}
+                            size="sm"
+                          />
+                          <button
+                            onClick={() => {
+                              setDatasetToShare(d)
+                              setShareModalOpen(true)
+                            }}
+                            className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
+                            aria-label="Share dataset"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
+                      
+                      {/* Row 2: Action buttons */}
                       <div className="flex gap-2">
                         <button
                           onClick={() => setSelected(datasets.indexOf(d))}
-                          className="bg-white text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-200 text-sm transition-colors active:scale-95"
+                          className="bg-white text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-200 text-sm transition-colors active:scale-95 flex-1"
                         >
                           Details
                         </button>
                         {userOwnsDataset(d.id) ? (
                           <button
                             onClick={() => navigate('/dashboard')}
-                            className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95"
+                            className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95 flex-1"
                           >
                             View in Library
                           </button>
                         ) : !user ? (
                           <button
                             onClick={() => setSignInOpen(true)}
-                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
+                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
                           >
                             Sign Up to Buy
                           </button>
                         ) : !hasBetaAccess ? (
                           <button
                             onClick={() => navigate('/dashboard')}
-                            className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95"
+                            className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95 flex-1"
                           >
                             Get Beta Access
                           </button>
                         ) : (
                           <button
                             onClick={() => setCheckoutIdx(datasets.indexOf(d))}
-                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95"
+                            className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
                           >
                             {d.price === 0 ? 'Get Free' : 'Buy Now'}
                           </button>
