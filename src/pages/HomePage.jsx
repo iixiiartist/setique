@@ -461,9 +461,6 @@ function HomePage() {
           </a>
           {user ? (
             <>
-              {/* Notification Bell */}
-              <NotificationBell />
-              
               <button
                 onClick={() => navigate('/dashboard')}
                 className="font-bold text-black hover:text-cyan-600 transition flex items-center gap-1"
@@ -471,6 +468,10 @@ function HomePage() {
                 <User className="h-4 w-4" />
                 Dashboard
               </button>
+              
+              {/* Notification Bell */}
+              <NotificationBell />
+              
               <button
                 onClick={handleSignOut}
                 className="font-bold text-black hover:text-pink-600 transition flex items-center gap-1"
