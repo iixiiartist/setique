@@ -7,13 +7,11 @@ import { stripePromise } from '../lib/stripe'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import FeedbackModal from '../components/FeedbackModal'
-import FavoriteButton from '../components/FavoriteButton'
 import ShareModal from '../components/ShareModal'
 import NotificationBell from '../components/NotificationBell'
 import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
-  Database,
   Zap,
   X,
   Archive,
@@ -21,21 +19,7 @@ import {
   BrainCircuit,
   LogOut,
   User,
-  Share2,
 } from '../components/Icons'
-
-const badgeColors = {
-  verified: 'bg-blue-100 text-blue-800 border-blue-800',
-  expert: 'bg-purple-100 text-purple-800 border-purple-800',
-  master: 'bg-yellow-100 text-yellow-800 border-yellow-800'
-};
-
-const tierDisplayInfo = {
-  newcomer: { label: 'Open to All', badge: '🌟', color: 'bg-gray-100 text-gray-800 border-gray-600' },
-  verified: { label: 'Verified+', badge: '✓', color: 'bg-blue-100 text-blue-800 border-blue-600' },
-  expert: { label: 'Expert+', badge: '✓✓', color: 'bg-purple-100 text-purple-800 border-purple-600' },
-  master: { label: 'Master Only', badge: '⭐', color: 'bg-yellow-100 text-yellow-800 border-yellow-600' }
-};
 
 function HomePage() {
   const { user, signOut } = useAuth()
@@ -106,14 +90,12 @@ function HomePage() {
 
   // Data from Supabase
   const [datasets, setDatasets] = useState([])
-  const [bounties, setBounties] = useState([])
   const [topCurators, setTopCurators] = useState([])
   const [userPurchases, setUserPurchases] = useState([])
 
   // Fetch datasets
   useEffect(() => {
     fetchDatasets()
-    fetchBounties()
     fetchTopCurators()
     if (user) {
       fetchUserPurchases()
@@ -189,43 +171,6 @@ function HomePage() {
       setDatasets(data || [])
     } catch (error) {
       console.error('❌ Error fetching datasets:', error)
-    }
-  }
-
-  const fetchBounties = async () => {
-    try {
-      // Fetch top 5 newest bounties for featured section
-      const { data, error } = await supabase
-        .from('curation_requests')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      if (error) throw error
-      
-      // Fetch creator profiles separately
-      if (data && data.length > 0) {
-        const creatorIds = [...new Set(data.map(b => b.creator_id).filter(Boolean))];
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, username')
-          .in('id', creatorIds);
-        
-        // Attach profile data and map to old format
-        const bountiesWithProfiles = data.map(bounty => ({
-          ...bounty,
-          profiles: profilesData?.find(p => p.id === bounty.creator_id),
-          budget: bounty.budget_max || bounty.budget_min,
-          modality: bounty.modality || 'data'
-        }));
-        
-        setBounties(bountiesWithProfiles);
-      } else {
-        setBounties([]);
-      }
-    } catch (error) {
-      console.error('Error fetching bounties:', error)
     }
   }
 
@@ -1479,334 +1424,6 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Featured Section */}
-        {datasets.length > 0 && (
-          <section id="featured" className="max-w-7xl mx-auto mb-24">
-            <h3 className="text-4xl sm:text-5xl font-extrabold mb-8 text-black drop-shadow-[3px_3px_0_#fff] text-center">
-              Featured Collections
-            </h3>
-            <div className="grid lg:grid-cols-2 gap-10">
-              {datasets.slice(0, 2).map((d, idx) => (
-                <div
-                  key={d.id}
-                  className={`${d.accent_color} border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-6 flex flex-col sm:flex-row gap-6 items-center`}
-                >
-                  <div className="text-5xl">
-                    {idx === 0 ? '🏛️' : '⌨️'}
-                  </div>
-                  <div>
-                    <div className="text-xs font-extrabold uppercase bg-white/50 px-2 py-1 inline-block rounded-full border-2 border-black mb-2">
-                      Featured
-                    </div>
-                    <h4 className="text-2xl font-extrabold mb-2">{d.title}</h4>
-                    <p className="font-semibold text-black/80">{d.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Featured Datasets Section */}
-        <section id="featured-datasets" className="max-w-7xl mx-auto mb-24 pt-10">
-          <h3 className="text-4xl sm:text-5xl font-extrabold mb-4 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-            <Database className="h-10 w-10 text-pink-600" /> Featured Datasets
-          </h3>
-          <p className="text-lg font-semibold text-black/80 mb-8">
-            Discover our most popular unique datasets curated by experts
-          </p>
-          
-          {datasets.length > 0 ? (
-            <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {datasets.map((d) => (
-                  <div
-                    key={d.id}
-                    className={`${d.accent_color} border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] hover:scale-105 transition-transform flex flex-col`}
-                  >
-                    <div className="p-6 pb-2">
-                      <h4 className="text-2xl font-extrabold text-black uppercase">
-                        {d.title}
-                      </h4>
-                      {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
-                            <Star className="w-3 h-3 mr-1 fill-current" />
-                            PRO CURATOR
-                          </span>
-                          <span className="text-xs font-semibold text-black/70">
-                            by {d.dataset_partnerships[0].pro_curators.display_name}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6 pt-2 flex flex-col flex-grow">
-                      <p className="text-black/80 mb-4 text-sm leading-relaxed font-semibold flex-grow">
-                        {d.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {d.tags.slice(0, 3).map((t) => (
-                          <span
-                            key={t}
-                            className="text-xs font-extrabold px-2 py-1 border-2 border-black rounded-full bg-white"
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      {/* Card footer */}
-                      <div className="flex flex-col gap-3 mt-auto">
-                        {/* Row 1: Price, status badges, and social actions */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="bg-yellow-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-sm">
-                              {d.price === 0 ? 'FREE' : `$${d.price}`}
-                            </div>
-                            {userOwnsDataset(d.id) && (
-                              <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full shadow text-xs">
-                                ✓ Owned
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FavoriteButton 
-                              datasetId={d.id}
-                              datasetTitle={d.title}
-                              ownerId={d.user_id}
-                              initialCount={d.favorite_count || 0}
-                              size="sm"
-                            />
-                            <button
-                              onClick={() => {
-                                setDatasetToShare(d)
-                                setShareModalOpen(true)
-                              }}
-                              className="p-2 bg-cyan-400 text-black border-2 border-black rounded-full hover:bg-cyan-500 transition active:scale-95"
-                              aria-label="Share dataset"
-                            >
-                              <Share2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Row 2: Action buttons */}
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setSelected(datasets.indexOf(d))}
-                            className="bg-white text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-200 text-sm transition-colors active:scale-95 flex-1"
-                          >
-                            Details
-                          </button>
-                          {userOwnsDataset(d.id) ? (
-                            <button
-                              onClick={() => navigate('/dashboard')}
-                              className="bg-green-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-green-300 text-sm transition-colors active:scale-95 flex-1"
-                            >
-                              View in Library
-                            </button>
-                          ) : !user ? (
-                            <button
-                              onClick={() => setSignInOpen(true)}
-                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
-                            >
-                              Sign Up to Buy
-                            </button>
-                          ) : !hasBetaAccess ? (
-                            <button
-                              onClick={() => navigate('/dashboard')}
-                              className="bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-4 py-2 hover:bg-yellow-300 text-sm transition-colors active:scale-95 flex-1"
-                            >
-                              Get Beta Access
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setCheckoutIdx(datasets.indexOf(d))}
-                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 text-sm transition-opacity active:scale-95 flex-1"
-                            >
-                              {d.price === 0 ? 'Get Free' : 'Buy Now'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* View All CTA */}
-              <div className="text-center">
-                <button
-                  onClick={() => navigate('/datasets')}
-                  className="bg-gradient-to-r from-pink-400 to-cyan-400 text-white font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all"
-                >
-                  View All Datasets →
-                </button>
-                <p className="mt-4 text-sm font-semibold text-black/70">
-                  Browse hundreds of specialized datasets from expert curators
-                </p>
-              </div>
-            </>
-          ) : (
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">
-              <div className="text-6xl mb-4">�</div>
-              <h4 className="text-2xl font-extrabold text-black mb-3">
-                No Datasets Available Yet
-              </h4>
-              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
-                Be the first to curate! Share your expertise and earn 80% revenue share.
-              </p>
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setSignInOpen(true)
-                  } else {
-                    navigate('/dashboard')
-                  }
-                }}
-                className="bg-gradient-to-r from-cyan-400 to-pink-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-              >
-                {user ? 'Start Curating' : 'Sign Up to Curate'}
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* Featured Bounties Section */}
-        <section id="featured-bounties" className="max-w-7xl mx-auto mb-24 pt-10">
-          <h3 className="text-4xl sm:text-5xl font-extrabold mb-4 text-black drop-shadow-[3px_3px_0_#fff] flex items-center justify-center sm:justify-start gap-3">
-            <CircleDollarSign className="h-10 w-10 text-green-600" /> Featured Bounties
-          </h3>
-          <p className="text-lg font-semibold text-black/80 mb-8">
-            Get paid to curate custom datasets - check out our newest opportunities
-          </p>
-          
-          {bounties.length > 0 ? (
-            <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {bounties.map((bounty) => {
-                  const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
-                  return (
-                  <div
-                    key={bounty.id}
-                    className="bg-gradient-to-br from-green-100 to-cyan-100 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-6 hover:scale-105 transition-transform"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="text-xl font-extrabold text-black pr-2">
-                        {bounty.title}
-                      </h4>
-                      <div className="bg-green-400 text-black font-bold border-2 border-black px-3 py-1 rounded-full text-sm whitespace-nowrap">
-                        ${bounty.budget_min}-${bounty.budget_max}
-                      </div>
-                    </div>
-                    
-                    {/* Tier Badge */}
-                    <div className="mb-3">
-                      <span className={`text-xs font-bold px-2 py-1 border-2 rounded-full inline-flex items-center gap-1 ${tierInfo.color}`}>
-                        <span>{tierInfo.badge}</span>
-                        <span>{tierInfo.label}</span>
-                      </span>
-                    </div>
-
-                    <p className="text-sm font-semibold text-black/80 mb-4 line-clamp-3">
-                      {bounty.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {bounty.specialties_needed?.slice(0, 3).map((specialty, idx) => (
-                        <span
-                          key={idx}
-                          className="text-xs font-bold px-2 py-1 bg-white border-2 border-black rounded-full"
-                        >
-                          #{specialty}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between text-xs font-semibold text-black/70 mb-4">
-                      <span>Posted by {bounty.profiles?.username || 'Anonymous'}</span>
-                      <span className="uppercase bg-yellow-200 px-2 py-1 rounded border-2 border-black">
-                        {bounty.status}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setSelectedBounty(bounty)}
-                      className="w-full bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold border-2 border-black rounded-full px-4 py-2 hover:opacity-90 transition-opacity active:scale-95"
-                    >
-                      View Details
-                    </button>
-                  </div>
-                  );
-                })}
-              </div>
-              
-              {/* View All CTA */}
-              <div className="text-center">
-                <button
-                  onClick={() => navigate('/bounties')}
-                  className="bg-gradient-to-r from-green-400 to-cyan-400 text-white font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all"
-                >
-                  View All Bounties →
-                </button>
-                <p className="mt-4 text-sm font-semibold text-black/70">
-                  See all open bounties and earn money curating custom datasets
-                </p>
-              </div>
-            </>
-          ) : (
-            <div className="bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-black rounded-2xl shadow-[6px_6px_0_#000] p-12 text-center">
-              <div className="text-6xl mb-4">�</div>
-              <h4 className="text-2xl font-extrabold text-black mb-3">
-                No Active Bounties Right Now
-              </h4>
-              <p className="text-lg font-semibold text-black/70 mb-6 max-w-2xl mx-auto">
-                Be the first to post a bounty! Commission our community of expert curators to build the custom dataset your AI project needs.
-              </p>
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setSignInOpen(true)
-                  } else {
-                    navigate('/dashboard')
-                  }
-                }}
-                className="bg-gradient-to-r from-cyan-400 to-green-400 text-black font-extrabold text-lg px-8 py-3 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-              >
-                {user ? 'Post a Bounty' : 'Sign In to Post Bounty'}
-              </button>
-            </div>
-          )}
-        </section>
-
-        {/* Post Bounty CTA */}
-        <section id="bounties-cta" className="max-w-5xl mx-auto mb-24 pt-10">
-          <div className="bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0_#000]">
-            <div className="p-6 border-b-4 border-black bg-gradient-to-r from-yellow-300 to-pink-300">
-              <h3 className="text-4xl font-extrabold text-black">
-                Commission a Custom Dataset
-              </h3>
-              <p className="font-semibold text-black/80 mt-1">
-                Post a bounty and have our community of curators build the exact dataset your AI model needs.
-              </p>
-            </div>
-            <div className="p-8 text-center">
-              <p className="text-xl font-semibold mb-6 text-black">
-                Can't find what you need? Commission expert curators to build custom datasets tailored to your AI project.
-              </p>
-              <button
-                onClick={() => {
-                  if (!user) {
-                    setSignInOpen(true)
-                  } else {
-                    navigate('/dashboard')
-                  }
-                }}
-                className="bg-[linear-gradient(90deg,#00ffff,#ff00c3,#ffea00)] text-black font-extrabold text-lg px-12 py-4 rounded-full border-4 border-black hover:scale-105 transition-transform active:scale-100"
-              >
-                {user ? 'Go to Dashboard to Post Bounty' : 'Sign Up to Post Bounty'}
-              </button>
-            </div>
-          </div>
-        </section>
-
         {/* Leaderboard */}
         {topCurators.length > 0 && (
           <section id="leaderboard" className="max-w-4xl mx-auto mb-24 pt-10">
@@ -2121,8 +1738,8 @@ function HomePage() {
         onClose={() => setSubmissionBounty(null)}
         bounty={submissionBounty}
         onSuccess={() => {
-          // Refresh data after successful submission
-          fetchBounties()
+          // Close modal after successful submission
+          setSubmissionBounty(null)
         }}
       />
 
