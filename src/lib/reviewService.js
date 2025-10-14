@@ -131,10 +131,7 @@ export async function getDatasetReviews(datasetId, sortBy = 'recent', filterRati
     
     let query = supabase
       .from('dataset_reviews')
-      .select(`
-        *,
-        user:profiles!user_id(username, avatar_url, is_pro_curator)
-      `)
+      .select('*')
       .eq('dataset_id', datasetId);
 
     // Filter by rating if specified
@@ -168,8 +165,27 @@ export async function getDatasetReviews(datasetId, sortBy = 'recent', filterRati
 
     if (error) throw error;
 
+    // Fetch user profiles for all reviews
+    if (reviews && reviews.length > 0) {
+      const userIds = [...new Set(reviews.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url, is_pro_curator')
+        .in('id', userIds);
+
+      // Map profiles to reviews
+      const profileMap = {};
+      profiles?.forEach(profile => {
+        profileMap[profile.id] = profile;
+      });
+
+      reviews.forEach(review => {
+        review.user = profileMap[review.user_id] || { username: 'Unknown User' };
+      });
+    }
+
     // Enrich with user vote status if logged in
-    if (user && reviews) {
+    if (user && reviews && reviews.length > 0) {
       const reviewIds = reviews.map(r => r.id);
       const { data: votes } = await supabase
         .from('review_votes')
@@ -188,7 +204,7 @@ export async function getDatasetReviews(datasetId, sortBy = 'recent', filterRati
       });
     }
 
-    return { data: reviews, error: null, count };
+    return { data: reviews || [], error: null, count };
   } catch (error) {
     console.error('Error getting dataset reviews:', error);
     return { data: null, error, count: 0 };
@@ -299,8 +315,8 @@ export async function hasUserPurchased(datasetId) {
     const { data, error } = await supabase
       .from('purchases')
       .select('id')
-      .eq('dataset_id', datasetId)
       .eq('user_id', user.id)
+      .eq('dataset_id', datasetId)
       .eq('status', 'completed')
       .maybeSingle();
 
