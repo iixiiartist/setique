@@ -144,15 +144,15 @@ function DatasetComments({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-6 h-6" />
-          <h3 className="font-black text-xl">
+          <MessageSquare className="w-5 h-5" />
+          <h3 className="font-black text-lg">
             Comments
             {initialCommentCount > 0 && (
-              <span className="ml-2 text-gray-500 text-base">({initialCommentCount})</span>
+              <span className="ml-2 text-gray-500 text-sm">({initialCommentCount})</span>
             )}
           </h3>
         </div>
@@ -161,10 +161,10 @@ function DatasetComments({
         <button
           onClick={handleRefresh}
           disabled={isLoading}
-          className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+          className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
           aria-label="Refresh comments"
         >
-          <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -198,12 +198,12 @@ function DatasetComments({
 
       {/* Comments List */}
       {isLoading && comments.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="animate-spin text-4xl mb-4">⏳</div>
-          <div className="font-bold text-gray-600">Loading comments...</div>
+        <div className="text-center py-8">
+          <div className="animate-spin text-2xl mb-2">⏳</div>
+          <div className="font-bold text-gray-600 text-sm">Loading comments...</div>
         </div>
       ) : comments.length > 0 ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {comments.map((comment) => (
             <CommentThread
               key={comment.id}
@@ -240,14 +240,14 @@ function DatasetComments({
         </div>
       ) : (
         !isLoading && (
-          <div className="bg-gray-50 border-4 border-black p-12 text-center">
-            <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h4 className="font-black text-lg text-gray-700 mb-2">No comments yet</h4>
-            <p className="text-gray-600 mb-4">
-              Be the first to share your thoughts about this dataset!
+          <div className="bg-gray-50 border-2 border-black p-6 text-center rounded-lg">
+            <MessageSquare className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+            <h4 className="font-black text-sm text-gray-700 mb-1">No comments yet</h4>
+            <p className="text-gray-600 text-xs mb-2">
+              Be the first to share your thoughts!
             </p>
             {!currentUserId && (
-              <p className="text-sm text-gray-500 italic">
+              <p className="text-xs text-gray-500 italic">
                 Sign in to start the conversation
               </p>
             )}

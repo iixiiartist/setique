@@ -698,95 +698,105 @@ export default function DatasetsPage() {
           onClick={() => setSelected(null)}
         >
           <div
-            className="bg-white border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] p-8 max-w-2xl w-full my-8"
+            className="bg-white border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] p-6 max-w-6xl w-full my-8 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <div className="flex justify-between items-start mb-6">
-              <h2 className="text-3xl font-extrabold text-black">
+              <h2 className="text-2xl font-extrabold text-black pr-8">
                 {datasets[selected].title}
               </h2>
               <button
                 onClick={() => setSelected(null)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-bold text-lg mb-2">Description</h3>
-                <p className="text-black/80">{datasets[selected].description}</p>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-2">Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  {datasets[selected].tags.map((t) => (
-                    <span
-                      key={t}
-                      className="text-sm font-bold px-3 py-1 border-2 border-black rounded-full bg-yellow-200"
+
+            {/* Two-column layout: Dataset info on left, Comments on right */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Left Column: Dataset Details */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Description</h3>
+                  <p className="text-black/80 text-sm">{datasets[selected].description}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Categories</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {datasets[selected].tags.map((t) => (
+                      <span
+                        key={t}
+                        className="text-xs font-bold px-2 py-1 border-2 border-black rounded-full bg-yellow-200"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Details</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-gray-50 border-2 border-black p-3 rounded-lg">
+                      <p className="text-xs text-black/60 mb-1">Price</p>
+                      <p className="font-bold text-lg">
+                        {datasets[selected].price === 0
+                          ? 'FREE'
+                          : `$${datasets[selected].price}`}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 border-2 border-black p-3 rounded-lg">
+                      <p className="text-xs text-black/60 mb-1">File Size</p>
+                      <p className="font-bold text-lg">{datasets[selected].file_size_mb} MB</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="pt-4">
+                  {userOwnsDataset(datasets[selected].id) ? (
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="w-full bg-green-400 text-black font-bold border-2 border-black rounded-full px-6 py-3 hover:bg-green-300 transition-colors text-sm"
                     >
-                      #{t}
-                    </span>
-                  ))}
+                      View in Library
+                    </button>
+                  ) : !user ? (
+                    <button
+                      onClick={() => {
+                        setSelected(null)
+                        setSignInOpen(true)
+                      }}
+                      className="w-full bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 transition-opacity text-sm"
+                    >
+                      Sign Up to Buy
+                    </button>
+                  ) : !hasBetaAccess ? (
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="w-full bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-6 py-3 hover:bg-yellow-300 transition-colors text-sm"
+                    >
+                      Get Beta Access
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setCheckoutIdx(selected)
+                        setSelected(null)
+                      }}
+                      className="w-full bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 transition-opacity text-sm"
+                    >
+                      {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-2">Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-black/60">Price</p>
-                    <p className="font-bold text-lg">
-                      {datasets[selected].price === 0
-                        ? 'FREE'
-                        : `$${datasets[selected].price}`}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-black/60">File Size</p>
-                    <p className="font-bold text-lg">{datasets[selected].file_size_mb} MB</p>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-4 border-t-2 border-black">
-                {userOwnsDataset(datasets[selected].id) ? (
-                  <button
-                    onClick={() => navigate('/dashboard')}
-                    className="w-full bg-green-400 text-black font-bold border-2 border-black rounded-full px-6 py-3 hover:bg-green-300 transition-colors"
-                  >
-                    View in Library
-                  </button>
-                ) : !user ? (
-                  <button
-                    onClick={() => {
-                      setSelected(null)
-                      setSignInOpen(true)
-                    }}
-                    className="w-full bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 transition-opacity"
-                  >
-                    Sign Up to Buy
-                  </button>
-                ) : !hasBetaAccess ? (
-                  <button
-                    onClick={() => navigate('/dashboard')}
-                    className="w-full bg-yellow-400 text-black font-bold border-2 border-black rounded-full px-6 py-3 hover:bg-yellow-300 transition-colors"
-                  >
-                    Get Beta Access
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setCheckoutIdx(selected)
-                      setSelected(null)
-                    }}
-                    className="w-full bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold border-2 border-black rounded-full px-6 py-3 hover:opacity-90 transition-opacity"
-                  >
-                    {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
-                  </button>
-                )}
               </div>
 
-              {/* Comments Section */}
-              <div className="pt-6 border-t-2 border-black mt-6">
+              {/* Right Column: Comments Section (Compact) */}
+              <div className="border-l-0 md:border-l-4 border-black pl-0 md:pl-6">
                 <DatasetComments
                   datasetId={datasets[selected].id}
                   datasetOwnerId={datasets[selected].creator_id}

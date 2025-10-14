@@ -71,35 +71,35 @@ function CommentItem({
   };
 
   return (
-    <div className={`${indentClass} mb-4`}>
+    <div className={`${indentClass} mb-3`}>
       {/* Comment Card */}
-      <div className="bg-white border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-        <div className="p-4">
+      <div className="bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+        <div className="p-3">
           {/* Header: User info and actions */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
               {/* Avatar */}
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-500 border-2 border-black rounded-full flex items-center justify-center text-white font-black text-sm">
+              <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-purple-500 border-2 border-black rounded-full flex items-center justify-center text-white font-black text-xs">
                 {displayName.charAt(0).toUpperCase()}
               </div>
 
               {/* User info */}
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-sm">{displayName}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-xs">{displayName}</span>
                   {comment.username && (
-                    <span className="text-xs text-gray-500">@{comment.username}</span>
+                    <span className="text-[10px] text-gray-500">@{comment.username}</span>
                   )}
                   {comment.is_pro_curator && (
-                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-black px-2 py-0.5 border-2 border-black">
+                    <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-black px-1.5 py-0.5 border border-black rounded">
                       PRO
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-600">
+                <div className="text-[10px] text-gray-600">
                   {formatCommentTime(comment.created_at)}
                   {comment.edited && (
-                    <span className="ml-2 italic text-gray-500">(edited)</span>
+                    <span className="ml-1 italic text-gray-500">(edited)</span>
                   )}
                 </div>
               </div>
@@ -189,7 +189,7 @@ function CommentItem({
           </div>
 
           {/* Comment Content */}
-          <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+          <div className="text-xs leading-relaxed whitespace-pre-wrap break-words">
             {comment.content}
           </div>
 
