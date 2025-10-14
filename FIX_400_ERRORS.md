@@ -11,6 +11,8 @@ You're seeing these errors:
 
 The `log_user_activity` RPC function doesn't exist in your Supabase database. The activity feed system migration hasn't been applied yet.
 
+**UPDATE**: The migration file was also missing `'comment_added'` activity type in the validation constraint, which would cause comments to fail even after applying the migration. This has been fixed!
+
 ---
 
 ## ✅ Solution: Apply Missing Migrations
@@ -24,8 +26,9 @@ You need to apply **TWO** critical SQL migrations:
 
 ### 2. Activity Feed Migration (CRITICAL) ⭐⭐⭐
 **File**: `sql/migrations/add_activity_feed_system.sql`  
-**Status**: ❌ NOT APPLIED  
-**Impact**: All activity logging fails with 400 errors
+**Status**: ❌ NOT APPLIED (and just fixed!)  
+**Impact**: All activity logging fails with 400 errors  
+**Fixed**: Added missing `'comment_added'` activity type to validation constraint
 
 ---
 

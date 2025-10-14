@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS user_activities (
       'bounty_submission',
       'proposal_submitted',
       'dataset_favorited',
-      'curator_certified'
+      'curator_certified',
+      'comment_added'
     )
   ),
   
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS user_activities (
       'user',
       'bounty',
       'proposal',
-      'submission'
+      'submission',
+      'comment'
     )
   )
 );
@@ -235,6 +237,6 @@ BEGIN
   RAISE NOTICE '✅ Activity feed system created successfully!';
   RAISE NOTICE 'Tables: user_activities';
   RAISE NOTICE 'Functions: log_user_activity(), get_activity_feed()';
-  RAISE NOTICE 'Activity types: dataset_published, dataset_purchased, user_followed, bounty_created, etc.';
+  RAISE NOTICE 'Activity types: dataset_published, dataset_purchased, user_followed, bounty_created, bounty_submission, proposal_submitted, dataset_favorited, curator_certified, comment_added';
   RAISE NOTICE 'RLS: Enabled with user and follower policies';
 END $$;
