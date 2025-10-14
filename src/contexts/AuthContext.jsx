@@ -95,30 +95,23 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      // Clear local state immediately for better UX
-      setUser(null)
-      setProfile(null)
-      
-      // Attempt to sign out from Supabase
-      const { error } = await supabase.auth.signOut()
+      // Sign out from Supabase - this will trigger onAuthStateChange
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
       
       // Ignore "Auth session missing" error - it means already signed out
-      if (error && error.message !== 'Auth session missing!') {
-        console.warn('Sign out error (non-critical):', error)
+      if (error && !error.message.includes('Auth session missing')) {
+        throw error
       }
       
-      // Force clear any remaining session data
-      localStorage.removeItem('supabase.auth.token')
-      
-      // Redirect to home page
-      window.location.href = '/'
+      // Clear state immediately
+      setUser(null)
+      setProfile(null)
     } catch (error) {
       console.error('Error signing out:', error)
       
-      // Still clear state and redirect even on error
+      // Force clear state even on error
       setUser(null)
       setProfile(null)
-      window.location.href = '/'
     }
   }
 
