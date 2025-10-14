@@ -45,13 +45,22 @@ export async function logActivity(userId, activityType, targetId = null, targetT
     });
 
     if (error) {
-      console.error('Error logging activity:', error);
+      console.error('Error logging activity:', {
+        error: error,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('Exception logging activity:', error);
+    console.error('Exception logging activity:', {
+      message: error.message || error.toString(),
+      error: error
+    });
     return null;
   }
 }
