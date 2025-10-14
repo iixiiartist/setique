@@ -168,19 +168,44 @@ export async function getDatasetReviews(datasetId, sortBy = 'recent', filterRati
     // Fetch user profiles for all reviews
     if (reviews && reviews.length > 0) {
       const userIds = [...new Set(reviews.map(r => r.user_id))];
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, is_pro_curator')
+        .select('id, username, avatar_url, display_name')
         .in('id', userIds);
 
-      // Map profiles to reviews
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
+      }
+
+      // Fetch pro curator status separately
+      const { data: proCurators } = await supabase
+        .from('pro_curators')
+        .select('user_id, badge_level')
+        .in('user_id', userIds)
+        .eq('certification_status', 'approved');
+
+      // Map profiles and pro curator status to reviews
       const profileMap = {};
       profiles?.forEach(profile => {
         profileMap[profile.id] = profile;
       });
 
+      const proCuratorMap = {};
+      proCurators?.forEach(pc => {
+        proCuratorMap[pc.user_id] = pc.badge_level;
+      });
+
       reviews.forEach(review => {
-        review.user = profileMap[review.user_id] || { username: 'Unknown User' };
+        const profile = profileMap[review.user_id];
+        if (profile) {
+          review.user = {
+            ...profile,
+            is_pro_curator: !!proCuratorMap[review.user_id],
+            badge_level: proCuratorMap[review.user_id]
+          };
+        } else {
+          review.user = { username: 'Unknown User' };
+        }
       });
     }
 
