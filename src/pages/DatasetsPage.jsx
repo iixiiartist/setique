@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
@@ -32,6 +32,7 @@ const badgeColors = {
 export default function DatasetsPage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // General state
   const [query, setQuery] = useState('')
@@ -238,6 +239,27 @@ export default function DatasetsPage() {
       document.body.style.overflow = 'unset'
     }
   }, [selected, checkoutIdx, isSignInOpen])
+
+  // Handle URL parameters for opening modal with specific dataset and tab
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const datasetId = searchParams.get('id')
+    const tab = searchParams.get('tab')
+
+    if (datasetId && datasets.length > 0 && !selected) {
+      // Find the dataset by ID
+      const dataset = datasets.find(d => d.id === datasetId)
+      if (dataset) {
+        setSelected(dataset)
+        // Set the active tab if specified (default to 'overview')
+        if (tab && ['overview', 'comments', 'reviews'].includes(tab)) {
+          setActiveTab(tab)
+        } else {
+          setActiveTab('overview')
+        }
+      }
+    }
+  }, [location.search, datasets, selected])
 
   const handleCheckout = async () => {
     if (!user) {

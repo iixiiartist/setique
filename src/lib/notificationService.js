@@ -193,12 +193,24 @@ export async function getAllNotifications(
         if (notification.actor_id) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('username, display_name, avatar_url, is_pro_curator')
+            .select('username, display_name, avatar_url')
             .eq('id', notification.actor_id)
             .single();
           
           if (profile) {
-            enriched.actor = profile;
+            // Check if actor is a pro curator
+            const { data: proCurator } = await supabase
+              .from('pro_curators')
+              .select('badge_level')
+              .eq('user_id', notification.actor_id)
+              .eq('certification_status', 'approved')
+              .maybeSingle();
+            
+            enriched.actor = {
+              ...profile,
+              is_pro_curator: !!proCurator,
+              badge_level: proCurator?.badge_level
+            };
           }
         }
 
@@ -213,6 +225,24 @@ export async function getAllNotifications(
             
             if (dataset) {
               enriched.dataset = dataset;
+            }
+          } else if (notification.target_type === 'review') {
+            // For review notifications, get the review and its dataset
+            const { data: review } = await supabase
+              .from('dataset_reviews')
+              .select('id, dataset_id, rating, datasets:dataset_id(id, title)')
+              .eq('id', notification.target_id)
+              .single();
+            
+            if (review?.datasets) {
+              enriched.dataset = {
+                id: review.dataset_id,
+                title: review.datasets.title
+              };
+              enriched.review = {
+                id: review.id,
+                rating: review.rating
+              };
             }
           } else if (notification.target_type === 'comment') {
             // For comment notifications, get the comment and its dataset

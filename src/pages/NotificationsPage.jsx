@@ -128,6 +128,25 @@ export default function NotificationsPage() {
           }
         }
         break;
+      case 'review_added':
+        // Navigate to dataset reviews tab
+        if (notification.dataset?.id) {
+          navigate(`/datasets?id=${notification.dataset.id}&tab=reviews`);
+        } else if (notification.target_type === 'review' && notification.target_id) {
+          // Fetch dataset_id from review
+          const { data: review } = await supabase
+            .from('dataset_reviews')
+            .select('dataset_id')
+            .eq('id', notification.target_id)
+            .single();
+          
+          if (review?.dataset_id) {
+            navigate(`/datasets?id=${review.dataset_id}&tab=reviews`);
+          }
+        } else if (notification.target_type === 'dataset' && notification.target_id) {
+          navigate(`/datasets?id=${notification.target_id}&tab=reviews`);
+        }
+        break;
       default:
         break;
     }
@@ -337,6 +356,7 @@ export default function NotificationsPage() {
                                   {notification.activity_type === 'dataset_favorited' && ' favorited '}
                                   {notification.activity_type === 'user_followed' && ' followed you'}
                                   {notification.activity_type === 'bounty_submission' && ' submitted to '}
+                                  {notification.activity_type === 'review_added' && ' reviewed '}
                                 </span>
                                 {notification.dataset?.title && (
                                   <span className="text-purple-600 hover:underline font-bold">

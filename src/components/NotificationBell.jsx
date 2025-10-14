@@ -146,6 +146,26 @@ export default function NotificationBell() {
           }
         }
         break;
+      case 'review_added':
+        // Navigate to dataset reviews tab
+        if (notification.target_type === 'dataset' || notification.target_type === 'review') {
+          // For reviews, target_id might be review_id, so we need to fetch dataset_id
+          if (notification.target_type === 'review') {
+            const { data: review } = await supabase
+              .from('dataset_reviews')
+              .select('dataset_id')
+              .eq('id', notification.target_id)
+              .single();
+            
+            if (review?.dataset_id) {
+              navigate(`/datasets?id=${review.dataset_id}&tab=reviews`);
+            }
+          } else {
+            // If target_type is 'dataset', use target_id directly
+            navigate(`/datasets?id=${notification.target_id}&tab=reviews`);
+          }
+        }
+        break;
       default:
         // Just close dropdown
         break;
