@@ -90,13 +90,11 @@ function HomePage() {
 
   // Data from Supabase
   const [datasets, setDatasets] = useState([])
-  const [topCurators, setTopCurators] = useState([])
   const [userPurchases, setUserPurchases] = useState([])
 
   // Fetch datasets
   useEffect(() => {
     fetchDatasets()
-    fetchTopCurators()
     if (user) {
       fetchUserPurchases()
     }
@@ -171,36 +169,6 @@ function HomePage() {
       setDatasets(data || [])
     } catch (error) {
       console.error('❌ Error fetching datasets:', error)
-    }
-  }
-
-  const fetchTopCurators = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('datasets')
-        .select('creator_id, profiles:creator_id(username), price, purchase_count')
-
-      if (error) throw error
-
-      // Calculate earnings per curator
-      const curatorMap = {}
-      data.forEach((dataset) => {
-        const username = dataset.profiles?.username || 'Anonymous'
-        if (!curatorMap[username]) {
-          curatorMap[username] = 0
-        }
-        curatorMap[username] += dataset.price * dataset.purchase_count
-      })
-
-      // Convert to array and sort
-      const curators = Object.entries(curatorMap)
-        .map(([name, earnings]) => ({ name, earnings }))
-        .sort((a, b) => b.earnings - a.earnings)
-        .slice(0, 3)
-
-      setTopCurators(curators)
-    } catch (error) {
-      console.error('Error fetching top curators:', error)
     }
   }
 
@@ -1423,31 +1391,6 @@ function HomePage() {
             </div>
           </div>
         </section>
-
-        {/* Leaderboard */}
-        {topCurators.length > 0 && (
-          <section id="leaderboard" className="max-w-4xl mx-auto mb-24 pt-10">
-            <h3 className="text-5xl font-extrabold mb-8 flex items-center gap-3 text-black drop-shadow-[3px_3px_0_#fff]">
-              <Star className="h-8 w-8 text-cyan-400 animate-pulse" /> Top
-              Curators
-            </h3>
-            <div className="bg-cyan-200 rounded-3xl border-4 border-black divide-y-4 divide-black shadow-[8px_8px_0_#000] overflow-hidden">
-              {topCurators.map((curator, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center p-6 hover:bg-yellow-300 transition font-extrabold text-xl text-black"
-                >
-                  <span>
-                    #{idx + 1}. {curator.name}
-                  </span>
-                  <span className="text-lg font-bold bg-white/50 px-3 py-1 rounded-full border-2 border-black">
-                    ${curator.earnings.toFixed(0)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Toolkit */}
         <section id="toolkit" className="max-w-5xl mx-auto mb-24 text-center pt-10">

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import { Search, Sparkles, TrendingUp, User as UserIcon, CheckCircle, AlertCircle } from '../components/Icons'
+import { Search, Sparkles, TrendingUp, User as UserIcon, CheckCircle, AlertCircle, Star } from '../components/Icons'
 import TrustLevelBadge from '../components/TrustLevelBadge'
 
 const filterOptions = [
@@ -45,6 +45,7 @@ export default function UserDiscoveryPage() {
   const navigate = useNavigate()
 
   const [profiles, setProfiles] = useState([])
+  const [topCurators, setTopCurators] = useState([])
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -115,8 +116,39 @@ export default function UserDiscoveryPage() {
     }
   }, [])
 
+  const fetchTopCurators = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('datasets')
+        .select('creator_id, profiles:creator_id(username), price, purchase_count')
+
+      if (error) throw error
+
+      // Calculate earnings per curator
+      const curatorMap = {}
+      data.forEach((dataset) => {
+        const username = dataset.profiles?.username || 'Anonymous'
+        if (!curatorMap[username]) {
+          curatorMap[username] = 0
+        }
+        curatorMap[username] += dataset.price * dataset.purchase_count
+      })
+
+      // Convert to array and sort
+      const curators = Object.entries(curatorMap)
+        .map(([name, earnings]) => ({ name, earnings }))
+        .sort((a, b) => b.earnings - a.earnings)
+        .slice(0, 3)
+
+      setTopCurators(curators)
+    } catch (error) {
+      console.error('Error fetching top curators:', error)
+    }
+  }
+
   useEffect(() => {
     loadProfiles()
+    fetchTopCurators()
   }, [loadProfiles])
 
   useEffect(() => {
@@ -556,6 +588,34 @@ export default function UserDiscoveryPage() {
           <div className="bg-red-100 border-4 border-black text-red-700 px-6 py-4 font-semibold">
             {errorMessage}
           </div>
+        )}
+
+        {/* Leaderboard */}
+        {topCurators.length > 0 && (
+          <section className="bg-white border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Star className="w-6 h-6 text-cyan-500" />
+              <h2 className="text-2xl font-black">Top Curators</h2>
+            </div>
+            <p className="text-sm text-gray-600 mb-6 font-semibold">
+              The highest earning curators on SETIQUE. Follow them to discover premium datasets.
+            </p>
+            <div className="space-y-3">
+              {topCurators.map((curator, idx) => (
+                <div
+                  key={idx}
+                  className="border-4 border-black bg-cyan-100 hover:bg-cyan-200 transition px-5 py-4 flex justify-between items-center"
+                >
+                  <span className="font-bold text-lg">
+                    #{idx + 1}. {curator.name}
+                  </span>
+                  <span className="text-base font-bold bg-white px-3 py-1 border-2 border-black">
+                    ${curator.earnings.toFixed(0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {user && recommendedProfiles.length > 0 && (
