@@ -289,7 +289,7 @@ export async function hasUserReviewed(datasetId) {
 
 /**
  * Check if current user has purchased a dataset
- * This checks the dataset_purchases table
+ * This checks the purchases table
  */
 export async function hasUserPurchased(datasetId) {
   try {
@@ -297,10 +297,10 @@ export async function hasUserPurchased(datasetId) {
     if (!user) return { data: false, error: null };
 
     const { data, error } = await supabase
-      .from('dataset_purchases')
+      .from('purchases')
       .select('id')
       .eq('dataset_id', datasetId)
-      .eq('buyer_id', user.id)
+      .eq('user_id', user.id)
       .eq('status', 'completed')
       .maybeSingle();
 
