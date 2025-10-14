@@ -17,6 +17,7 @@ import { createNotification, generateNotificationMessage } from './notificationS
  * - proposal_submitted: Pro curator submitted a proposal
  * - dataset_favorited: User favorited a dataset
  * - curator_certified: User became a pro curator
+ * - comment_added: User commented on a dataset
  */
 
 /**
@@ -282,6 +283,29 @@ export async function logCuratorCertified(userId, badgeLevel) {
     'user',
     { badge_level: badgeLevel }
   );
+}
+
+/**
+ * Log comment added activity
+ * Also creates notification for dataset owner and parent comment author (if reply)
+ */
+export async function logCommentAdded(userId, commentId, datasetId, datasetTitle, parentCommentId = null) {
+  const activityId = await logActivity(
+    userId,
+    'comment_added',
+    commentId,
+    'comment',
+    { 
+      dataset_id: datasetId,
+      dataset_title: datasetTitle,
+      is_reply: !!parentCommentId
+    }
+  );
+
+  // Note: Notifications are already handled in the SQL function add_dataset_comment()
+  // But we keep this for activity feed tracking
+
+  return activityId;
 }
 
 /**

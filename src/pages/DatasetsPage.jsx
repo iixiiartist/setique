@@ -8,6 +8,7 @@ import { SignInModal } from '../components/SignInModal'
 import FavoriteButton from '../components/FavoriteButton'
 import ShareModal from '../components/ShareModal'
 import NotificationBell from '../components/NotificationBell'
+import DatasetComments from '../components/comments/DatasetComments'
 import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
@@ -49,6 +50,7 @@ export default function DatasetsPage() {
   // Data from Supabase
   const [datasets, setDatasets] = useState([])
   const [userPurchases, setUserPurchases] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -116,9 +118,34 @@ export default function DatasetsPage() {
     fetchDatasets()
     if (user) {
       fetchUserPurchases()
+      checkAdminStatus()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
+
+  const checkAdminStatus = async () => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (error || !data) {
+        setIsAdmin(false)
+      } else {
+        setIsAdmin(true)
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setIsAdmin(false)
+    }
+  }
 
   const fetchUserPurchases = async () => {
     if (!user) return
@@ -756,6 +783,18 @@ export default function DatasetsPage() {
                     {datasets[selected].price === 0 ? 'Get Free' : 'Buy Now'}
                   </button>
                 )}
+              </div>
+
+              {/* Comments Section */}
+              <div className="pt-6 border-t-2 border-black mt-6">
+                <DatasetComments
+                  datasetId={datasets[selected].id}
+                  datasetOwnerId={datasets[selected].creator_id}
+                  datasetTitle={datasets[selected].title}
+                  currentUserId={user?.id}
+                  isAdmin={isAdmin}
+                  initialCommentCount={datasets[selected].comment_count || 0}
+                />
               </div>
             </div>
           </div>
