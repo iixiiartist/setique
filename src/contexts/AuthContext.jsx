@@ -99,17 +99,28 @@ export const AuthProvider = ({ children }) => {
       setUser(null)
       setProfile(null)
       
-      // Sign out from Supabase - this will trigger onAuthStateChange
-      const { error } = await supabase.auth.signOut()
-      
-      // Ignore "Auth session missing" error - it means already signed out
-      if (error && !error.message.includes('Auth session missing')) {
-        console.warn('Sign out warning:', error)
-        // Don't throw - still want to clear state
+      // Try to sign out from Supabase
+      try {
+        await supabase.auth.signOut()
+      } catch (signOutError) {
+        // Log the error but don't block the sign out
+        console.warn('Supabase sign out API error (ignoring):', signOutError)
       }
+      
+      // Force clear all Supabase auth storage as fallback
+      try {
+        // Clear all possible auth storage keys
+        const keysToRemove = Object.keys(localStorage).filter(key => 
+          key.includes('supabase') || key.includes('sb-')
+        )
+        keysToRemove.forEach(key => localStorage.removeItem(key))
+      } catch (storageError) {
+        console.warn('Storage clear error (ignoring):', storageError)
+      }
+      
     } catch (error) {
-      console.error('Error signing out:', error)
-      // State is already cleared above, so user experience is fine
+      console.error('Error in sign out flow:', error)
+      // State is already cleared, user experience should still be fine
     }
   }
 
