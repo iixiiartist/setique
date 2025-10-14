@@ -589,7 +589,7 @@ export default function DatasetsPage() {
                           <FavoriteButton 
                             datasetId={d.id}
                             datasetTitle={d.title}
-                            ownerId={d.user_id}
+                            ownerId={d.creator_id}
                             initialCount={d.favorite_count || 0}
                             size="sm"
                           />

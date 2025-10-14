@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Trash2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import {
   getAllNotifications,
   markAsRead,
@@ -111,8 +112,20 @@ export default function NotificationsPage() {
         }
         break;
       case 'user_followed':
-        if (notification.actor_id) {
-          navigate(`/profile/${notification.actor_id}`);
+        // Navigate to actor's profile using their username
+        if (notification.actor?.username) {
+          navigate(`/profile/${notification.actor.username}`);
+        } else if (notification.actor_id) {
+          // Fallback: fetch username if not in enriched data
+          const { data: actorProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', notification.actor_id)
+            .single();
+          
+          if (actorProfile?.username) {
+            navigate(`/profile/${actorProfile.username}`);
+          }
         }
         break;
       default:
