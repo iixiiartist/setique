@@ -95,23 +95,21 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Clear state first for immediate UI feedback
+      setUser(null)
+      setProfile(null)
+      
       // Sign out from Supabase - this will trigger onAuthStateChange
-      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      const { error } = await supabase.auth.signOut()
       
       // Ignore "Auth session missing" error - it means already signed out
       if (error && !error.message.includes('Auth session missing')) {
-        throw error
+        console.warn('Sign out warning:', error)
+        // Don't throw - still want to clear state
       }
-      
-      // Clear state immediately
-      setUser(null)
-      setProfile(null)
     } catch (error) {
       console.error('Error signing out:', error)
-      
-      // Force clear state even on error
-      setUser(null)
-      setProfile(null)
+      // State is already cleared above, so user experience is fine
     }
   }
 
