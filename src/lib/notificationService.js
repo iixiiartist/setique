@@ -167,8 +167,7 @@ export async function getAllNotifications(
         target_type,
         message,
         read,
-        created_at,
-        actor:profiles!actor_id(username, avatar_url)
+        created_at
       `, { count: 'exact' })
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
