@@ -40,10 +40,10 @@ CREATE TABLE IF NOT EXISTS dataset_reviews (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_reviews_dataset ON dataset_reviews(dataset_id, created_at DESC);
-CREATE INDEX idx_reviews_user ON dataset_reviews(user_id, created_at DESC);
-CREATE INDEX idx_reviews_rating ON dataset_reviews(dataset_id, rating DESC);
-CREATE INDEX idx_reviews_helpful ON dataset_reviews(dataset_id, helpful_count DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_dataset ON dataset_reviews(dataset_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_user ON dataset_reviews(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_rating ON dataset_reviews(dataset_id, rating DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_helpful ON dataset_reviews(dataset_id, helpful_count DESC);
 
 -- ============================================================================
 -- CREATE REVIEW_VOTES TABLE
@@ -61,8 +61,8 @@ CREATE TABLE IF NOT EXISTS review_votes (
 );
 
 -- Create index for vote lookups
-CREATE INDEX idx_review_votes_review ON review_votes(review_id);
-CREATE INDEX idx_review_votes_user ON review_votes(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_votes_review ON review_votes(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_votes_user ON review_votes(user_id);
 
 -- ============================================================================
 -- TRIGGERS TO UPDATE DATASET RATING STATS
@@ -161,12 +161,14 @@ ALTER TABLE dataset_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE review_votes ENABLE ROW LEVEL SECURITY;
 
 -- Reviews: Anyone can read
+DROP POLICY IF EXISTS "Anyone can read reviews" ON dataset_reviews;
 CREATE POLICY "Anyone can read reviews"
 ON dataset_reviews FOR SELECT
 TO authenticated, anon
 USING (true);
 
 -- Reviews: Authenticated users who purchased can create
+DROP POLICY IF EXISTS "Purchasers can create reviews" ON dataset_reviews;
 CREATE POLICY "Purchasers can create reviews"
 ON dataset_reviews FOR INSERT
 TO authenticated
@@ -181,6 +183,7 @@ WITH CHECK (
 );
 
 -- Reviews: Users can update their own reviews (within 30 days)
+DROP POLICY IF EXISTS "Users can update own reviews" ON dataset_reviews;
 CREATE POLICY "Users can update own reviews"
 ON dataset_reviews FOR UPDATE
 TO authenticated
@@ -191,12 +194,14 @@ USING (
 WITH CHECK (auth.uid() = user_id);
 
 -- Reviews: Users can delete their own reviews
+DROP POLICY IF EXISTS "Users can delete own reviews" ON dataset_reviews;
 CREATE POLICY "Users can delete own reviews"
 ON dataset_reviews FOR DELETE
 TO authenticated
 USING (auth.uid() = user_id);
 
 -- Reviews: Admins can manage all reviews
+DROP POLICY IF EXISTS "Admins can manage all reviews" ON dataset_reviews;
 CREATE POLICY "Admins can manage all reviews"
 ON dataset_reviews FOR ALL
 TO authenticated
@@ -208,18 +213,21 @@ USING (
 );
 
 -- Vote Policies: Anyone can read votes
+DROP POLICY IF EXISTS "Anyone can read votes" ON review_votes;
 CREATE POLICY "Anyone can read votes"
 ON review_votes FOR SELECT
 TO authenticated, anon
 USING (true);
 
 -- Vote Policies: Authenticated users can vote
+DROP POLICY IF EXISTS "Users can vote on reviews" ON review_votes;
 CREATE POLICY "Users can vote on reviews"
 ON review_votes FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid() = user_id);
 
 -- Vote Policies: Users can update their own votes
+DROP POLICY IF EXISTS "Users can update own votes" ON review_votes;
 CREATE POLICY "Users can update own votes"
 ON review_votes FOR UPDATE
 TO authenticated
@@ -227,6 +235,7 @@ USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 
 -- Vote Policies: Users can delete their own votes
+DROP POLICY IF EXISTS "Users can delete own votes" ON review_votes;
 CREATE POLICY "Users can delete own votes"
 ON review_votes FOR DELETE
 TO authenticated
