@@ -87,16 +87,33 @@ export default function NotificationsPage() {
       );
     }
 
-    // Navigate based on target type
-    switch (notification.target_type) {
-      case 'dataset':
-        navigate(`/dataset/${notification.target_id}`);
+    // Navigate based on activity type and target
+    switch (notification.activity_type) {
+      case 'comment_added':
+      case 'comment_reply':
+        // Navigate to dataset page with comment highlighted
+        if (notification.dataset?.id) {
+          navigate(`/datasets?id=${notification.dataset.id}`);
+        } else if (notification.target_type === 'dataset' && notification.target_id) {
+          navigate(`/datasets?id=${notification.target_id}`);
+        }
         break;
-      case 'bounty':
-        navigate(`/bounties/${notification.target_id}`);
+      case 'dataset_purchased':
+      case 'dataset_favorited':
+        if (notification.target_id) {
+          navigate(`/datasets?id=${notification.target_id}`);
+        }
         break;
-      case 'user':
-        navigate(`/profile/${notification.actor_id}`);
+      case 'bounty_submission':
+      case 'proposal_submitted':
+        if (notification.target_id) {
+          navigate(`/bounties/${notification.target_id}`);
+        }
+        break;
+      case 'user_followed':
+        if (notification.actor_id) {
+          navigate(`/profile/${notification.actor_id}`);
+        }
         break;
       default:
         break;
@@ -260,28 +277,80 @@ export default function NotificationsPage() {
                       }`}
                     >
                       <div className="flex gap-4">
-                        {/* Activity Icon */}
-                        <div
-                          className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full ${style.color}`}
-                        >
-                          <span className="text-2xl">{style.icon}</span>
+                        {/* User Avatar */}
+                        <div className="flex-shrink-0">
+                          {notification.actor?.avatar_url ? (
+                            <img
+                              src={notification.actor.avatar_url}
+                              alt={notification.actor.username}
+                              className="w-14 h-14 rounded-full border-4 border-black object-cover"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-full border-4 border-black bg-gradient-to-br from-purple-400 via-blue-400 to-pink-400 flex items-center justify-center">
+                              <span className="text-2xl font-bold text-white">
+                                {notification.actor?.username?.[0]?.toUpperCase() || '?'}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-base font-bold text-gray-900 mb-2">
-                            {notification.message}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {formatTimeAgo(notification.created_at)}
-                          </p>
+                          <div className="flex items-start gap-3 mb-2">
+                            {/* Activity Icon Badge */}
+                            <div
+                              className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full ${style.color} border-2 border-black`}
+                            >
+                              <span className="text-base">{style.icon}</span>
+                            </div>
+
+                            {/* Message with enhanced formatting */}
+                            <div className="flex-1">
+                              <p className="text-base font-bold text-gray-900">
+                                {notification.actor?.username && (
+                                  <span className="text-blue-600 hover:underline mr-1">
+                                    @{notification.actor.username}
+                                    {notification.actor.is_pro_curator && (
+                                      <span className="ml-1 text-xs bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-0.5 rounded-full border-2 border-black">
+                                        PRO
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                                <span className="text-gray-700">
+                                  {notification.activity_type === 'comment_added' && ' commented on '}
+                                  {notification.activity_type === 'comment_reply' && ' replied to your comment on '}
+                                  {notification.activity_type === 'dataset_purchased' && ' purchased '}
+                                  {notification.activity_type === 'dataset_favorited' && ' favorited '}
+                                  {notification.activity_type === 'user_followed' && ' followed you'}
+                                  {notification.activity_type === 'bounty_submission' && ' submitted to '}
+                                </span>
+                                {notification.dataset?.title && (
+                                  <span className="text-purple-600 hover:underline font-bold">
+                                    {notification.dataset.title}
+                                  </span>
+                                )}
+                              </p>
+                              
+                              {/* Timestamp and activity type label */}
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-sm text-gray-500 font-medium">
+                                  {formatTimeAgo(notification.created_at)}
+                                </p>
+                                <span className="text-gray-300">•</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                                  {notification.activity_type.replace(/_/g, ' ')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex-shrink-0 flex items-center gap-2">
+                        <div className="flex-shrink-0 flex items-start gap-2 pt-1">
                           {/* Unread Indicator */}
                           {!notification.read && (
-                            <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                            <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" />
                           )}
 
                           {/* Delete Button */}

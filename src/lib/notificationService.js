@@ -184,8 +184,59 @@ export async function getAllNotifications(
       return { notifications: [], total: 0 };
     }
 
+    // Enrich notifications with actor profile and target details
+    const enrichedNotifications = await Promise.all(
+      (data || []).map(async (notification) => {
+        const enriched = { ...notification };
+
+        // Fetch actor profile if actor_id exists
+        if (notification.actor_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, display_name, avatar_url, is_pro_curator')
+            .eq('id', notification.actor_id)
+            .single();
+          
+          if (profile) {
+            enriched.actor = profile;
+          }
+        }
+
+        // Fetch target details based on target_type
+        if (notification.target_id) {
+          if (notification.target_type === 'dataset') {
+            const { data: dataset } = await supabase
+              .from('datasets')
+              .select('id, title, creator_id')
+              .eq('id', notification.target_id)
+              .single();
+            
+            if (dataset) {
+              enriched.dataset = dataset;
+            }
+          } else if (notification.target_type === 'comment') {
+            // For comment notifications, get the comment and its dataset
+            const { data: comment } = await supabase
+              .from('dataset_comments')
+              .select('id, dataset_id, datasets:dataset_id(id, title)')
+              .eq('id', notification.target_id)
+              .single();
+            
+            if (comment?.datasets) {
+              enriched.dataset = {
+                id: comment.dataset_id,
+                title: comment.datasets.title
+              };
+            }
+          }
+        }
+
+        return enriched;
+      })
+    );
+
     return {
-      notifications: data || [],
+      notifications: enrichedNotifications,
       total: count || 0,
     };
   } catch (err) {
