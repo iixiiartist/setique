@@ -173,10 +173,10 @@ TO authenticated
 WITH CHECK (
     auth.uid() = user_id AND
     EXISTS (
-        SELECT 1 FROM purchases
-        WHERE purchases.user_id = auth.uid()
-        AND purchases.dataset_id = dataset_reviews.dataset_id
-        AND purchases.status = 'completed'
+        SELECT 1 FROM dataset_purchases
+        WHERE dataset_purchases.buyer_id = auth.uid()
+        AND dataset_purchases.dataset_id = dataset_reviews.dataset_id
+        AND dataset_purchases.status = 'completed'
     )
 );
 
@@ -265,8 +265,8 @@ BEGIN
     
     -- Check if user has purchased this dataset
     SELECT EXISTS (
-        SELECT 1 FROM purchases
-        WHERE user_id = auth.uid()
+        SELECT 1 FROM dataset_purchases
+        WHERE buyer_id = auth.uid()
         AND dataset_id = p_dataset_id
         AND status = 'completed'
     ) INTO v_is_verified;

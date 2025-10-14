@@ -9,6 +9,8 @@ import FavoriteButton from '../components/FavoriteButton'
 import ShareModal from '../components/ShareModal'
 import NotificationBell from '../components/NotificationBell'
 import DatasetComments from '../components/comments/DatasetComments'
+import DatasetReviews from '../components/DatasetReviews'
+import StarRating from '../components/StarRating'
 import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
@@ -40,6 +42,7 @@ export default function DatasetsPage() {
 
   // Modal state
   const [selected, setSelected] = useState(null)
+  const [activeTab, setActiveTab] = useState('overview')
   const [checkoutIdx, setCheckoutIdx] = useState(null)
   const [isSignInOpen, setSignInOpen] = useState(false)
   const [isProcessing, setProcessing] = useState(false)
@@ -543,6 +546,24 @@ export default function DatasetsPage() {
                     <h3 className="text-2xl font-extrabold text-black uppercase">
                       {d.title}
                     </h3>
+                    
+                    {/* Rating display */}
+                    {d.review_count > 0 && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <StarRating 
+                          rating={d.average_rating || 0} 
+                          readonly 
+                          size="sm" 
+                        />
+                        <span className="text-sm font-bold text-gray-700">
+                          {(d.average_rating || 0).toFixed(1)}
+                        </span>
+                        <span className="text-xs text-gray-600">
+                          ({d.review_count})
+                        </span>
+                      </div>
+                    )}
+                    
                     {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
                       <div className="mt-2 flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
@@ -695,29 +716,119 @@ export default function DatasetsPage() {
       {selected !== null && datasets[selected] && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
-          onClick={() => setSelected(null)}
+          onClick={() => {
+            setSelected(null);
+            setActiveTab('overview'); // Reset tab when closing
+          }}
         >
           <div
             className="bg-white border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] p-6 max-w-6xl w-full my-8 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex justify-between items-start mb-6">
-              <h2 className="text-2xl font-extrabold text-black pr-8">
-                {datasets[selected].title}
-              </h2>
+            {/* Header with rating */}
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-extrabold text-black pr-8 mb-2">
+                  {datasets[selected].title}
+                </h2>
+                {/* Average rating display */}
+                {datasets[selected].review_count > 0 && (
+                  <div className="flex items-center gap-2">
+                    <StarRating 
+                      rating={datasets[selected].average_rating || 0} 
+                      readonly 
+                      size="sm" 
+                    />
+                    <span className="text-sm font-bold text-gray-700">
+                      {(datasets[selected].average_rating || 0).toFixed(1)}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      ({datasets[selected].review_count} {datasets[selected].review_count === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </div>
+                )}
+              </div>
               <button
-                onClick={() => setSelected(null)}
+                onClick={() => {
+                  setSelected(null);
+                  setActiveTab('overview');
+                }}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            {/* Two-column layout: Dataset info on left, Comments on right */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Left Column: Dataset Details */}
-              <div className="space-y-4">
+            {/* Tabs */}
+            <div className="border-b-4 border-black mb-6">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`
+                    px-6 py-3 font-bold text-sm relative
+                    transition-colors
+                    ${activeTab === 'overview' 
+                      ? 'text-black' 
+                      : 'text-gray-500 hover:text-gray-700'
+                    }
+                  `}
+                >
+                  Overview
+                  {activeTab === 'overview' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400" />
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('comments')}
+                  className={`
+                    px-6 py-3 font-bold text-sm relative
+                    transition-colors
+                    ${activeTab === 'comments' 
+                      ? 'text-black' 
+                      : 'text-gray-500 hover:text-gray-700'
+                    }
+                  `}
+                >
+                  Comments
+                  {datasets[selected].comment_count > 0 && (
+                    <span className="ml-1 text-xs">
+                      ({datasets[selected].comment_count})
+                    </span>
+                  )}
+                  {activeTab === 'comments' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={`
+                    px-6 py-3 font-bold text-sm relative
+                    transition-colors
+                    ${activeTab === 'reviews' 
+                      ? 'text-black' 
+                      : 'text-gray-500 hover:text-gray-700'
+                    }
+                  `}
+                >
+                  Reviews
+                  {datasets[selected].review_count > 0 && (
+                    <span className="ml-1 text-xs">
+                      ({datasets[selected].review_count})
+                    </span>
+                  )}
+                  {activeTab === 'reviews' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Dataset Details */}
                 <div>
                   <h3 className="font-bold text-lg mb-2">Description</h3>
                   <p className="text-black/80 text-sm">{datasets[selected].description}</p>
@@ -794,19 +905,28 @@ export default function DatasetsPage() {
                   )}
                 </div>
               </div>
+            )}
 
-              {/* Right Column: Comments Section (Compact) */}
-              <div className="border-l-0 md:border-l-4 border-black pl-0 md:pl-6">
-                <DatasetComments
-                  datasetId={datasets[selected].id}
-                  datasetOwnerId={datasets[selected].creator_id}
-                  datasetTitle={datasets[selected].title}
-                  currentUserId={user?.id}
-                  isAdmin={isAdmin}
-                  initialCommentCount={datasets[selected].comment_count || 0}
-                />
-              </div>
-            </div>
+            {/* Comments Tab */}
+            {activeTab === 'comments' && (
+              <DatasetComments
+                datasetId={datasets[selected].id}
+                datasetOwnerId={datasets[selected].creator_id}
+                datasetTitle={datasets[selected].title}
+                currentUserId={user?.id}
+                isAdmin={isAdmin}
+                initialCommentCount={datasets[selected].comment_count || 0}
+              />
+            )}
+
+            {/* Reviews Tab */}
+            {activeTab === 'reviews' && (
+              <DatasetReviews
+                datasetId={datasets[selected].id}
+                currentUser={user}
+                isOwner={user?.id === datasets[selected].creator_id}
+              />
+            )}
           </div>
         </div>
       )}
