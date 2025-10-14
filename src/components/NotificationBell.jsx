@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import {
   getRecentNotifications,
   getUnreadCount,
@@ -96,17 +97,54 @@ export default function NotificationBell() {
       await markAsRead(notification.id);
     }
 
-    // Navigate based on target type
+    // Close dropdown
     setIsOpen(false);
-    switch (notification.target_type) {
-      case 'dataset':
-        navigate(`/dataset/${notification.target_id}`);
+
+    // Navigate based on activity type and target
+    switch (notification.activity_type) {
+      case 'comment_added':
+      case 'comment_reply':
+        // Navigate to dataset page - need to get dataset ID
+        if (notification.target_type === 'comment') {
+          // Fetch the comment to get dataset_id
+          const { data: comment } = await supabase
+            .from('dataset_comments')
+            .select('dataset_id')
+            .eq('id', notification.target_id)
+            .single();
+          
+          if (comment?.dataset_id) {
+            navigate(`/datasets?id=${comment.dataset_id}`);
+          }
+        } else if (notification.target_type === 'dataset') {
+          navigate(`/datasets?id=${notification.target_id}`);
+        }
         break;
-      case 'bounty':
-        navigate(`/bounties/${notification.target_id}`);
+      case 'dataset_purchased':
+      case 'dataset_favorited':
+        if (notification.target_id) {
+          navigate(`/datasets?id=${notification.target_id}`);
+        }
         break;
-      case 'user':
-        navigate(`/profile/${notification.actor_id}`);
+      case 'bounty_submission':
+      case 'proposal_submitted':
+        if (notification.target_id) {
+          navigate(`/bounties/${notification.target_id}`);
+        }
+        break;
+      case 'user_followed':
+        // Need to fetch username from actor_id
+        if (notification.actor_id) {
+          const { data: actorProfile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', notification.actor_id)
+            .single();
+          
+          if (actorProfile?.username) {
+            navigate(`/profile/${actorProfile.username}`);
+          }
+        }
         break;
       default:
         // Just close dropdown
