@@ -89,7 +89,8 @@ export default function UserDiscoveryPage() {
           .limit(150),
         supabase
           .from('pro_curators')
-          .select('id, display_name, badge_level, specialties, rating, total_projects')
+          .select('user_id, display_name, badge_level, specialties, rating, total_projects, certification_status')
+          .eq('certification_status', 'approved')
       ])
 
       if (profileError) throw profileError
@@ -97,7 +98,7 @@ export default function UserDiscoveryPage() {
 
       const proCuratorMap = {}
       proData?.forEach(curator => {
-        proCuratorMap[curator.id] = curator
+        proCuratorMap[curator.user_id] = curator
       })
 
       const sanitizedProfiles = (profileData || [])

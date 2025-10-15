@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { stripePromise } from '../lib/stripe'
 import { logUserFollowed } from '../lib/activityTracking'
-import { CheckCircle, AlertCircle, X } from '../components/Icons'
+import { CheckCircle, AlertCircle, X, Star } from '../components/Icons'
 import ReportButton from '../components/ReportButton'
 import TrustLevelBadge from '../components/TrustLevelBadge'
 
@@ -15,6 +15,7 @@ export default function UserProfilePage() {
   
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState(null)
+  const [proCurator, setProCurator] = useState(null)
   const [datasets, setDatasets] = useState([])
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
@@ -83,6 +84,16 @@ export default function UserProfilePage() {
       }
 
       setProfile(profileData)
+
+      // Check if user is a pro curator
+      const { data: proCuratorData } = await supabase
+        .from('pro_curators')
+        .select('user_id, display_name, badge_level, specialties, rating, total_projects, certification_status')
+        .eq('user_id', profileData.id)
+        .eq('certification_status', 'approved')
+        .maybeSingle()
+
+      setProCurator(proCuratorData)
 
       // Fetch user's datasets
       const { data: datasetsData, error: datasetsError } = await supabase
@@ -520,6 +531,11 @@ export default function UserProfilePage() {
                       {profile.display_name || profile.username}
                     </h1>
                     <TrustLevelBadge level={profile.trust_level || 0} size="md" />
+                    {proCurator && (
+                      <span className="text-xs font-extrabold uppercase border-2 border-black px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
+                        PRO CURATOR · {proCurator.badge_level}
+                      </span>
+                    )}
                   </div>
                   <p className="text-gray-600 mb-2">@{profile.username}</p>
                   {profile.location && (
@@ -581,6 +597,33 @@ export default function UserProfilePage() {
               {/* Bio */}
               {profile.bio && (
                 <p className="text-gray-700 mb-4">{profile.bio}</p>
+              )}
+
+              {/* Pro Curator Info */}
+              {proCurator && (
+                <div className="mb-4 p-4 border-2 border-black bg-gradient-to-r from-yellow-50 to-orange-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-5 h-5 text-yellow-600" />
+                    <span className="font-bold text-gray-900">Certified Pro Curator</span>
+                  </div>
+                  {proCurator.specialties && proCurator.specialties.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {proCurator.specialties.map((specialty, idx) => (
+                        <span 
+                          key={idx}
+                          className="text-xs font-bold px-2 py-1 bg-white border-2 border-black"
+                        >
+                          {specialty}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {proCurator.rating > 0 && (
+                    <p className="text-sm text-gray-700">
+                      ⭐ {proCurator.rating.toFixed(1)} rating • {proCurator.total_projects} projects completed
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* Social Links */}
