@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
@@ -1415,8 +1415,15 @@ function HomePage() {
         </section>
       </main>
 
-      <footer className="text-center text-black font-bold mt-8 text-sm bg-yellow-300 border-t-4 border-black py-4">
-        © {new Date().getFullYear()} Setique — The Niche Data Economy
+      <footer className="text-center text-black font-bold mt-8 text-sm bg-yellow-300 border-t-4 border-black py-6">
+        <div className="max-w-4xl mx-auto px-4">
+          <p className="mb-3">© {new Date().getFullYear()} Setique — The Niche Data Economy</p>
+          <div className="flex justify-center gap-6 text-xs">
+            <Link to="/privacy" className="hover:underline">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
       </footer>
 
       {/* Modals */}
