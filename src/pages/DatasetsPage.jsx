@@ -246,17 +246,19 @@ export default function DatasetsPage() {
     const datasetId = searchParams.get('id')
     const tab = searchParams.get('tab')
 
-    if (datasetId && datasets.length > 0 && !selected) {
-      // Find the dataset by ID
-      const dataset = datasets.find(d => d.id === datasetId)
-      if (dataset) {
-        setSelected(dataset)
+    if (datasetId && datasets.length > 0 && selected === null) {
+      // Find the dataset index by ID
+      const datasetIndex = datasets.findIndex(d => d.id === datasetId)
+      if (datasetIndex !== -1) {
+        setSelected(datasetIndex)
         // Set the active tab if specified (default to 'overview')
         if (tab && ['overview', 'comments', 'reviews'].includes(tab)) {
           setActiveTab(tab)
         } else {
           setActiveTab('overview')
         }
+        // Clear URL params after opening modal to prevent re-opening
+        window.history.replaceState({}, '', '/datasets')
       }
     }
   }, [location.search, datasets, selected])
