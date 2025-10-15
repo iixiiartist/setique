@@ -79,9 +79,17 @@ function CommentItem({
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
               {/* Avatar */}
-              <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-purple-500 border-2 border-black rounded-full flex items-center justify-center text-white font-black text-xs">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+              {comment.avatar_url ? (
+                <img
+                  src={comment.avatar_url}
+                  alt={displayName}
+                  className="w-8 h-8 border-2 border-black rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-purple-500 border-2 border-black rounded-full flex items-center justify-center text-white font-black text-xs">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
 
               {/* User info */}
               <div>
