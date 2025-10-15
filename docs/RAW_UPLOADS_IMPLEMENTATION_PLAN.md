@@ -522,12 +522,15 @@ const [readmeContent, setReadmeContent] = useState('')
   {/* Price guidance based on curation level */}
   <div className="mb-2 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg">
     <p className="text-xs font-bold text-blue-900">
-      💡 Suggested Price Range for {curationLevel === 'raw' ? 'Raw Data' : curationLevel === 'partial' ? 'Partially Curated' : 'Fully Curated'}:
+      💡 Typical Pricing for {curationLevel === 'raw' ? 'Raw Data' : curationLevel === 'partial' ? 'Partially Curated' : 'Fully Curated'}:
     </p>
     <p className="text-sm font-extrabold text-blue-700 mt-1">
-      {curationLevel === 'raw' && '$5 - $25 (typically 20-40% of curated equivalent)'}
-      {curationLevel === 'partial' && `$${Math.round(20 + (metadataCompleteness / 100) * 30)} - $${Math.round(40 + (metadataCompleteness / 100) * 60)} (based on ${metadataCompleteness}% completion)`}
-      {curationLevel === 'curated' && '$50 - $150+ (premium pricing for ready-to-use data)'}
+      {curationLevel === 'raw' && '$5-25 typical (but price based on your data\'s uniqueness!)'}
+      {curationLevel === 'partial' && `$20-60 typical for ${metadataCompleteness}% completion`}
+      {curationLevel === 'curated' && '$50+ typical (premium datasets often $150-500+)'}
+    </p>
+    <p className="text-xs text-blue-600 mt-1">
+      No maximum—set your own value based on quality, rarity, and effort!
     </p>
   </div>
 
@@ -881,9 +884,15 @@ function RawVsCuratedContent() {
             </tr>
             <tr className="border-b-2 border-black">
               <td className="p-4 font-bold border-r-4 border-black bg-gray-100">Typical Price</td>
-              <td className="p-4 border-r-4 border-black">$5-25</td>
-              <td className="p-4 border-r-4 border-black">$20-60</td>
-              <td className="p-4">$50-150+</td>
+              <td className="p-4 border-r-4 border-black">$5-25 typical</td>
+              <td className="p-4 border-r-4 border-black">$20-60 typical</td>
+              <td className="p-4">$50+ (often $150-500+)</td>
+            </tr>
+            <tr className="border-b-2 border-black">
+              <td className="p-4 font-bold border-r-4 border-black bg-gray-100">Pricing</td>
+              <td className="p-4 border-r-4 border-black" colSpan="3">
+                <span className="font-bold text-green-700">No maximum—creators set their own value!</span>
+              </td>
             </tr>
             <tr className="border-b-2 border-black">
               <td className="p-4 font-bold border-r-4 border-black bg-gray-100">Upload Time</td>
@@ -999,7 +1008,7 @@ function TipsForSuccessContent() {
           <li><strong>Start with raw:</strong> Don't wait for perfection. Upload raw data to test market interest.</li>
           <li><strong>Write great READMEs:</strong> Explain what's in your dataset, file formats, use cases, limitations.</li>
           <li><strong>Provide 5-10 sample previews:</strong> Help buyers understand quality before purchasing.</li>
-          <li><strong>Price competitively:</strong> Check similar datasets in your modality. Raw = $5-25, Curated = $50-150+.</li>
+          <li><strong>Price based on value:</strong> Check similar datasets as reference, but set your own price based on quality, uniqueness, and effort. No maximum!</li>
           <li><strong>Use the upgrade path:</strong> Raw → Request Curation → Split revenue 40/40 with Pro Curator.</li>
           <li><strong>Respond to feedback:</strong> If admin rejects your upload, read the notes and resubmit improved version.</li>
           <li><strong>Build reputation:</strong> Consistent quality leads to repeat buyers and higher trust levels.</li>
@@ -1040,7 +1049,6 @@ function TipsForSuccessContent() {
           <li>❌ <strong>Mislabeling curation level:</strong> Don't mark raw data as "curated"—it will be rejected.</li>
           <li>❌ <strong>Skipping sample previews:</strong> Raw uploads without samples won't sell well.</li>
           <li>❌ <strong>Vague descriptions:</strong> "Image dataset" isn't enough—specify content, size, quality.</li>
-          <li>❌ <strong>Overpricing raw data:</strong> Unlabeled data should be priced $5-25, not $100+.</li>
           <li>❌ <strong>Ignoring file formats:</strong> Use standard formats (CSV, JSON, PNG, WAV) for compatibility.</li>
           <li>❌ <strong>No README:</strong> Raw uploads require documentation—explain what buyers are getting.</li>
           <li>❌ <strong>Copyrighted content:</strong> Only upload data you own rights to or have permission to share.</li>
@@ -1204,21 +1212,21 @@ if (filterCuration !== 'all') {
 
 ```javascript
 // Price validation based on curation level
-const validatePrice = (price, curationLevel, fileSize) => {
+const validatePrice = (price, curationLevel) => {
   const numPrice = parseFloat(price)
   
-  // Minimum prices by level
+  // Minimum prices by level (for quality signaling)
   const minimums = {
     raw: 0,      // Can be free
     partial: 5,   // Minimum $5
     curated: 10   // Minimum $10
   }
   
-  // Suggested ranges
-  const ranges = {
-    raw: { min: 5, max: 25 },
-    partial: { min: 20, max: 60 },
-    curated: { min: 50, max: 150 }
+  // Suggested starting points (no maximum - creators set their own value)
+  const suggestions = {
+    raw: { typical: '5-25', note: 'Most raw datasets start here' },
+    partial: { typical: '20-60', note: 'Reflects partial curation effort' },
+    curated: { typical: '50-150+', note: 'Premium datasets often exceed $150' }
   }
   
   if (numPrice < minimums[curationLevel]) {
@@ -1228,16 +1236,12 @@ const validatePrice = (price, curationLevel, fileSize) => {
     }
   }
   
-  // Warning if outside suggested range
-  const range = ranges[curationLevel]
-  if (numPrice < range.min || numPrice > range.max) {
-    return {
-      valid: true,
-      warning: `Suggested range: $${range.min}-$${range.max}. Your price may affect sales.`
-    }
+  // Informational guidance only (not a warning)
+  const suggestion = suggestions[curationLevel]
+  return { 
+    valid: true,
+    info: `💡 Typical range: $${suggestion.typical}. ${suggestion.note} But price your dataset based on quality and uniqueness!`
   }
-  
-  return { valid: true }
 }
 ```
 

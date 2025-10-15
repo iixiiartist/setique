@@ -11,9 +11,11 @@
 Allow creators to upload **raw, unlabeled data** alongside fully curated datasets, with admin review for quality assurance.
 
 ### Three-Tier System
-- **📦 Raw** ($5-25): Unprocessed data, no labels/metadata
-- **🏗️ Partial** ($20-60): Some labeling done (20-80% complete)
-- **🏷️ Curated** ($50-150+): Fully labeled, production-ready
+- **📦 Raw** ($5+ typical): Unprocessed data, no labels/metadata
+- **🏗️ Partial** ($20+ typical): Some labeling done (20-80% complete)
+- **🏷️ Curated** ($50+ typical): Fully labeled, production-ready
+
+*Note: No maximum price—creators value their datasets based on quality, uniqueness, and market demand.*
 
 ---
 
@@ -146,12 +148,15 @@ const minimums = {
   curated: 10   // Min $10
 }
 
-const ranges = {
-  raw: { min: 5, max: 25 },
-  partial: { min: 20, max: 60 },
-  curated: { min: 50, max: 150 }
+// Typical starting points (no maximum)
+const suggestions = {
+  raw: '5-25 typical',
+  partial: '20-60 typical',
+  curated: '50+ typical (often $150-500+ for premium datasets)'
 }
 ```
+
+*No maximum price—creators set their own value based on quality and uniqueness.*
 
 ### Upload Flow (Non-Pro-Curator)
 1. User selects "Raw" in upload modal
