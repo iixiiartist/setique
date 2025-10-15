@@ -1,0 +1,21 @@
+{
+  "name": "Setique",
+  "short_name": "Setique",
+  "description": "Unique Data. Better AI. - AI training data marketplace",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#fef3c7",
+  "background_color": "#F5F5DC",
+  "display": "standalone",
+  "start_url": "/"
+}
