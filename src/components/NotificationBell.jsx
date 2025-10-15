@@ -36,12 +36,34 @@ export default function NotificationBell() {
     if (!user) return;
 
     setLoading(true);
-    const [notifs, count] = await Promise.all([
+    const [rawNotifs, count] = await Promise.all([
       getRecentNotifications(10),
       getUnreadCount(),
     ]);
 
-    setNotifications(notifs);
+    // Enrich notifications with actor profile data
+    const enrichedNotifs = await Promise.all(
+      rawNotifs.map(async (notification) => {
+        const enriched = { ...notification };
+
+        // Fetch actor profile if actor_id exists
+        if (notification.actor_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, display_name, avatar_url')
+            .eq('id', notification.actor_id)
+            .single();
+          
+          if (profile) {
+            enriched.actor = profile;
+          }
+        }
+
+        return enriched;
+      })
+    );
+
+    setNotifications(enrichedNotifs);
     setUnreadCount(count);
     setLoading(false);
   }, [user]);
@@ -61,7 +83,22 @@ export default function NotificationBell() {
       user.id,
       // onInsert: New notification received
       async (newNotification) => {
-        setNotifications((prev) => [newNotification, ...prev.slice(0, 9)]);
+        // Enrich the notification with actor profile
+        const enriched = { ...newNotification };
+        
+        if (newNotification.actor_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, display_name, avatar_url')
+            .eq('id', newNotification.actor_id)
+            .single();
+          
+          if (profile) {
+            enriched.actor = profile;
+          }
+        }
+
+        setNotifications((prev) => [enriched, ...prev.slice(0, 9)]);
         setUnreadCount((prev) => prev + 1);
       },
       // onUpdate: Notification marked as read
@@ -280,7 +317,20 @@ export default function NotificationBell() {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-gray-900 mb-1">
-                          {notification.message}
+                          {notification.actor?.username && (
+                            <span className="text-blue-600">
+                              @{notification.actor.username}{' '}
+                            </span>
+                          )}
+                          <span className="text-gray-700">
+                            {notification.activity_type === 'comment_added' && 'commented on your dataset'}
+                            {notification.activity_type === 'comment_reply' && 'replied to your comment'}
+                            {notification.activity_type === 'dataset_purchased' && 'purchased your dataset'}
+                            {notification.activity_type === 'dataset_favorited' && 'favorited your dataset'}
+                            {notification.activity_type === 'user_followed' && 'followed you'}
+                            {notification.activity_type === 'bounty_submission' && 'submitted to your bounty'}
+                            {notification.activity_type === 'review_added' && 'reviewed your dataset'}
+                          </span>
                         </p>
                         <p className="text-xs text-gray-500">
                           {formatTimeAgo(notification.created_at)}
