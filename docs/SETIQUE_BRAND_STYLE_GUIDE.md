@@ -1058,7 +1058,7 @@ Please create [specific request] that:
 ## Contact & Feedback
 
 For questions about this style guide or brand consistency:
-**Email:** joseph@anconsulting.us  
+**Email:** info@setique.com  
 **Website:** https://www.setique.com
 
 ---

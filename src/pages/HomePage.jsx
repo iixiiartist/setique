@@ -318,7 +318,7 @@ function HomePage() {
               <p className="text-sm font-semibold">
                 Platform in active development. All transactions are live and real. 
                 <a 
-                  href="mailto:joseph@anconsulting.us" 
+                  href="mailto:info@setique.com" 
                   className="underline ml-1 hover:text-cyan-600 transition"
                 >
                   Report issues or share feedback

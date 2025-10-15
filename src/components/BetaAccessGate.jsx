@@ -183,8 +183,8 @@ export default function BetaAccessGate() {
             <p>Signed up on {new Date(betaStatus?.created_at).toLocaleDateString()}</p>
             <p className="mt-2">
               Questions? Email us at{' '}
-              <a href="mailto:joseph@anconsulting.us" className="text-purple-600 underline hover:no-underline">
-                joseph@anconsulting.us
+              <a href="mailto:info@setique.com" className="text-purple-600 underline hover:no-underline">
+                info@setique.com
               </a>
             </p>
           </div>
@@ -308,8 +308,8 @@ export default function BetaAccessGate() {
           <div className="text-center text-sm text-gray-600">
             <p>
               Questions? Contact us at{' '}
-              <a href="mailto:joseph@anconsulting.us" className="text-purple-600 underline hover:no-underline">
-                joseph@anconsulting.us
+              <a href="mailto:info@setique.com" className="text-purple-600 underline hover:no-underline">
+                info@setique.com
               </a>
             </p>
           </div>

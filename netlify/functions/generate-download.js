@@ -140,7 +140,7 @@ Visit **setique.com** to start creating and selling real datasets today!
 
 ### Need Help?
 
-- 📧 Email: joseph@anconsulting.us
+- 📧 Email: info@setique.com
 - 🌐 Website: https://setique.com
 - 💬 Feedback: Click the beta feedback button on our site
 
