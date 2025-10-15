@@ -8,7 +8,7 @@
     <!-- Homepage -->
     <url>
         <loc>https://setique.com</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
     </url>
@@ -16,7 +16,7 @@
     <!-- Datasets Marketplace -->
     <url>
         <loc>https://setique.com/datasets</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
@@ -24,7 +24,7 @@
     <!-- Bounties Board -->
     <url>
         <loc>https://setique.com/bounties</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
@@ -32,7 +32,7 @@
     <!-- Marketplace (Pro Curator Requests) -->
     <url>
         <loc>https://setique.com/marketplace</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.8</priority>
     </url>
@@ -40,7 +40,7 @@
     <!-- Dashboard -->
     <url>
         <loc>https://setique.com/dashboard</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -48,15 +48,23 @@
     <!-- User Discovery -->
     <url>
         <loc>https://setique.com/discover</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
+    </url>
+    
+    <!-- Privacy Policy -->
+    <url>
+        <loc>https://setique.com/privacy</loc>
+        <lastmod>2025-10-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
     </url>
     
     <!-- About Page -->
     <url>
         <loc>https://setique.com/about</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
@@ -64,7 +72,7 @@
     <!-- Success Page -->
     <url>
         <loc>https://setique.com/success</loc>
-        <lastmod>2025-10-12</lastmod>
+        <lastmod>2025-10-15</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
     </url>
