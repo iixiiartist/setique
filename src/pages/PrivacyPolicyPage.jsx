@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
                 Welcome to SETIQUE ("we," "our," or "us"). We are committed to protecting your privacy and ensuring transparency about how we collect, use, and safeguard your personal information.
               </p>
               <p className="text-lg leading-relaxed mb-4">
-                SETIQUE is a niche data marketplace that connects data creators with data consumers. This Privacy Policy explains how we handle your data when you use our platform at <a href="https://setique.netlify.app" className="text-blue-600 underline">setique.netlify.app</a>.
+                SETIQUE is a niche data marketplace that connects data creators with data consumers. This Privacy Policy explains how we handle your data when you use our platform at <a href="https://setique.com" className="text-blue-600 underline">setique.com</a>.
               </p>
               <p className="text-lg leading-relaxed">
                 By using SETIQUE, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services.
@@ -294,7 +294,7 @@ export default function PrivacyPolicyPage() {
               <p className="mb-4">To exercise any of these rights:</p>
               <ol className="list-decimal pl-6 mb-6 space-y-2">
                 <li>Visit your <strong>Profile Settings</strong> page to update or delete information directly</li>
-                <li>Contact us at <a href="mailto:privacy@setique.com" className="text-blue-600 underline">privacy@setique.com</a> for data access, portability, or deletion requests</li>
+                <li>Contact us at <a href="mailto:joseph@anconsulting.us" className="text-blue-600 underline">joseph@anconsulting.us</a> for data access, portability, or deletion requests</li>
                 <li>We will respond to your request within 30 days</li>
               </ol>
 
@@ -330,7 +330,7 @@ export default function PrivacyPolicyPage() {
                 SETIQUE is not intended for users under the age of 13. We do not knowingly collect personal information from children under 13. If we discover that we have collected information from a child under 13, we will delete it immediately.
               </p>
               <p className="mb-4">
-                If you're a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:privacy@setique.com" className="text-blue-600 underline">privacy@setique.com</a>.
+                If you're a parent or guardian and believe your child has provided us with personal information, please contact us at <a href="mailto:joseph@anconsulting.us" className="text-blue-600 underline">joseph@anconsulting.us</a>.
               </p>
             </section>
 
@@ -376,8 +376,8 @@ export default function PrivacyPolicyPage() {
                 If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="p-6 bg-yellow-100 border-2 border-black rounded-lg space-y-2">
-                <p><strong>Email:</strong> <a href="mailto:privacy@setique.com" className="text-blue-600 underline">privacy@setique.com</a></p>
-                <p><strong>Website:</strong> <a href="https://setique.netlify.app" className="text-blue-600 underline">setique.netlify.app</a></p>
+                <p><strong>Email:</strong> <a href="mailto:joseph@anconsulting.us" className="text-blue-600 underline">joseph@anconsulting.us</a></p>
+                <p><strong>Website:</strong> <a href="https://setique.com" className="text-blue-600 underline">setique.com</a></p>
                 <p className="mt-4 text-sm">
                   We aim to respond to all privacy inquiries within 30 days.
                 </p>
