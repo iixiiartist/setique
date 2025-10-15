@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -33,6 +33,7 @@ export default function DatasetsPage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const processedUrlRef = useRef(false)
 
   // General state
   const [query, setQuery] = useState('')
@@ -246,7 +247,8 @@ export default function DatasetsPage() {
     const datasetId = searchParams.get('id')
     const tab = searchParams.get('tab')
 
-    if (datasetId && datasets.length > 0 && selected === null) {
+    // Only process URL params once and when datasets are loaded
+    if (datasetId && datasets.length > 0 && !processedUrlRef.current) {
       // Find the dataset index by ID
       const datasetIndex = datasets.findIndex(d => d.id === datasetId)
       if (datasetIndex !== -1) {
@@ -257,11 +259,18 @@ export default function DatasetsPage() {
         } else {
           setActiveTab('overview')
         }
-        // Clear URL params after opening modal to prevent re-opening
+        // Mark URL as processed
+        processedUrlRef.current = true
+        // Clear URL params to clean up the URL bar
         window.history.replaceState({}, '', '/datasets')
       }
     }
-  }, [location.search, datasets, selected])
+    
+    // Reset the ref when there's no ID in URL (user navigated away)
+    if (!datasetId) {
+      processedUrlRef.current = false
+    }
+  }, [location.search, datasets])
 
   const handleCheckout = async () => {
     if (!user) {
