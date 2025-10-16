@@ -6,6 +6,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import TrustLevelManager from '../components/TrustLevelManager';
 import FeedbackManagement from '../components/FeedbackManagement';
 import BetaAccessManagement from '../components/BetaAccessManagement';
+import { AdminReviewPanel } from '../components/AdminReviewPanel';
 
 export default function AdminDashboard() {
   console.log('🔵 AdminDashboard component loaded');
@@ -813,6 +814,16 @@ export default function AdminDashboard() {
               }`}
             >
               📦 Datasets
+            </button>
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`px-6 py-4 font-bold transition whitespace-nowrap ${
+                activeTab === 'reviews' 
+                  ? 'bg-yellow-300 border-r-2 border-black' 
+                  : 'bg-white hover:bg-gray-50 border-r-2 border-black'
+              }`}
+            >
+              🔍 Pending Reviews
             </button>
             <button
               onClick={() => setActiveTab('bounties')}
@@ -1716,6 +1727,12 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div>
+                <AdminReviewPanel />
               </div>
             )}
 
