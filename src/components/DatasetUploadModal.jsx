@@ -468,6 +468,25 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
             
+            {/* Copyright Warning */}
+            <div className="bg-red-50 border-3 border-red-600 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <p className="font-extrabold text-red-900 mb-2">Copyright & Legal Notice</p>
+                  <p className="text-sm font-bold text-red-800 mb-2">
+                    You MUST own or have legal rights to distribute all data you upload. 
+                  </p>
+                  <p className="text-xs font-semibold text-red-700">
+                    • Do NOT upload copyrighted images, music, videos, or text without permission<br/>
+                    • Do NOT scrape or republish data from other platforms without authorization<br/>
+                    • Violations will result in immediate account suspension and legal action<br/>
+                    • By uploading, you confirm you have all necessary rights and permissions
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             {/* Price and Modality */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -720,7 +739,8 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
               <button
                 type="submit"
                 disabled={!isFormValid || isUploading}
-                className="flex-1 bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:hover:scale-100"
+                className="flex-1 bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                title={!isFormValid ? 'Please complete all required fields' : ''}
               >
                 {isUploading ? `Uploading ${uploadProgress}%...` : 'Publish Dataset'}
               </button>
@@ -733,6 +753,42 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                 Cancel
               </button>
             </div>
+            
+            {/* Validation Checklist */}
+            {!isFormValid && !isUploading && (
+              <div className="bg-yellow-50 border-2 border-yellow-500 rounded-lg p-4">
+                <p className="font-extrabold text-sm mb-2">📋 Checklist (complete to publish):</p>
+                <div className="space-y-1 text-xs font-semibold">
+                  <div className={title.trim() !== '' ? 'text-green-600' : 'text-red-600'}>
+                    {title.trim() !== '' ? '✓' : '✗'} Title filled
+                  </div>
+                  <div className={description.trim() !== '' ? 'text-green-600' : 'text-red-600'}>
+                    {description.trim() !== '' ? '✓' : '✗'} Description filled
+                  </div>
+                  <div className={!isNaN(numericPrice) && numericPrice >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    {!isNaN(numericPrice) && numericPrice >= 0 ? '✓' : '✗'} Valid price (0 or higher)
+                  </div>
+                  <div className={uploadFile !== null ? 'text-green-600' : 'text-red-600'}>
+                    {uploadFile !== null ? '✓' : '✗'} Dataset file selected
+                  </div>
+                  {curationLevel === 'raw' && (
+                    <>
+                      <div className={samplePreviews.length >= 3 && samplePreviews.length <= 10 ? 'text-green-600' : 'text-red-600'}>
+                        {samplePreviews.length >= 3 && samplePreviews.length <= 10 ? '✓' : '✗'} Sample previews (3-10 files) - Currently: {samplePreviews.length}
+                      </div>
+                      <div className={readmeContent.trim().length >= 100 ? 'text-green-600' : 'text-red-600'}>
+                        {readmeContent.trim().length >= 100 ? '✓' : '✗'} README content (100+ chars) - Currently: {readmeContent.trim().length}
+                      </div>
+                    </>
+                  )}
+                  {curationLevel === 'partial' && (
+                    <div className={samplePreviews.length >= 3 && samplePreviews.length <= 10 ? 'text-green-600' : 'text-red-600'}>
+                      {samplePreviews.length >= 3 && samplePreviews.length <= 10 ? '✓' : '✗'} Sample previews (3-10 files) - Currently: {samplePreviews.length}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </form>
         </div>
       </div>

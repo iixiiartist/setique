@@ -724,8 +724,15 @@ export default function ResourcesPage() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
+                      <p className="font-bold">Uploading Copyrighted Content</p>
+                      <p className="text-sm text-black/70">⚠️ CRITICAL: Only upload data you own or have legal rights to distribute. No copyrighted images, music, videos, or text without permission. Violators will be banned.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
                       <p className="font-bold">Ignoring Licensing</p>
-                      <p className="text-sm text-black/70">Clearly state usage rights. Commercial use? Attribution required? Be explicit.</p>
+                      <p className="text-sm text-black/70">Clearly state usage rights. Commercial use? Attribution required? Be explicit about terms.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
