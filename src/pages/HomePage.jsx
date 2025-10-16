@@ -493,8 +493,8 @@ function HomePage() {
             <br /> Better AI.
           </h2>
           <p className="text-lg sm:text-2xl text-black/80 font-semibold mb-12">
-            An ecosystem where everyday creators monetize their expertise and AI builders
-            discover unique datasets. Turn your niche knowledge into income or find
+            A marketplace where creators monetize niche expertise and AI builders
+            discover unique datasets. Turn your specialized knowledge into revenue or find
             cross-domain data that gives your AI the edge.
           </p>
         </section>
@@ -505,10 +505,10 @@ function HomePage() {
               Our Philosophy
             </h3>
             <p className="text-center font-semibold text-xl text-black/80">
-              We believe the future of AI should be built on the rich, diverse, and wonderfully
+              We believe the future of AI should be built on rich, diverse, and wonderfully
               specific knowledge captured by real people. We&apos;re democratizing data by
               <strong> empowering creators</strong> to monetize their expertise AND
-              <strong> enabling builders</strong> to discover unexpected datasets. A thriving
+              <strong> enabling builders</strong> to discover datasets that matter. A thriving
               community where everyone benefits.
             </p>
           </div>
@@ -518,26 +518,26 @@ function HomePage() {
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <Archive className="h-16 w-16 text-pink-600 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">1. Curate Your Expertise</h3>
+              <h3 className="text-2xl font-extrabold mb-2">1. Share Your Expertise</h3>
               <p className="font-semibold text-black/70">
-                Creators: Package your unique knowledge—rare photos, handwriting samples,
-                audio recordings, niche datasets. Buyers: Browse and discover across all domains.
+                Creators: Package your unique knowledge—rare images, specialized audio, handwriting samples,
+                niche datasets. Buyers: Browse and discover datasets across all domains for your AI projects.
               </p>
             </div>
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <CircleDollarSign className="h-16 w-16 text-cyan-500 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">2. Set Your Value & Build Trust</h3>
+              <h3 className="text-2xl font-extrabold mb-2">2. Set Your Price & Earn Revenue</h3>
               <p className="font-semibold text-black/70">
-                You&apos;re the expert—set your price and earn 80% per purchase (ongoing passive income). Pro Curators
-                can help improve quality and earn 40% ongoing by partnering with you. Build your reputation in the community.
+                Set your own pricing and earn 80% revenue share on every sale—ongoing passive income. 
+                Pro Curators can partner to enhance quality, earning 40% of the creator&apos;s share. Build your reputation and grow.
               </p>
             </div>
             <div className="bg-white/30 p-8 rounded-3xl border-4 border-black shadow-[8px_8px_0_#000]">
               <BrainCircuit className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-extrabold mb-2">3. Thrive Together</h3>
+              <h3 className="text-2xl font-extrabold mb-2">3. Grow Together</h3>
               <p className="font-semibold text-black/70">
-                Creators earn passive income from their niche knowledge. Builders discover
-                unique data for better AI. Join a community democratizing data for everyone.
+                Creators earn ongoing income from specialized knowledge. AI builders discover
+                unique data that improves their models. Join a community democratizing data for everyone.
               </p>
             </div>
           </div>
@@ -556,7 +556,7 @@ function HomePage() {
                 <Star className="h-10 w-10 text-yellow-300 fill-yellow-300" />
               </div>
               <p className="text-xl font-bold text-white/90 max-w-3xl mx-auto">
-                Partner with data owners, apply your expertise, and earn 50/50 revenue splits on professionally curated datasets
+                Partner with data owners, apply your expertise, and earn 50/50 revenue splits on professionally curated datasets for ongoing passive income
               </p>
             </div>
 
@@ -567,21 +567,21 @@ function HomePage() {
                   <div className="text-4xl mb-3">🎯</div>
                   <h4 className="text-xl font-extrabold mb-2 text-black">Expert Recognition</h4>
                   <p className="font-semibold text-black/70 text-sm">
-                    Get certified as a Pro Curator. Earn badges (Verified → Expert → Master) as you complete projects and build your reputation.
+                    Earn Pro Curator certification and verified badges (Verified → Expert → Master) as you complete projects and build your reputation on the platform.
                   </p>
                 </div>
                 <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0_#000]">
                   <div className="text-4xl mb-3">💰</div>
                   <h4 className="text-xl font-extrabold mb-2 text-black">Fair Revenue Split</h4>
                   <p className="font-semibold text-black/70 text-sm">
-                    Earn 40% of every dataset sale (50/50 split of the creator share). No upfront costs, no hourly limits—just passive income from quality work.
+                    Earn 40% of every dataset sale in a 50/50 split with the creator. No upfront costs, no hourly limits—just ongoing passive income from quality work.
                   </p>
                 </div>
                 <div className="bg-white border-3 border-black rounded-2xl p-6 shadow-[4px_4px_0_#000]">
                   <div className="text-4xl mb-3">🤝</div>
                   <h4 className="text-xl font-extrabold mb-2 text-black">Choose Your Projects</h4>
                   <p className="font-semibold text-black/70 text-sm">
-                    Browse curation requests, submit proposals, and partner with data owners who need your specific expertise.
+                    Browse curation requests (bounties), submit competitive proposals, and partner with data owners who need your specific domain expertise.
                   </p>
                 </div>
               </div>
@@ -596,7 +596,7 @@ function HomePage() {
                     </div>
                     <h5 className="font-extrabold text-sm mb-2">Apply for Certification</h5>
                     <p className="text-xs font-semibold text-black/70">
-                      Submit your profile with specialties, bio, and portfolio samples
+                      Complete your profile with specialties, bio, and portfolio samples to get started
                     </p>
                   </div>
                   <div className="text-center">
@@ -605,7 +605,7 @@ function HomePage() {
                     </div>
                     <h5 className="font-extrabold text-sm mb-2">Browse Opportunities</h5>
                     <p className="text-xs font-semibold text-black/70">
-                      View curation requests from data owners who need help
+                      View curation requests (bounties) from data owners seeking expert help
                     </p>
                   </div>
                   <div className="text-center">
@@ -614,7 +614,7 @@ function HomePage() {
                     </div>
                     <h5 className="font-extrabold text-sm mb-2">Submit Proposals</h5>
                     <p className="text-xs font-semibold text-black/70">
-                      Pitch your approach, timeline, and pricing for projects
+                      Pitch your approach, timeline, and pricing for each project you want to win
                     </p>
                   </div>
                   <div className="text-center">
@@ -722,9 +722,9 @@ function HomePage() {
             <Zap className="h-10 w-10 text-yellow-400" /> Creator Toolkit
           </h3>
           <p className="text-black/80 max-w-2xl mx-auto mb-8 font-semibold">
-            Power up your workflow. Use the Setique API to programmatically upload
-            datasets from your apps and scripts. Automate your uploads and earn
-            passively.
+            Power up your workflow with the SETIQUE API. Programmatically upload
+            datasets from your apps and scripts, automate your data publishing,
+            and earn passive income at scale.
           </p>
           <a
             href="#"
@@ -740,7 +740,7 @@ function HomePage() {
       </main>
 
       <footer className="text-center text-black font-bold mt-8 text-sm bg-yellow-300 border-t-4 border-black py-4">
-        © {new Date().getFullYear()} Setique — The Niche Data Economy
+        © {new Date().getFullYear()} SETIQUE — Unique Data. Better AI.
       </footer>
 
       {/* Modals */}
