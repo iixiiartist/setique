@@ -16,6 +16,7 @@ import ProfileSettingsPage from './pages/ProfileSettingsPage'
 import ModerationQueuePage from './pages/ModerationQueuePage'
 import NotificationsPage from './pages/NotificationsPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import ResourcesPage from './pages/ResourcesPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import BetaProtectedRoute from './components/BetaProtectedRoute'
 
@@ -92,6 +93,7 @@ function App() {
           } 
         />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
       </Routes>
     </>
   )
