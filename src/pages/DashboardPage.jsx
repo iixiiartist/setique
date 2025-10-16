@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { useModalState, useConfirmDialog } from '../lib/hooks/useModalState'
 import { DatasetUploadModal } from '../components/DatasetUploadModal'
 import ProCuratorProfile from '../components/ProCuratorProfile'
 import CurationRequestModal from '../components/CurationRequestModal'
@@ -56,15 +57,15 @@ function DashboardPage() {
   const [deletionModalDataset, setDeletionModalDataset] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   
-  // Upload modal state
-  const [uploadModalOpen, setUploadModalOpen] = useState(false)
-  
-  // Curation request modal state
-  const [curationRequestModalOpen, setCurationRequestModalOpen] = useState(false)
-  
-  // TODO: Phase 2 - Consolidate modal states using useModalState hook
-  // Modals to combine: uploadModal, curationRequestModal, proposalsModal, proposalSubmissionModal,
-  // bountySubmissionModal, submissionModal, confirmDialog, deleteConfirm, editingDataset
+  // Modal states - Using useModalState hook (Phase 2 refactoring)
+  const uploadModal = useModalState()
+  const curationRequestModal = useModalState()
+  const proposalsModal = useModalState()
+  const proposalSubmissionModal = useModalState()
+  const bountySubmissionModal = useModalState()
+  const curatorSubmissionModal = useModalState()
+  const editDatasetModal = useModalState()
+  const confirmDialogModal = useConfirmDialog()
   
   // Curator data
   const [myDatasets, setMyDatasets] = useState([])
@@ -82,31 +83,16 @@ function DashboardPage() {
   
   // Curation requests data
   const [myCurationRequests, setMyCurationRequests] = useState([])
-  const [selectedRequest, setSelectedRequest] = useState(null)
-  const [proposalsModalOpen, setProposalsModalOpen] = useState(false)
   const [openCurationRequests, setOpenCurationRequests] = useState([])
-  const [proposalSubmissionOpen, setProposalSubmissionOpen] = useState(false)
-  const [selectedRequestForProposal, setSelectedRequestForProposal] = useState(null)
   const [curatorProfile, setCuratorProfile] = useState(null)
   const [curatorAssignedRequests, setCuratorAssignedRequests] = useState([])
-  
-  // Bounty submission modal state (for custom dataset uploads to bounties)
-  const [bountySubmissionOpen, setBountySubmissionOpen] = useState(false)
-  const [selectedBountyForSubmission, setSelectedBountyForSubmission] = useState(null)
-  
-  // Curator submission modal state
-  const [submissionModalOpen, setSubmissionModalOpen] = useState(false)
-  const [selectedRequestForSubmission, setSelectedRequestForSubmission] = useState(null)
   
   // Stripe Connect state
   const [connectingStripe, setConnectingStripe] = useState(false)
   const [connectError, setConnectError] = useState(null)
   
   // Dataset management state
-  const [editingDataset, setEditingDataset] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
   
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -498,7 +484,7 @@ function DashboardPage() {
   }
 
   const handleEditDataset = (dataset) => {
-    setEditingDataset({
+    editDatasetModal.open({
       id: dataset.id,
       title: dataset.title,
       description: dataset.description,
@@ -509,30 +495,31 @@ function DashboardPage() {
   }
 
   const handleSaveEdit = async () => {
-    if (!editingDataset) return
+    if (!editDatasetModal.data) return
     
     setActionLoading(true)
     try {
+      const editData = editDatasetModal.data
       const { error } = await supabase
         .from('datasets')
         .update({
-          title: editingDataset.title,
-          description: editingDataset.description,
-          price: parseFloat(editingDataset.price),
-          modality: editingDataset.modality,
-          tags: editingDataset.tags,
+          title: editData.title,
+          description: editData.description,
+          price: parseFloat(editData.price),
+          modality: editData.modality,
+          tags: editData.tags,
         })
-        .eq('id', editingDataset.id)
+        .eq('id', editData.id)
         .eq('creator_id', user.id)
       
       if (error) throw error
       
       // Update local state
       setMyDatasets(prev => 
-        prev.map(d => d.id === editingDataset.id ? { ...d, ...editingDataset, price: parseFloat(editingDataset.price) } : d)
+        prev.map(d => d.id === editData.id ? { ...d, ...editData, price: parseFloat(editData.price) } : d)
       )
       
-      setEditingDataset(null)
+      editDatasetModal.close()
       alert('Dataset updated successfully!')
     } catch (error) {
       console.error('Error updating dataset:', error)
@@ -557,14 +544,11 @@ function DashboardPage() {
       const hasPurchases = purchases && purchases.length > 0
       
       // Show confirmation dialog
-      setConfirmDialog({
-        isOpen: true,
+      confirmDialogModal.show({
         title: hasPurchases ? 'Delete Dataset with Purchases?' : 'Delete Dataset?',
         message: hasPurchases 
           ? '⚠️ This dataset has purchases! Deleting it will break download access for buyers. This action cannot be undone. Are you absolutely sure?'
           : 'Are you sure you want to delete this dataset? This action cannot be undone.',
-        confirmText: 'Delete',
-        variant: 'danger',
         onConfirm: async () => {
           setActionLoading(true)
           try {
@@ -588,7 +572,6 @@ function DashboardPage() {
 
             alert('✅ Dataset deleted successfully')
             await fetchDashboardData()
-            setDeleteConfirm(null)
           } catch (error) {
             console.error('Error deleting dataset:', error)
             alert('Failed to delete dataset: ' + error.message)
@@ -1192,7 +1175,7 @@ function DashboardPage() {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-extrabold">My Datasets</h3>
                 <button
-                  onClick={() => setUploadModalOpen(true)}
+                  onClick={() => uploadModal.open()}
                   className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
                 >
                   <Upload className="h-4 w-4" />
@@ -1274,12 +1257,8 @@ function DashboardPage() {
                           {isAdmin ? (
                             <button
                               onClick={() => handleDeleteDataset(dataset.id)}
-                              className={`p-2 rounded-lg border-2 border-black hover:scale-110 transition ${
-                                deleteConfirm === dataset.id 
-                                  ? 'bg-red-500 text-white' 
-                                  : 'bg-red-300'
-                              }`}
-                              title={deleteConfirm === dataset.id ? 'Click again to confirm' : 'Delete dataset'}
+                              className="p-2 rounded-lg border-2 border-black hover:scale-110 transition bg-red-300"
+                              title="Delete dataset"
                             >
                               <Trash className="h-5 w-5" />
                             </button>
@@ -1361,14 +1340,6 @@ function DashboardPage() {
                         
                         return null
                       })()}
-                      
-                      {deleteConfirm === dataset.id && isAdmin && (
-                        <div className="mt-3 p-3 bg-red-100 border-2 border-red-500 rounded-lg">
-                          <p className="font-bold text-sm text-red-700">
-                            ⚠️ Are you sure? Click delete again to confirm. This cannot be undone!
-                          </p>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -1379,7 +1350,7 @@ function DashboardPage() {
                     You haven&apos;t created any datasets yet
                   </p>
                   <button
-                    onClick={() => setUploadModalOpen(true)}
+                    onClick={() => uploadModal.open()}
                     className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
                   >
                     Create Your First Dataset
@@ -1626,8 +1597,7 @@ function DashboardPage() {
                                   navigate('/?auth=signin')
                                   return
                                 }
-                                setSelectedBountyForSubmission(bounty)
-                                setBountySubmissionOpen(true)
+                                bountySubmissionModal.open(bounty)
                               }}
                               className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
                             >
@@ -1908,7 +1878,7 @@ function DashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setCurationRequestModalOpen(true)}
+                  onClick={() => curationRequestModal.open()}
                   className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
                 >
                   + New Request
@@ -1939,7 +1909,7 @@ function DashboardPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setCurationRequestModalOpen(true)}
+                    onClick={() => curationRequestModal.open()}
                     className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
                   >
                     🚀 Post Your First Request
@@ -2061,10 +2031,7 @@ function DashboardPage() {
                         <div className="flex gap-2">
                           {proposals.length > 0 && (
                             <button
-                              onClick={() => {
-                                setSelectedRequest(request)
-                                setProposalsModalOpen(true)
-                              }}
+                              onClick={() => proposalsModal.open(request)}
                               className="flex-1 bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-4 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
                             >
                               View {proposals.length} Proposal{proposals.length !== 1 ? 's' : ''}
@@ -2113,7 +2080,7 @@ function DashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setCurationRequestModalOpen(true)}
+                  onClick={() => curationRequestModal.open()}
                   className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition"
                 >
                   Request Curation Help
@@ -2183,10 +2150,7 @@ function DashboardPage() {
                             {request.status === 'in_progress' && (
                               <div className="flex gap-3 mt-4">
                                 <button
-                                  onClick={() => {
-                                    setSelectedRequestForSubmission(request)
-                                    setSubmissionModalOpen(true)
-                                  }}
+                                  onClick={() => curatorSubmissionModal.open(request)}
                                   className="px-4 py-2 bg-green-400 text-black font-bold rounded-full border-2 border-black hover:bg-green-500 transition"
                                 >
                                   📤 Submit Completed Work
@@ -2252,10 +2216,7 @@ function DashboardPage() {
                             </div>
 
                             <button
-                              onClick={() => {
-                                setSelectedRequestForProposal(request)
-                                setProposalSubmissionOpen(true)
-                              }}
+                              onClick={() => proposalSubmissionModal.open(request)}
                               className="w-full bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-extrabold px-4 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
                             >
                               Submit Proposal
@@ -2320,10 +2281,7 @@ function DashboardPage() {
                             </div>
 
                             <button
-                              onClick={() => {
-                                setSelectedRequestForProposal(request)
-                                setProposalSubmissionOpen(true)
-                              }}
+                              onClick={() => proposalSubmissionModal.open(request)}
                               className="ml-4 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:opacity-90 transition whitespace-nowrap"
                             >
                               Submit Proposal
@@ -2450,14 +2408,14 @@ function DashboardPage() {
       </main>
       
       {/* Edit Dataset Modal */}
-      {editingDataset && (
+      {editDatasetModal.isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl border-4 border-black max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-extrabold">Edit Dataset</h3>
                 <button
-                  onClick={() => setEditingDataset(null)}
+                  onClick={editDatasetModal.close}
                   className="p-2 hover:bg-gray-100 rounded-lg transition"
                 >
                   <X className="h-6 w-6" />
@@ -2469,8 +2427,8 @@ function DashboardPage() {
                   <label className="block font-bold mb-2">Title</label>
                   <input
                     type="text"
-                    value={editingDataset.title}
-                    onChange={(e) => setEditingDataset(prev => ({ ...prev, title: e.target.value }))}
+                    value={editDatasetModal.data?.title || ''}
+                    onChange={(e) => editDatasetModal.updateData({ ...editDatasetModal.data, title: e.target.value })}
                     className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
                     placeholder="Dataset title"
                   />
@@ -2479,8 +2437,8 @@ function DashboardPage() {
                 <div>
                   <label className="block font-bold mb-2">Description</label>
                   <textarea
-                    value={editingDataset.description}
-                    onChange={(e) => setEditingDataset(prev => ({ ...prev, description: e.target.value }))}
+                    value={editDatasetModal.data?.description || ''}
+                    onChange={(e) => editDatasetModal.updateData({ ...editDatasetModal.data, description: e.target.value })}
                     className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
                     rows="4"
                     placeholder="Describe your dataset..."
@@ -2494,8 +2452,8 @@ function DashboardPage() {
                       type="number"
                       min="0"
                       step="0.01"
-                      value={editingDataset.price}
-                      onChange={(e) => setEditingDataset(prev => ({ ...prev, price: e.target.value }))}
+                      value={editDatasetModal.data?.price || ''}
+                      onChange={(e) => editDatasetModal.updateData({ ...editDatasetModal.data, price: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
                     />
                   </div>
@@ -2503,8 +2461,8 @@ function DashboardPage() {
                   <div>
                     <label className="block font-bold mb-2">Modality</label>
                     <select
-                      value={editingDataset.modality}
-                      onChange={(e) => setEditingDataset(prev => ({ ...prev, modality: e.target.value }))}
+                      value={editDatasetModal.data?.modality || 'vision'}
+                      onChange={(e) => editDatasetModal.updateData({ ...editDatasetModal.data, modality: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
                     >
                       <option value="vision">Vision</option>
@@ -2520,11 +2478,11 @@ function DashboardPage() {
                   <label className="block font-bold mb-2">Tags (comma-separated)</label>
                   <input
                     type="text"
-                    value={editingDataset.tags?.join(', ') || ''}
-                    onChange={(e) => setEditingDataset(prev => ({ 
-                      ...prev, 
+                    value={editDatasetModal.data?.tags?.join(', ') || ''}
+                    onChange={(e) => editDatasetModal.updateData({ 
+                      ...editDatasetModal.data, 
                       tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) 
-                    }))}
+                    })}
                     className="w-full px-4 py-2 border-2 border-black rounded-lg font-semibold"
                     placeholder="machine-learning, computer-vision, nlp"
                   />
@@ -2540,7 +2498,7 @@ function DashboardPage() {
                   {actionLoading ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
-                  onClick={() => setEditingDataset(null)}
+                  onClick={editDatasetModal.close}
                   className="flex-1 bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:bg-gray-300 transition"
                 >
                   Cancel
@@ -2553,37 +2511,31 @@ function DashboardPage() {
       
       {/* Upload Dataset Modal */}
       <DatasetUploadModal 
-        isOpen={uploadModalOpen}
-        onClose={() => setUploadModalOpen(false)}
+        isOpen={uploadModal.isOpen}
+        onClose={uploadModal.close}
         onSuccess={fetchDashboardData}
       />
       
       {/* Curation Request Modal */}
       <CurationRequestModal 
-        isOpen={curationRequestModalOpen}
-        onClose={() => setCurationRequestModalOpen(false)}
+        isOpen={curationRequestModal.isOpen}
+        onClose={curationRequestModal.close}
         onSuccess={fetchDashboardData}
       />
       
       {/* Proposals Modal */}
       <ProposalsModal 
-        isOpen={proposalsModalOpen}
-        onClose={() => {
-          setProposalsModalOpen(false)
-          setSelectedRequest(null)
-        }}
-        request={selectedRequest}
+        isOpen={proposalsModal.isOpen}
+        onClose={proposalsModal.close}
+        request={proposalsModal.data}
         onAccept={fetchDashboardData}
       />
       
       {/* Proposal Submission Modal */}
       <ProposalSubmissionModal 
-        isOpen={proposalSubmissionOpen}
-        onClose={() => {
-          setProposalSubmissionOpen(false)
-          setSelectedRequestForProposal(null)
-        }}
-        request={selectedRequestForProposal}
+        isOpen={proposalSubmissionModal.isOpen}
+        onClose={proposalSubmissionModal.close}
+        request={proposalSubmissionModal.data}
         curatorProfile={curatorProfile}
         userProfile={profile}
         onSuccess={fetchDashboardData}
@@ -2591,23 +2543,17 @@ function DashboardPage() {
 
       {/* Bounty Submission Modal - For custom dataset uploads to bounties */}
       <BountySubmissionModal
-        isOpen={bountySubmissionOpen}
-        onClose={() => {
-          setBountySubmissionOpen(false)
-          setSelectedBountyForSubmission(null)
-        }}
-        bounty={selectedBountyForSubmission}
+        isOpen={bountySubmissionModal.isOpen}
+        onClose={bountySubmissionModal.close}
+        bounty={bountySubmissionModal.data}
         onSuccess={fetchDashboardData}
       />
 
       {/* Curator Submission Modal */}
       <CuratorSubmissionModal
-        isOpen={submissionModalOpen}
-        onClose={() => {
-          setSubmissionModalOpen(false)
-          setSelectedRequestForSubmission(null)
-        }}
-        request={selectedRequestForSubmission}
+        isOpen={curatorSubmissionModal.isOpen}
+        onClose={curatorSubmissionModal.close}
+        request={curatorSubmissionModal.data}
         curatorProfile={curatorProfile}
         onSuccess={fetchDashboardData}
       />
@@ -2867,13 +2813,11 @@ function DashboardPage() {
 
       {/* Confirm Dialog */}
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        onConfirm={confirmDialog.onConfirm}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        confirmText={confirmDialog.confirmText}
-        variant={confirmDialog.variant}
+        isOpen={confirmDialogModal.isOpen}
+        onClose={confirmDialogModal.cancel}
+        onConfirm={confirmDialogModal.confirm}
+        title={confirmDialogModal.title}
+        message={confirmDialogModal.message}
       />
     </div>
   )

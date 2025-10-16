@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useModalState, useConfirmDialog } from '../lib/hooks/useModalState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TrustLevelManager from '../components/TrustLevelManager';
 import FeedbackManagement from '../components/FeedbackManagement';
@@ -24,12 +25,11 @@ export default function AdminDashboard() {
   
   // Datasets
   const [allDatasets, setAllDatasets] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState(null);
-  const [showDatasetModal, setShowDatasetModal] = useState(false);
   
-  // Users
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showUserModal, setShowUserModal] = useState(false);
+  // Modal states - Using useModalState hook (Phase 2 refactoring)
+  const userModal = useModalState()
+  const bountyModal = useModalState()
+  const confirmDialogModal = useConfirmDialog()
   
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
@@ -41,17 +41,9 @@ export default function AdminDashboard() {
   
   // Bounties (curation requests)
   const [allBounties, setAllBounties] = useState([]);
-  const [selectedBounty, setSelectedBounty] = useState(null);
-  const [showBountyModal, setShowBountyModal] = useState(false);
   
   // Bounty Submissions
   const [allBountySubmissions, setAllBountySubmissions] = useState([]);
-  
-  // Confirm Dialog
-  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
-
-  // TODO: Phase 2 - Consolidate modal states using useModalState hook
-  // Combine: showUserModal, showBountyModal, confirmDialog, rejectingRequest states
   
   // Stats
   const [stats, setStats] = useState({
@@ -431,26 +423,22 @@ export default function AdminDashboard() {
   const handleViewUserDetails = (userId) => {
     const userProfile = allUsers.find(u => u.id === userId);
     if (userProfile) {
-      setSelectedUser(userProfile);
-      setShowUserModal(true);
+      userModal.open(userProfile);
     }
   };
 
   const handleViewDataset = (datasetId) => {
     const dataset = allDatasets.find(d => d.id === datasetId);
     if (dataset) {
-      setSelectedDataset(dataset);
-      setShowDatasetModal(true);
+      // Note: Dataset modal not currently used in AdminDashboard, keeping for future use
+      console.log('Dataset details:', dataset);
     }
   };
 
   const handleDeleteDataset = async (datasetId, datasetTitle) => {
-    setConfirmDialog({
-      isOpen: true,
+    confirmDialogModal.show({
       title: 'Delete Dataset?',
       message: `⚠️ Are you sure you want to PERMANENTLY DELETE "${datasetTitle}"?\n\nThis will remove the dataset and ALL related data including purchases, reviews, comments, and favorites.\n\nThis action cannot be undone!`,
-      confirmText: 'Delete Permanently',
-      variant: 'danger',
       onConfirm: async () => {
 
     try {
@@ -573,12 +561,9 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteBounty = async (bountyId) => {
-    setConfirmDialog({
-      isOpen: true,
+    confirmDialogModal.show({
       title: 'Delete Bounty?',
       message: '⚠️ PERMANENTLY delete this bounty? This cannot be undone and will delete all associated proposals.',
-      confirmText: 'Delete',
-      variant: 'danger',
       onConfirm: async () => {
         try {
           // Delete proposals first (foreign key constraint)
@@ -1439,10 +1424,7 @@ export default function AdminDashboard() {
                                   🗑️ Delete
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    setSelectedBounty(bounty);
-                                    setShowBountyModal(true);
-                                  }}
+                                  onClick={() => bountyModal.open(bounty)}
                                   className="bg-blue-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-blue-300 transition text-sm"
                                 >
                                   👁️ View Details
@@ -1493,10 +1475,7 @@ export default function AdminDashboard() {
                                   🗑️ Delete
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    setSelectedBounty(bounty);
-                                    setShowBountyModal(true);
-                                  }}
+                                  onClick={() => bountyModal.open(bounty)}
                                   className="bg-blue-400 border-2 border-black px-4 py-2 rounded-lg font-bold hover:bg-blue-300 transition text-sm"
                                 >
                                   👁️ View Details
@@ -1760,140 +1739,19 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Dataset Details Modal */}
-      {showDatasetModal && selectedDataset && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowDatasetModal(false)}>
-          <div className="bg-white rounded-xl border-2 border-black max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h2 className="text-3xl font-extrabold mb-2">{selectedDataset.title}</h2>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="px-3 py-1 bg-purple-200 rounded-full font-bold">{selectedDataset.modality}</span>
-                    <span className="text-2xl font-extrabold text-green-600">${selectedDataset.price}</span>
-                    {selectedDataset.is_featured && (
-                      <span className="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
-                        ⭐ FEATURED
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowDatasetModal(false)}
-                  className="bg-red-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  ✕ Close
-                </button>
-              </div>
-
-              {/* Description */}
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-2">Description</h3>
-                <p className="text-gray-700">{selectedDataset.description}</p>
-              </div>
-
-              {/* Tags */}
-              {selectedDataset.tags && selectedDataset.tags.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold mb-2">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDataset.tags.map((tag, idx) => (
-                      <span key={idx} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Metadata */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="border-2 border-black rounded-lg p-4">
-                  <div className="text-sm font-bold text-gray-600 mb-1">Creator</div>
-                  <div className="font-bold">{selectedDataset.profiles?.username || 'Unknown'}</div>
-                  <div className="text-xs text-gray-500">{selectedDataset.profiles?.email || ''}</div>
-                </div>
-                <div className="border-2 border-black rounded-lg p-4">
-                  <div className="text-sm font-bold text-gray-600 mb-1">Purchases</div>
-                  <div className="font-bold">{selectedDataset.purchase_count || 0}</div>
-                </div>
-                <div className="border-2 border-black rounded-lg p-4">
-                  <div className="text-sm font-bold text-gray-600 mb-1">Status</div>
-                  <div className="font-bold">{selectedDataset.is_active ? '✅ Active' : '❌ Inactive'}</div>
-                </div>
-              </div>
-
-              {/* Download URL */}
-              {selectedDataset.download_url && (
-                <div className="mb-6">
-                  <h3 className="text-xl font-bold mb-2">Storage Path</h3>
-                  <div className="bg-gray-100 p-3 rounded-lg border border-gray-300 font-mono text-sm break-all">
-                    {selectedDataset.download_url}
-                  </div>
-                </div>
-              )}
-
-              {/* Dates */}
-              <div className="flex gap-4 text-sm text-gray-600 mb-6">
-                <div>
-                  <span className="font-bold">Created:</span> {new Date(selectedDataset.created_at).toLocaleString()}
-                </div>
-                {selectedDataset.updated_at && (
-                  <div>
-                    <span className="font-bold">Updated:</span> {new Date(selectedDataset.updated_at).toLocaleString()}
-                  </div>
-                )}
-              </div>
-
-              {/* Admin Actions */}
-              <div className="flex gap-3 pt-4 border-t-2 border-gray-200">
-                <button
-                  onClick={() => {
-                    handleToggleFeatured(selectedDataset.id);
-                    setShowDatasetModal(false);
-                  }}
-                  className="bg-blue-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  {selectedDataset.is_featured ? '⭐ Unfeature' : '⭐ Feature'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDatasetModal(false);
-                    handleDeleteDataset(selectedDataset.id, selectedDataset.title);
-                  }}
-                  className="bg-red-400 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  🗑️ Delete
-                </button>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedDataset.id);
-                    alert('Dataset ID copied to clipboard!');
-                  }}
-                  className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                >
-                  📋 Copy ID
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* User Details Modal */}
-      {showUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowUserModal(false)}>
+      {userModal.isOpen && userModal.data && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={userModal.close}>
           <div className="bg-white rounded-xl border-2 border-black max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-3xl font-extrabold mb-2">{selectedUser.username || 'Anonymous User'}</h2>
-                  <p className="text-gray-600">{selectedUser.email || 'No email'}</p>
+                  <h2 className="text-3xl font-extrabold mb-2">{userModal.data.username || 'Anonymous User'}</h2>
+                  <p className="text-gray-600">{userModal.data.email || 'No email'}</p>
                 </div>
                 <button
-                  onClick={() => setShowUserModal(false)}
+                  onClick={userModal.close}
                   className="bg-red-400 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition"
                 >
                   ✕ Close
@@ -1904,22 +1762,22 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="border-2 border-black rounded-lg p-4">
                   <div className="text-sm font-bold text-gray-600 mb-1">User ID</div>
-                  <div className="font-mono text-sm break-all">{selectedUser.id}</div>
+                  <div className="font-mono text-sm break-all">{userModal.data.id}</div>
                 </div>
                 <div className="border-2 border-black rounded-lg p-4">
                   <div className="text-sm font-bold text-gray-600 mb-1">Joined</div>
-                  <div className="font-bold">{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'Unknown'}</div>
+                  <div className="font-bold">{userModal.data.created_at ? new Date(userModal.data.created_at).toLocaleDateString() : 'Unknown'}</div>
                 </div>
               </div>
 
               {/* User's Datasets */}
               <div className="mb-6">
                 <h3 className="text-xl font-bold mb-3">Datasets Created</h3>
-                {allDatasets.filter(d => d.creator_id === selectedUser.id).length === 0 ? (
+                {allDatasets.filter(d => d.creator_id === userModal.data.id).length === 0 ? (
                   <p className="text-gray-500 text-center py-4">No datasets created yet</p>
                 ) : (
                   <div className="space-y-2">
-                    {allDatasets.filter(d => d.creator_id === selectedUser.id).map((dataset) => (
+                    {allDatasets.filter(d => d.creator_id === userModal.data.id).map((dataset) => (
                       <div key={dataset.id} className="border border-gray-300 rounded-lg p-3 flex justify-between items-center hover:bg-gray-50">
                         <div>
                           <div className="font-bold">{dataset.title}</div>
@@ -1927,7 +1785,7 @@ export default function AdminDashboard() {
                         </div>
                         <button
                           onClick={() => {
-                            setShowUserModal(false);
+                            userModal.close();
                             handleViewDataset(dataset.id);
                           }}
                           className="bg-blue-400 text-black font-bold px-3 py-1 rounded-full border-2 border-black hover:scale-105 transition text-sm"
@@ -1945,7 +1803,7 @@ export default function AdminDashboard() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(selectedUser.id);
+                      navigator.clipboard.writeText(userModal.data.id);
                       alert('User ID copied to clipboard!');
                     }}
                     className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
@@ -1954,7 +1812,7 @@ export default function AdminDashboard() {
                   </button>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(selectedUser.email || '');
+                      navigator.clipboard.writeText(userModal.data.email || '');
                       alert('Email copied to clipboard!');
                     }}
                     className="bg-gray-200 text-black font-bold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
@@ -1965,10 +1823,10 @@ export default function AdminDashboard() {
                 
                 {/* Trust Level Management */}
                 <TrustLevelManager 
-                  userId={selectedUser.id}
-                  currentLevel={selectedUser.trust_level || 0}
+                  userId={userModal.data.id}
+                  currentLevel={userModal.data.trust_level || 0}
                   onUpdate={() => {
-                    setShowUserModal(false);
+                    userModal.close();
                     fetchAdminData();
                   }}
                 />
@@ -1978,8 +1836,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Confirm Dialog */}
-      {showBountyModal && selectedBounty && (
+      {/* Bounty Details Modal */}
+      {bountyModal.isOpen && bountyModal.data && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl border-4 border-black max-w-2xl w-full shadow-[10px_10px_0_#000]">
             <div className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
@@ -1988,10 +1846,7 @@ export default function AdminDashboard() {
                 Bounty Details
               </h3>
               <button
-                onClick={() => {
-                  setShowBountyModal(false);
-                  setSelectedBounty(null);
-                }}
+                onClick={bountyModal.close}
                 className="px-3 py-1 font-bold border-2 border-black rounded-full bg-gray-100 hover:bg-gray-200 transition"
               >
                 Close
@@ -1999,34 +1854,34 @@ export default function AdminDashboard() {
             </div>
             <div className="px-6 py-4 space-y-4">
               <div>
-                <h4 className="text-xl font-bold mb-1">{selectedBounty.title}</h4>
-                <p className="text-gray-700 leading-relaxed">{selectedBounty.description}</p>
+                <h4 className="text-xl font-bold mb-1">{bountyModal.data.title}</h4>
+                <p className="text-gray-700 leading-relaxed">{bountyModal.data.description}</p>
               </div>
               <div className="grid md:grid-cols-2 gap-4 text-sm font-semibold">
                 <div className="bg-yellow-100 border-2 border-black rounded-xl p-4">
                   <div>💰 Budget</div>
                   <div>
-                    ${selectedBounty.budget_min} - ${selectedBounty.budget_max}
+                    ${bountyModal.data.budget_min} - ${bountyModal.data.budget_max}
                   </div>
                 </div>
                 <div className="bg-blue-100 border-2 border-black rounded-xl p-4">
                   <div>📅 Posted</div>
-                  <div>{new Date(selectedBounty.created_at).toLocaleString()}</div>
+                  <div>{new Date(bountyModal.data.created_at).toLocaleString()}</div>
                 </div>
                 <div className="bg-green-100 border-2 border-black rounded-xl p-4">
                   <div>🧑 Requestor</div>
-                  <div>{selectedBounty.profiles?.username || 'Unknown'}</div>
+                  <div>{bountyModal.data.profiles?.username || 'Unknown'}</div>
                 </div>
                 <div className="bg-purple-100 border-2 border-black rounded-xl p-4">
                   <div>📦 Status</div>
-                  <div className="capitalize">{selectedBounty.status || 'open'}</div>
+                  <div className="capitalize">{bountyModal.data.status || 'open'}</div>
                 </div>
               </div>
-              {selectedBounty.requirements && (
+              {bountyModal.data.requirements && (
                 <div className="bg-gray-50 border-2 border-dashed border-black rounded-xl p-4">
                   <div className="font-bold mb-2">📝 Requirements</div>
                   <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-                    {selectedBounty.requirements}
+                    {bountyModal.data.requirements}
                   </p>
                 </div>
               )}
@@ -2035,13 +1890,13 @@ export default function AdminDashboard() {
         </div>
       )}
       <ConfirmDialog
-        isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        onConfirm={confirmDialog.onConfirm}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        confirmText={confirmDialog.confirmText}
-        variant={confirmDialog.variant}
+        isOpen={confirmDialogModal.isOpen}
+        onClose={confirmDialogModal.cancel}
+        onConfirm={confirmDialogModal.confirm}
+        title={confirmDialogModal.title}
+        message={confirmDialogModal.message}
+        confirmText={confirmDialogModal.confirmText}
+        variant={confirmDialogModal.variant}
       />
     </div>
   );
