@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
@@ -318,7 +318,7 @@ function HomePage() {
               <p className="text-sm font-semibold">
                 Platform in active development. All transactions are live and real. 
                 <a 
-                  href="mailto:info@setique.com" 
+                  href="mailto:joseph@anconsulting.us" 
                   className="underline ml-1 hover:text-cyan-600 transition"
                 >
                   Report issues or share feedback
@@ -549,115 +549,57 @@ function HomePage() {
           </div>
         </section>
 
-        {/* Resources & Getting Started Teaser */}
-        <section id="getting-started" className="max-w-6xl mx-auto mb-24 pt-10">
-          <div className="bg-gradient-to-br from-cyan-100 via-pink-100 to-yellow-100 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
-            <div className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] p-6 border-b-4 border-black text-center">
+        {/* Data Curation Guide Section */}
+        <section id="curator-guide" className="max-w-6xl mx-auto mb-24 pt-10">
+          <div className="bg-gradient-to-br from-yellow-200 via-pink-200 to-cyan-200 border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] overflow-hidden">
+            <div className="bg-[linear-gradient(90deg,#ff00c3,#00ffff)] p-6 border-b-4 border-black">
               <h3 className="text-4xl font-extrabold text-white drop-shadow-[2px_2px_0_#000]">
-                📚 New to Dataset Creation?
+                📚 Data Curation Guide for Beginners
               </h3>
-              <p className="text-white/90 font-semibold mt-2 text-lg">
-                Explore our comprehensive guides for buyers, sellers, and Pro Curators
+              <p className="text-white/90 font-semibold mt-2">
+                Never created a dataset before? Start here.
               </p>
             </div>
-
-            <div className="p-8">
-              {/* Banner: Raw Uploads Available */}
-              <div className="bg-orange-100 border-3 border-orange-500 rounded-xl p-4 mb-8 text-center">
-                <p className="font-extrabold text-lg">
-                  ⚡ <span className="text-orange-700">NEW:</span> Raw uploads now available! 
-                  <span className="text-orange-600"> Non-labeled data gets admin review within 24-48 hours.</span>
-                </p>
-              </div>
-
-              {/* 4 Resource Cards */}
-              <div className="grid sm:grid-cols-2 gap-6 mb-8">
-                <div className="bg-cyan-50 border-3 border-cyan-400 rounded-xl p-6 hover:shadow-[6px_6px_0_#000] transition-all">
-                  <div className="text-4xl mb-3">🚀</div>
-                  <h4 className="text-xl font-extrabold mb-2">Platform Guide</h4>
-                  <p className="text-sm text-black/70 font-semibold mb-4">
-                    Quick start, features overview, and user roles explained in 5 minutes.
-                  </p>
-                  <div className="flex items-center gap-2 text-cyan-600 font-bold text-sm">
-                    <span>Learn More</span>
-                    <span>→</span>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 border-3 border-blue-400 rounded-xl p-6 hover:shadow-[6px_6px_0_#000] transition-all">
-                  <div className="text-4xl mb-3">📊</div>
-                  <h4 className="text-xl font-extrabold mb-2">Data Concepts</h4>
-                  <p className="text-sm text-black/70 font-semibold mb-4">
-                    Understanding datasets, modalities, file formats, and what makes quality data.
-                  </p>
-                  <div className="flex items-center gap-2 text-blue-600 font-bold text-sm">
-                    <span>Explore</span>
-                    <span>→</span>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 border-3 border-purple-400 rounded-xl p-6 hover:shadow-[6px_6px_0_#000] transition-all">
-                  <div className="text-4xl mb-3">🎯</div>
-                  <h4 className="text-xl font-extrabold mb-2">Raw vs Curated</h4>
-                  <p className="text-sm text-black/70 font-semibold mb-4">
-                    Comparison table, pricing guide, and dataset upgrade partnership opportunities.
-                  </p>
-                  <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
-                    <span>Compare</span>
-                    <span>→</span>
-                  </div>
-                </div>
-
-                <div className="bg-yellow-50 border-3 border-yellow-400 rounded-xl p-6 hover:shadow-[6px_6px_0_#000] transition-all">
-                  <div className="text-4xl mb-3">💡</div>
-                  <h4 className="text-xl font-extrabold mb-2">Success Tips</h4>
-                  <p className="text-sm text-black/70 font-semibold mb-4">
-                    Best practices for sellers, buyers, Pro Curators, and common mistakes to avoid.
-                  </p>
-                  <div className="flex items-center gap-2 text-yellow-600 font-bold text-sm">
-                    <span>Discover</span>
-                    <span>→</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <div className="text-center">
-                <button
-                  onClick={() => navigate('/resources')}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-400 to-pink-400 text-black font-extrabold px-8 py-4 rounded-full border-3 border-black shadow-[6px_6px_0_#000] hover:translate-y-1 hover:shadow-[3px_3px_0_#000] transition-all text-lg"
-                >
-                  <span>📖</span>
-                  <span>Read Complete Getting Started Guide</span>
-                  <span>→</span>
-                </button>
-                <p className="text-sm text-black/60 font-semibold mt-3">
-                  Comprehensive 4-tab guide • Beginner-friendly • 10 min read
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pro Curator Program Section */}
-        <section id="pro-curator" className="max-w-6xl mx-auto mb-24 pt-10">
-          <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-4 border-black rounded-3xl shadow-[12px_12px_0_#000] overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-500 p-8 border-b-4 border-black text-center">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <Star className="h-10 w-10 text-yellow-300 fill-yellow-300" />
-                <h3 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-[3px_3px_0_#000]">
-                  Pro Curator Program
-                </h3>
-                <Star className="h-10 w-10 text-yellow-300 fill-yellow-300" />
-              </div>
-              <p className="text-xl font-bold text-white/90 max-w-3xl mx-auto">
-                Partner with data owners, apply your expertise, and earn 50/50 revenue splits on professionally curated datasets
-              </p>
-            </div>
-
-            {/* Content */}
+            
             <div className="p-8 space-y-8">
+              {/* What is Data Curation */}
+              <div>
+                <h4 className="text-2xl font-extrabold mb-3 text-black">
+                  🤔 What is Data Curation? (In Plain English)
+                </h4>
+                <p className="font-semibold text-black/80 mb-3">
+                  Data curation is like being a teacher for AI. Just like a child learns by looking at many examples, 
+                  AI learns from datasets. Your job as a curator is to collect examples and label them so the AI 
+                  understands what it's looking at.
+                </p>
+                <div className="bg-white border-3 border-black rounded-xl p-5 space-y-3">
+                  <p className="font-bold mb-2">💡 Real-World Example:</p>
+                  <p className="font-semibold text-sm leading-relaxed">
+                    Imagine you're teaching a robot to identify different types of pizza:<br/>
+                    <span className="text-green-700">✓ Good dataset:</span> 100 pizza photos, each labeled with "style: neapolitan, 
+                    toppings: margherita, crust: thin, cooked: wood-fired"<br/>
+                    <span className="text-red-700">✗ Bad dataset:</span> 100 pizza photos with no labels or just "pizza"
+                  </p>
+                  <p className="font-semibold text-sm text-black/70 italic mt-2">
+                    The labels (metadata) are what make the data valuable. Without them, it's just random pictures!
+                  </p>
+                </div>
+              </div>
+
+              {/* Why This Matters */}
+              <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-3 border-black rounded-xl p-5">
+                <h4 className="text-xl font-extrabold mb-3 text-black">
+                  🎯 Why Your Work Matters
+                </h4>
+                <div className="space-y-2 text-sm font-semibold">
+                  <p>• AI companies need specialized data that doesn't exist yet</p>
+                  <p>• Researchers need specific examples for their studies</p>
+                  <p>• Startups need custom datasets for their unique products</p>
+                  <p>• You get paid for creating what they need!</p>
+                </div>
+              </div>
+
+              {/* Types of Data You Can Curate */}
               <div>
                 <h4 className="text-2xl font-extrabold mb-4 text-black">
                   🎨 What Kind of Data Can I Curate? (Start With What You Know!)
@@ -1473,15 +1415,8 @@ function HomePage() {
         </section>
       </main>
 
-      <footer className="text-center text-black font-bold mt-8 text-sm bg-yellow-300 border-t-4 border-black py-6">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="mb-3">© {new Date().getFullYear()} Setique — The Niche Data Economy</p>
-          <div className="flex justify-center gap-6 text-xs">
-            <Link to="/privacy" className="hover:underline">
-              Privacy Policy
-            </Link>
-          </div>
-        </div>
+      <footer className="text-center text-black font-bold mt-8 text-sm bg-yellow-300 border-t-4 border-black py-4">
+        © {new Date().getFullYear()} Setique — The Niche Data Economy
       </footer>
 
       {/* Modals */}
