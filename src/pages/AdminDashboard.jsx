@@ -466,8 +466,8 @@ export default function AdminDashboard() {
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Dataset?',
-      message: `⚠️ Are you sure you want to DELETE "${datasetTitle}"?\n\nNote: If this dataset has purchases, it will be soft-deleted (marked as inactive) to preserve transaction history. Otherwise, it will be permanently deleted.`,
-      confirmText: 'Delete',
+      message: `⚠️ Are you sure you want to PERMANENTLY DELETE "${datasetTitle}"?\n\nThis will remove the dataset and ALL related data including purchases, reviews, comments, and favorites.\n\nThis action cannot be undone!`,
+      confirmText: 'Delete Permanently',
       variant: 'danger',
       onConfirm: async () => {
 
@@ -490,15 +490,7 @@ export default function AdminDashboard() {
         throw new Error(result.error || 'Failed to delete dataset');
       }
 
-      // Check if it was a soft delete or hard delete
-      if (result.data?.softDeleted) {
-        alert(`✅ Dataset soft-deleted (marked as inactive) due to ${result.data.purchaseCount} existing purchase(s). Transaction history preserved.`);
-      } else if (result.data?.hardDeleted) {
-        alert('✅ Dataset permanently deleted!');
-      } else {
-        alert('✅ Dataset deleted successfully!');
-      }
-      
+      alert('✅ Dataset permanently deleted!');
       await fetchAdminData();
       } catch (error) {
         console.error('Error deleting dataset:', error);

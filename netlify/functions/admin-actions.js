@@ -154,66 +154,49 @@ exports.handler = async (event) => {
         break
 
       case 'delete_dataset':
-        // Admin can delete any dataset
-        // First check if dataset has any purchases
-        const { count: purchaseCount } = await supabase
+        // Admin hard delete - removes dataset and all related data
+        
+        // Step 1: Delete all purchases of this dataset
+        await supabase
           .from('purchases')
-          .select('*', { count: 'exact', head: true })
+          .delete()
           .eq('dataset_id', targetId)
         
-        // If dataset has purchases, use soft delete (mark as inactive)
-        if (purchaseCount > 0) {
-          result = await supabase
-            .from('datasets')
-            .update({ 
-              is_active: false,
-              title: `[DELETED] ${(await supabase.from('datasets').select('title').eq('id', targetId).single()).data?.title || 'Dataset'}`
-            })
-            .eq('id', targetId)
-          
-          // Return success with soft delete message
-          result.softDeleted = true
-          result.purchaseCount = purchaseCount
-        } else {
-          // No purchases exist, safe to hard delete
-          // Step 1: Clear published_dataset_id references in curation_requests
-          await supabase
-            .from('curation_requests')
-            .update({ published_dataset_id: null })
-            .eq('published_dataset_id', targetId)
-          
-          // Step 2: Delete related partnerships (if any)
-          await supabase
-            .from('dataset_partnerships')
-            .delete()
-            .eq('dataset_id', targetId)
-          
-          // Step 3: Delete reviews
-          await supabase
-            .from('dataset_reviews')
-            .delete()
-            .eq('dataset_id', targetId)
-          
-          // Step 4: Delete comments
-          await supabase
-            .from('comments')
-            .delete()
-            .eq('dataset_id', targetId)
-          
-          // Step 5: Delete favorites
-          await supabase
-            .from('favorites')
-            .delete()
-            .eq('dataset_id', targetId)
-          
-          // Step 6: Delete the dataset
-          result = await supabase
-            .from('datasets')
-            .delete()
-            .eq('id', targetId)
-          
-          result.hardDeleted = true
-        }
+        // Step 2: Clear published_dataset_id references in curation_requests
+        await supabase
+          .from('curation_requests')
+          .update({ published_dataset_id: null })
+          .eq('published_dataset_id', targetId)
+        
+        // Step 3: Delete related partnerships (if any)
+        await supabase
+          .from('dataset_partnerships')
+          .delete()
+          .eq('dataset_id', targetId)
+        
+        // Step 4: Delete reviews
+        await supabase
+          .from('dataset_reviews')
+          .delete()
+          .eq('dataset_id', targetId)
+        
+        // Step 5: Delete comments
+        await supabase
+          .from('comments')
+          .delete()
+          .eq('dataset_id', targetId)
+        
+        // Step 6: Delete favorites
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('dataset_id', targetId)
+        
+        // Step 7: Delete the dataset itself
+        result = await supabase
+          .from('datasets')
+          .delete()
+          .eq('id', targetId)
         break
 
       case 'get_user_details':
@@ -259,66 +242,49 @@ exports.handler = async (event) => {
           }
         }
         
-        // Step 2: Check if dataset has any purchases
-        const { count: requestPurchaseCount } = await supabase
+        // Step 2: Delete all purchases of this dataset
+        await supabase
           .from('purchases')
-          .select('*', { count: 'exact', head: true })
+          .delete()
           .eq('dataset_id', deletionRequest.dataset_id)
         
-        let deletionType = 'hard'
+        // Step 3: Clear published_dataset_id references in curation_requests
+        await supabase
+          .from('curation_requests')
+          .update({ published_dataset_id: null })
+          .eq('published_dataset_id', deletionRequest.dataset_id)
         
-        // If dataset has purchases, use soft delete (mark as inactive)
-        if (requestPurchaseCount > 0) {
-          const { error: softDeleteError } = await supabase
-            .from('datasets')
-            .update({ 
-              is_active: false,
-              title: `[DELETED] ${deletionRequest.datasets?.title || 'Dataset'}`
-            })
-            .eq('id', deletionRequest.dataset_id)
-          
-          if (softDeleteError) throw softDeleteError
-          deletionType = 'soft'
-        } else {
-          // No purchases exist, safe to hard delete
-          // Step 3: Clear published_dataset_id references in curation_requests
-          await supabase
-            .from('curation_requests')
-            .update({ published_dataset_id: null })
-            .eq('published_dataset_id', deletionRequest.dataset_id)
-          
-          // Step 4: Delete related partnerships (if any)
-          await supabase
-            .from('dataset_partnerships')
-            .delete()
-            .eq('dataset_id', deletionRequest.dataset_id)
-          
-          // Step 5: Delete reviews
-          await supabase
-            .from('dataset_reviews')
-            .delete()
-            .eq('dataset_id', deletionRequest.dataset_id)
-          
-          // Step 6: Delete comments
-          await supabase
-            .from('comments')
-            .delete()
-            .eq('dataset_id', deletionRequest.dataset_id)
-          
-          // Step 7: Delete favorites
-          await supabase
-            .from('favorites')
-            .delete()
-            .eq('dataset_id', deletionRequest.dataset_id)
-          
-          // Step 8: Delete the dataset
-          const { error: deleteError } = await supabase
-            .from('datasets')
-            .delete()
-            .eq('id', deletionRequest.dataset_id)
-          
-          if (deleteError) throw deleteError
-        }
+        // Step 4: Delete related partnerships (if any)
+        await supabase
+          .from('dataset_partnerships')
+          .delete()
+          .eq('dataset_id', deletionRequest.dataset_id)
+        
+        // Step 5: Delete reviews
+        await supabase
+          .from('dataset_reviews')
+          .delete()
+          .eq('dataset_id', deletionRequest.dataset_id)
+        
+        // Step 6: Delete comments
+        await supabase
+          .from('comments')
+          .delete()
+          .eq('dataset_id', deletionRequest.dataset_id)
+        
+        // Step 7: Delete favorites
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('dataset_id', deletionRequest.dataset_id)
+        
+        // Step 8: Delete the dataset
+        const { error: deleteError } = await supabase
+          .from('datasets')
+          .delete()
+          .eq('id', deletionRequest.dataset_id)
+        
+        if (deleteError) throw deleteError
         
         // Step 9: Update the deletion request status
         result = await supabase
@@ -327,7 +293,7 @@ exports.handler = async (event) => {
             status: 'approved',
             reviewed_by: userId,
             reviewed_at: new Date().toISOString(),
-            admin_response: details?.adminResponse || `Deletion request approved (${deletionType} delete - ${requestPurchaseCount} purchases)`
+            admin_response: details?.adminResponse || 'Deletion request approved - dataset permanently deleted'
           })
           .eq('id', targetId)
         break
