@@ -2,16 +2,15 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { stripePromise } from '../lib/stripe'
 import { logger, handleSupabaseError } from '../lib/logger'
 import { fetchUserPurchases as fetchPurchases } from '../lib/purchases'
 import { checkBetaAccess as checkBeta } from '../lib/betaAccess'
+import { handleDatasetCheckout, refreshDatasetsAfterPurchase } from '../lib/checkout'
 import { SignInModal } from '../components/SignInModal'
 import { BountySubmissionModal } from '../components/BountySubmissionModal'
 import FeedbackModal from '../components/FeedbackModal'
 import ShareModal from '../components/ShareModal'
 import NotificationBell from '../components/NotificationBell'
-import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
   Zap,
@@ -165,125 +164,40 @@ function HomePage() {
       return
     }
 
-    // Check if user has beta access
-    if (!hasBetaAccess) {
-      alert('You need to be approved for beta access to purchase datasets. Check your email for your access code!')
-      navigate('/dashboard')
+    setProcessing(true)
+    
+    const result = await handleDatasetCheckout({
+      user,
+      dataset: datasets[checkoutIdx],
+      hasBetaAccess,
+      fetchUserPurchases,
+      onNavigate: navigate
+    })
+
+    // Handle result
+    if (!result.success) {
+      if (result.requiresAuth) {
+        setSignInOpen(true)
+      } else {
+        alert(result.message)
+      }
+      setCheckoutIdx(null)
+      setProcessing(false)
       return
     }
 
-    setProcessing(true)
-    try {
-      const dataset = datasets[checkoutIdx]
-
-      // Prevent self-purchase
-      if (dataset.creator_id === user.id) {
-        alert('❌ You cannot purchase your own dataset!')
-        setCheckoutIdx(null)
-        setProcessing(false)
-        return
-      }
-
-      // Check if user already owns this dataset
-      const { data: existingPurchase, error: checkError } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('dataset_id', dataset.id)
-        .maybeSingle()
-
-      if (checkError) throw checkError
-
-      if (existingPurchase) {
-        alert('You already own this dataset! Check your dashboard to download it.')
-        setCheckoutIdx(null)
-        setProcessing(false)
-        return
-      }
-
-      // Handle free datasets differently
-      if (dataset.price === 0) {
-        // Create purchase record directly for free datasets
-        const { error: purchaseError } = await supabase
-          .from('purchases')
-          .insert([
-            {
-              user_id: user.id,
-              dataset_id: dataset.id,
-              amount: 0,
-              status: 'completed',
-            },
-          ])
-
-        if (purchaseError) {
-          // Handle duplicate purchase error specifically
-          if (purchaseError.code === '23505') {
-            alert('You already own this dataset! Check your dashboard to download it.')
-          } else {
-            throw new Error(purchaseError.message)
-          }
-          setCheckoutIdx(null)
-          setProcessing(false)
-          return
-        }
-
-        // Log activity for social feed and send notification
-        await logDatasetPurchased(user.id, dataset.id, dataset.title, 0, dataset.user_id)
-
-        // Refresh user purchases to update UI
-        await fetchUserPurchases()
-
-        // Show success message
-        alert(`✅ ${dataset.title} added to your library!`)
-        setCheckoutIdx(null)
-        setProcessing(false)
-        
-        // Reload datasets
-        const { data: newDatasets } = await supabase
-          .from('datasets')
-          .select('*, profiles(username)')
-          .order('created_at', { ascending: false })
-        if (newDatasets) setDatasets(newDatasets)
-
-        return
-      }
-
-      // For paid datasets, use Stripe checkout
-      const response = await fetch('/.netlify/functions/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          datasetId: dataset.id,
-          userId: user.id,
-          price: dataset.price,
-          title: dataset.title,
-          creatorId: dataset.creator_id, // Pass creator ID for Stripe Connect
-        }),
-      })
-
-      const { sessionId, error } = await response.json()
-
-      if (error) {
-        throw new Error(error)
-      }
-
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
-      })
-
-      if (stripeError) {
-        throw stripeError
-      }
-    } catch (error) {
-      handleSupabaseError(error, 'handleCheckout')
-      alert('Error processing payment: ' + error.message)
-      setProcessing(false)
+    // Success handling
+    if (result.isFree) {
+      alert(result.message)
       setCheckoutIdx(null)
+      setProcessing(false)
+      
+      // Refresh datasets if needed
+      if (result.shouldRefreshDatasets) {
+        await refreshDatasetsAfterPurchase(setDatasets)
+      }
     }
+    // For paid datasets, user will be redirected to Stripe (processing state persists)
   }
 
 
@@ -306,8 +220,8 @@ function HomePage() {
               </div>
               <p className="text-sm font-semibold">
                 Platform in active development. All transactions are live and real. 
-                <a 
-                  href="mailto:joseph@anconsulting.us" 
+                  <a 
+                    href="mailto:info@setique.com" 
                   className="underline ml-1 hover:text-cyan-600 transition"
                 >
                   Report issues or share feedback
