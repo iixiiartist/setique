@@ -2,11 +2,16 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { logDatasetPublished } from '../lib/activityTracking'
-import { X, Upload } from './Icons'
+import { X, Upload, Package, Wrench, Tag as TagIcon } from './Icons'
 import { TagInput } from './TagInput'
 
 export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth()
+  
+  // Curation level state (new)
+  const [curationLevel, setCurationLevel] = useState(() => {
+    return localStorage.getItem('draft_modal_curation_level') || 'curated'
+  })
   
   // Form state with localStorage persistence
   const [title, setTitle] = useState(() => {
@@ -25,6 +30,20 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     const saved = localStorage.getItem('draft_modal_dataset_tags')
     return saved ? JSON.parse(saved) : []
   })
+  
+  // New fields for raw/partial datasets
+  const [samplePreviews, setSamplePreviews] = useState([])
+  const [readmeContent, setReadmeContent] = useState(() => {
+    return localStorage.getItem('draft_modal_readme_content') || ''
+  })
+  const [metadataCompleteness, setMetadataCompleteness] = useState(50)
+  
+  // Auto-save curation level to localStorage
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_curation_level', curationLevel)
+    }
+  }, [curationLevel, isOpen])
   
   // Auto-save form to localStorage
   useEffect(() => {
@@ -57,6 +76,13 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     }
   }, [tags, isOpen])
   
+  // Auto-save README content
+  useEffect(() => {
+    if (isOpen) {
+      localStorage.setItem('draft_modal_readme_content', readmeContent)
+    }
+  }, [readmeContent, isOpen])
+  
   // File upload state
   const [uploadFile, setUploadFile] = useState(null)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -65,7 +91,31 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   
   // Allow price = 0 for demo datasets; treat blank or negative as invalid
   const numericPrice = price === '' ? NaN : parseFloat(price)
-  const isFormValid = title.trim() !== '' && description.trim() !== '' && !isNaN(numericPrice) && numericPrice >= 0 && uploadFile !== null
+  
+  // Validation logic based on curation level
+  const isFormValid = (() => {
+    const basicValid = title.trim() !== '' && 
+                      description.trim() !== '' && 
+                      !isNaN(numericPrice) && 
+                      numericPrice >= 0 && 
+                      uploadFile !== null
+    
+    if (!basicValid) return false
+    
+    // Additional validations for raw/partial
+    if (curationLevel === 'raw') {
+      return samplePreviews.length >= 3 && 
+             samplePreviews.length <= 10 &&
+             readmeContent.trim().length >= 100
+    }
+    
+    if (curationLevel === 'partial') {
+      return samplePreviews.length >= 3 && 
+             samplePreviews.length <= 10
+    }
+    
+    return true
+  })()
   
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -73,6 +123,28 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
       setUploadFile(file)
       setUploadError('')
     }
+  }
+  
+  const handleSamplePreviewChange = (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length + samplePreviews.length > 10) {
+      setUploadError('Maximum 10 sample preview files allowed')
+      return
+    }
+    
+    // Check file sizes (max 5MB each)
+    const oversized = files.filter(f => f.size > 5 * 1024 * 1024)
+    if (oversized.length > 0) {
+      setUploadError('Sample preview files must be under 5MB each')
+      return
+    }
+    
+    setSamplePreviews([...samplePreviews, ...files])
+    setUploadError('')
+  }
+  
+  const removeSamplePreview = (index) => {
+    setSamplePreviews(samplePreviews.filter((_, i) => i !== index))
   }
 
   const getAccentColor = (mod) => {
@@ -105,7 +177,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     setUploadError('')
     
     try {
-      // Upload file to Supabase Storage
+      // Step 1: Upload main dataset file to Supabase Storage
       const fileExt = uploadFile.name.split('.').pop()
       const fileName = `${user.id}/${Date.now()}.${fileExt}`
       
@@ -116,13 +188,42 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           upsert: false,
           onUploadProgress: (progress) => {
             const percentage = (progress.loaded / progress.total) * 100
-            setUploadProgress(Math.round(percentage))
+            setUploadProgress(Math.round(percentage * 0.7)) // Reserve 30% for sample uploads
           }
         })
 
       if (uploadError) throw uploadError
+      
+      // Step 2: Upload sample preview files (if any)
+      let samplePreviewUrls = []
+      if (samplePreviews.length > 0) {
+        setUploadProgress(70)
+        const uploadPromises = samplePreviews.map(async (file, index) => {
+          const ext = file.name.split('.').pop()
+          const samplePath = `${user.id}/samples/${Date.now()}_${index}.${ext}`
+          
+          const { data, error } = await supabase.storage
+            .from('datasets')
+            .upload(samplePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            })
+          
+          if (error) throw error
+          
+          // Get public URL for the sample
+          const { data: { publicUrl } } = supabase.storage
+            .from('datasets')
+            .getPublicUrl(data.path)
+          
+          return publicUrl
+        })
+        
+        samplePreviewUrls = await Promise.all(uploadPromises)
+        setUploadProgress(90)
+      }
 
-      // Create dataset record with storage path
+      // Step 3: Create dataset record with all fields
       const { data: insertedDataset, error: insertError } = await supabase.from('datasets').insert([
         {
           creator_id: user.id,
@@ -135,12 +236,20 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           download_url: uploadData.path,
           file_size: uploadFile.size,
           is_active: true,
+          // New curation level fields
+          curation_level: curationLevel,
+          sample_preview_urls: samplePreviewUrls,
+          readme_content: curationLevel === 'raw' ? readmeContent.trim() : null,
+          metadata_completeness: curationLevel === 'partial' ? metadataCompleteness : 100,
+          // review_status will be auto-set by trigger based on Pro Curator status
         },
       ]).select()
 
       if (insertError) throw insertError
+      
+      setUploadProgress(100)
 
-      // Log activity for social feed
+      // Step 4: Log activity for social feed
       if (insertedDataset && insertedDataset[0]) {
         await logDatasetPublished(
           user.id,
@@ -150,8 +259,13 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           modality
         )
       }
-
-      alert(`✅ Published "${title}"! Your dataset is now live on the marketplace.`)
+      
+      // Success message varies by curation level
+      const reviewMessage = curationLevel === 'raw' && user.trust_level < 3
+        ? ' Your upload will be reviewed by our team within 24-48 hours.'
+        : ' Your dataset is now live on the marketplace.'
+      
+      alert(`✅ Published "${title}"!${reviewMessage}`)
       
       // Reset form and clear localStorage draft
       setTitle('')
@@ -160,12 +274,18 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
       setModality('vision')
       setTags([])
       setUploadFile(null)
+      setSamplePreviews([])
+      setReadmeContent('')
+      setMetadataCompleteness(50)
+      setCurationLevel('curated')
       setUploadProgress(0)
       localStorage.removeItem('draft_modal_dataset_title')
       localStorage.removeItem('draft_modal_dataset_desc')
       localStorage.removeItem('draft_modal_dataset_price')
       localStorage.removeItem('draft_modal_dataset_modality')
       localStorage.removeItem('draft_modal_dataset_tags')
+      localStorage.removeItem('draft_modal_readme_content')
+      localStorage.removeItem('draft_modal_curation_level')
       
       // Call success callback to refresh dashboard data
       if (onSuccess) {
@@ -195,6 +315,10 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     setModality('vision')
     setTags([])
     setUploadFile(null)
+    setSamplePreviews([])
+    setReadmeContent('')
+    setMetadataCompleteness(50)
+    setCurationLevel('curated')
     setUploadProgress(0)
     setUploadError('')
     onClose()
@@ -211,7 +335,7 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
             <div>
               <h3 className="text-2xl font-extrabold">Upload New Dataset</h3>
               <p className="text-sm font-semibold text-black/60 mt-1">
-                Share your curated data with the community
+                Choose your curation level and share your data
               </p>
             </div>
             <button
@@ -224,6 +348,94 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Curation Level Selector */}
+            <div className="bg-gradient-to-r from-yellow-100 via-pink-100 to-cyan-100 border-4 border-black rounded-xl p-4">
+              <label className="block font-extrabold text-lg mb-3">
+                🎯 Curation Level
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCurationLevel('raw')}
+                  disabled={isUploading}
+                  className={`
+                    flex flex-col items-center p-4 rounded-lg border-4 border-black
+                    font-bold text-sm transition
+                    ${curationLevel === 'raw' 
+                      ? 'bg-orange-300 shadow-[4px_4px_0_#000]' 
+                      : 'bg-white hover:bg-gray-50'}
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  <Package className="h-8 w-8 mb-2" />
+                  <span>Raw Data</span>
+                  <span className="text-xs font-normal text-black/70 mt-1">
+                    No labels
+                  </span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setCurationLevel('partial')}
+                  disabled={isUploading}
+                  className={`
+                    flex flex-col items-center p-4 rounded-lg border-4 border-black
+                    font-bold text-sm transition
+                    ${curationLevel === 'partial' 
+                      ? 'bg-yellow-300 shadow-[4px_4px_0_#000]' 
+                      : 'bg-white hover:bg-gray-50'}
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  <Wrench className="h-8 w-8 mb-2" />
+                  <span>Partial</span>
+                  <span className="text-xs font-normal text-black/70 mt-1">
+                    Some labeling
+                  </span>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setCurationLevel('curated')}
+                  disabled={isUploading}
+                  className={`
+                    flex flex-col items-center p-4 rounded-lg border-4 border-black
+                    font-bold text-sm transition
+                    ${curationLevel === 'curated' 
+                      ? 'bg-green-300 shadow-[4px_4px_0_#000]' 
+                      : 'bg-white hover:bg-gray-50'}
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  <TagIcon className="h-8 w-8 mb-2" />
+                  <span>Curated</span>
+                  <span className="text-xs font-normal text-black/70 mt-1">
+                    Fully labeled
+                  </span>
+                </button>
+              </div>
+              
+              {/* Info message based on selection */}
+              <div className="mt-3 p-3 bg-white border-2 border-black rounded-lg text-sm font-semibold">
+                {curationLevel === 'raw' && (
+                  <p>
+                    📦 <strong>Raw data:</strong> Requires 3-10 sample previews + README (100+ chars).
+                    {user?.trust_level < 3 && <span className="text-orange-600"> Will be reviewed within 24-48 hours.</span>}
+                  </p>
+                )}
+                {curationLevel === 'partial' && (
+                  <p>
+                    🏗️ <strong>Partially curated:</strong> Requires 3-10 sample previews. Set your metadata completeness percentage.
+                  </p>
+                )}
+                {curationLevel === 'curated' && (
+                  <p>
+                    🏷️ <strong>Fully curated:</strong> Production-ready data. Sample previews optional but recommended.
+                  </p>
+                )}
+              </div>
+            </div>
+            
             {/* Title */}
             <div>
               <label className="block font-bold mb-2">
@@ -262,6 +474,22 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                 <label className="block font-bold mb-2">
                   Price (USD) <span className="text-red-500">*</span>
                 </label>
+                
+                {/* Dynamic Price Guidance */}
+                <div className="mb-2 p-2 bg-blue-50 border-2 border-blue-400 rounded-lg text-xs">
+                  <p className="font-bold text-blue-900 mb-1">
+                    💡 Typical Pricing:
+                  </p>
+                  <p className="font-semibold text-blue-700">
+                    {curationLevel === 'raw' && '$5-25 typical'}
+                    {curationLevel === 'partial' && `$20-60 typical for ${metadataCompleteness}% complete`}
+                    {curationLevel === 'curated' && '$50+ typical (often $150-500+)'}
+                  </p>
+                  <p className="text-blue-600 mt-1">
+                    No max—price based on your data&apos;s value!
+                  </p>
+                </div>
+                
                 <input
                   type="number"
                   min="0"
@@ -273,9 +501,6 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                   placeholder="0.00"
                   required
                 />
-                <p className="text-xs font-semibold text-black/60 mt-1">
-                  Set to $0 for demo datasets
-                </p>
               </div>
               
               <div>
@@ -312,6 +537,113 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                 Add tags to help users discover your dataset
               </p>
             </div>
+            
+            {/* Sample Preview Upload (Raw/Partial) */}
+            {(curationLevel === 'raw' || curationLevel === 'partial') && (
+              <div className="bg-yellow-50 border-3 border-yellow-400 rounded-xl p-4">
+                <label className="block font-extrabold mb-2">
+                  Sample Previews <span className="text-red-500">* (3-10 required)</span>
+                </label>
+                <p className="text-xs font-semibold text-black/70 mb-3">
+                  Upload 3-10 representative sample files (max 5MB each) so buyers can assess quality before purchasing.
+                </p>
+                
+                {samplePreviews.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {samplePreviews.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-white border-2 border-black rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-sm font-bold">{file.name}</p>
+                          <p className="text-xs text-black/60">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        {!isUploading && (
+                          <button
+                            type="button"
+                            onClick={() => removeSamplePreview(index)}
+                            className="text-red-600 font-bold hover:underline text-sm"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <input
+                  type="file"
+                  id="sample-preview-upload"
+                  multiple
+                  accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.txt,.csv,.json,.wav,.mp3,.mp4"
+                  onChange={handleSamplePreviewChange}
+                  disabled={isUploading || samplePreviews.length >= 10}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="sample-preview-upload"
+                  className={`
+                    inline-block px-6 py-2 rounded-full border-2 border-black font-bold
+                    ${samplePreviews.length >= 10 || isUploading
+                      ? 'bg-gray-200 cursor-not-allowed opacity-50'
+                      : 'bg-yellow-200 hover:bg-yellow-300 cursor-pointer'}
+                  `}
+                >
+                  {samplePreviews.length === 0 ? 'Upload Sample Previews' : `Add More (${samplePreviews.length}/10)`}
+                </label>
+              </div>
+            )}
+            
+            {/* README Content (Raw only) */}
+            {curationLevel === 'raw' && (
+              <div className="bg-orange-50 border-3 border-orange-400 rounded-xl p-4">
+                <label className="block font-extrabold mb-2">
+                  README Documentation <span className="text-red-500">* (100+ chars)</span>
+                </label>
+                <p className="text-xs font-semibold text-black/70 mb-2">
+                  Describe your dataset structure, file formats, use cases, and any limitations. Markdown supported.
+                </p>
+                <textarea
+                  value={readmeContent}
+                  onChange={(e) => setReadmeContent(e.target.value)}
+                  disabled={isUploading}
+                  className="w-full px-4 py-3 border-2 border-black rounded-lg font-mono text-sm disabled:bg-gray-100"
+                  rows="8"
+                  placeholder="# Dataset Overview&#10;&#10;This dataset contains...&#10;&#10;## File Structure&#10;- images/ - Raw image files&#10;- metadata.csv - File descriptions&#10;&#10;## Use Cases&#10;- Computer vision training&#10;- Object detection&#10;&#10;## Limitations&#10;- Images are not labeled&#10;- Some files may need preprocessing"
+                  required
+                />
+                <p className="text-xs font-semibold text-black/60 mt-1">
+                  {readmeContent.length} / 100+ characters
+                  {readmeContent.length >= 100 && <span className="text-green-600"> ✓</span>}
+                </p>
+              </div>
+            )}
+            
+            {/* Metadata Completeness (Partial only) */}
+            {curationLevel === 'partial' && (
+              <div className="bg-yellow-50 border-3 border-yellow-400 rounded-xl p-4">
+                <label className="block font-extrabold mb-2">
+                  Metadata Completeness: {metadataCompleteness}%
+                </label>
+                <p className="text-xs font-semibold text-black/70 mb-3">
+                  What percentage of your files have complete labels/metadata?
+                </p>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  value={metadataCompleteness}
+                  onChange={(e) => setMetadataCompleteness(parseInt(e.target.value))}
+                  disabled={isUploading}
+                  className="w-full h-3 bg-gray-300 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs font-bold mt-2">
+                  <span>20% (Partially labeled)</span>
+                  <span>80% (Mostly complete)</span>
+                </div>
+              </div>
+            )}
             
             {/* File Upload */}
             <div>
