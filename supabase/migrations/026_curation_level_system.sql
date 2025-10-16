@@ -93,7 +93,7 @@ ALTER TABLE datasets
 ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES profiles(id);
 
 COMMENT ON COLUMN datasets.reviewed_by IS 
-'Admin user (is_admin = true) who reviewed this raw upload.
+'Admin user who reviewed this raw upload.
 NULL if auto-approved (Pro Curator) or not yet reviewed.';
 
 ALTER TABLE datasets 
@@ -192,9 +192,8 @@ CREATE POLICY "Admins can view all datasets" ON datasets
 FOR SELECT
 USING (
   EXISTS (
-    SELECT 1 FROM profiles 
-    WHERE profiles.id = auth.uid() 
-    AND profiles.is_admin = true
+    SELECT 1 FROM admins 
+    WHERE admins.user_id = auth.uid()
   )
 );
 
@@ -202,12 +201,14 @@ USING (
 -- STEP 11: Create admin review helper functions
 -- =====================================================
 
--- Function to check if user is Pro Curator (auto-approve eligible)
+-- Function to check if user is Pro Curator or Admin (auto-approve eligible)
 CREATE OR REPLACE FUNCTION is_pro_curator(user_id UUID)
 RETURNS BOOLEAN AS $$
   SELECT COALESCE(
     (SELECT trust_level >= 3 FROM profiles WHERE id = user_id),
     false
+  ) OR EXISTS (
+    SELECT 1 FROM admins WHERE admins.user_id = user_id
   );
 $$ LANGUAGE SQL STABLE;
 
