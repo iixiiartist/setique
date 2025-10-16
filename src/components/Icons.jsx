@@ -330,4 +330,45 @@ export const Wrench = ({ className }) => (
   </Icon>
 )
 
+export const ExternalLink = ({ className }) => (
+  <Icon className={className}>
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    <polyline points="15 3 21 3 21 9" />
+    <line x1="10" y1="14" x2="21" y2="3" />
+  </Icon>
+)
+
+export const Book = ({ className }) => (
+  <Icon className={className}>
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+  </Icon>
+)
+
+export const Target = ({ className }) => (
+  <Icon className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </Icon>
+)
+
+export const Lightbulb = ({ className }) => (
+  <Icon className={className}>
+    <path d="M9 18h6" />
+    <path d="M10 22h4" />
+    <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+  </Icon>
+)
+
+export const ArrowRight = ({ className }) => (
+  <Icon className={className}>
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
+  </Icon>
+)
+
+
+
+
+
 
