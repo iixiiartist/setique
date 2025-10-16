@@ -11,6 +11,7 @@ import NotificationBell from '../components/NotificationBell'
 import DatasetComments from '../components/comments/DatasetComments'
 import DatasetReviews from '../components/DatasetReviews'
 import StarRating from '../components/StarRating'
+import { CurationLevelBadge } from '../components/CurationLevelBadge'
 import { logDatasetPurchased } from '../lib/activityTracking'
 import {
   Star,
@@ -38,6 +39,7 @@ export default function DatasetsPage() {
   // General state
   const [query, setQuery] = useState('')
   const [modality, setModality] = useState('all')
+  const [curationFilter, setCurationFilter] = useState('all')
   
   // Beta access state
   const [hasBetaAccess, setHasBetaAccess] = useState(false)
@@ -228,9 +230,12 @@ export default function DatasetsPage() {
           (d.title + d.description + d.tags.join(' '))
             .toLowerCase()
             .includes(query.toLowerCase()) &&
-          (modality === 'all' || d.tags.some((tag) => tag === modality))
+          (modality === 'all' || d.tags.some((tag) => tag === modality)) &&
+          (curationFilter === 'all' || 
+           curationFilter === 'verified' ? d.verified_by_curator === true :
+           (d.curation_level || 'curated') === curationFilter)
       ),
-    [datasets, query, modality]
+    [datasets, query, modality, curationFilter]
   )
 
   useEffect(() => {
@@ -567,6 +572,63 @@ export default function DatasetsPage() {
             </div>
           </div>
           
+          {/* Curation Level Filters */}
+          <div className="mb-6 bg-gradient-to-r from-yellow-100 via-pink-100 to-cyan-100 border-4 border-black rounded-xl p-4">
+            <h3 className="font-extrabold text-sm mb-3">Filter by Curation Level:</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setCurationFilter('all')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  curationFilter === 'all'
+                    ? 'bg-black text-white shadow-none'
+                    : 'bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🔥 All Datasets
+              </button>
+              <button
+                onClick={() => setCurationFilter('curated')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  curationFilter === 'curated'
+                    ? 'bg-green-400 text-black shadow-none'
+                    : 'bg-green-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🏷️ Curated
+              </button>
+              <button
+                onClick={() => setCurationFilter('partial')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  curationFilter === 'partial'
+                    ? 'bg-yellow-400 text-black shadow-none'
+                    : 'bg-yellow-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🔧 Partial
+              </button>
+              <button
+                onClick={() => setCurationFilter('raw')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  curationFilter === 'raw'
+                    ? 'bg-orange-400 text-black shadow-none'
+                    : 'bg-orange-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                📦 Raw Data
+              </button>
+              <button
+                onClick={() => setCurationFilter('verified')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  curationFilter === 'verified'
+                    ? 'bg-purple-400 text-white shadow-none'
+                    : 'bg-purple-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🛡️ Verified Only
+              </button>
+            </div>
+          </div>
+          
           {/* Datasets Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {filtered.length > 0 ? (
@@ -575,10 +637,17 @@ export default function DatasetsPage() {
                   key={d.id}
                   className={`${d.accent_color} border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] hover:scale-105 transition-transform flex flex-col`}
                 >
-                  <div className="p-6 pb-2">
-                    <h3 className="text-2xl font-extrabold text-black uppercase">
+                <div className="p-6 pb-2">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <h3 className="text-2xl font-extrabold text-black uppercase flex-1">
                       {d.title}
                     </h3>
+                    <CurationLevelBadge 
+                      level={d.curation_level || 'curated'} 
+                      verified={d.verified_by_curator}
+                      size="sm"
+                    />
+                  </div>
                     
                     {/* Rating display */}
                     {d.review_count > 0 && (
@@ -595,9 +664,7 @@ export default function DatasetsPage() {
                           ({d.review_count})
                         </span>
                       </div>
-                    )}
-                    
-                    {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
+                    )}                    {d.dataset_partnerships?.[0]?.pro_curators && d.dataset_partnerships[0].status === 'active' && (
                       <div className="mt-2 flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border-2 ${badgeColors[d.dataset_partnerships[0].pro_curators.badge_level] || badgeColors.verified}`}>
                           <Star className="w-3 h-3 mr-1 fill-current" />
