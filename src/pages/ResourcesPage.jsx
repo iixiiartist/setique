@@ -87,7 +87,7 @@ export default function ResourcesPage() {
                   Getting Started with SETIQUE
                 </h2>
                 <p className="text-lg font-semibold text-black/70">
-                  Your complete guide to buying, selling, and curating datasets on a marketplace built for AI creators and data experts.
+                  SETIQUE is the marketplace for unique datasets that give your AI the edge. Buy curated data, sell your expertise, or become a Pro Curator earning premium rates.
                 </p>
               </div>
 
@@ -102,21 +102,21 @@ export default function ResourcesPage() {
                     <span className="flex-shrink-0 w-8 h-8 bg-cyan-600 text-white font-extrabold rounded-full flex items-center justify-center border-2 border-black">1</span>
                     <div>
                       <p className="font-bold">Create Your Account</p>
-                      <p className="text-sm text-black/70">Sign up with email or GitHub. Verify your email to get started.</p>
+                      <p className="text-sm text-black/70">Sign up with your email and create a username. Verify your email to get started.</p>
                     </div>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex-shrink-0 w-8 h-8 bg-cyan-600 text-white font-extrabold rounded-full flex items-center justify-center border-2 border-black">2</span>
                     <div>
                       <p className="font-bold">Browse the Marketplace</p>
-                      <p className="text-sm text-black/70">Explore datasets by category, curation level, or search for specific topics.</p>
+                      <p className="text-sm text-black/70">Explore curated datasets for AI/ML training. Filter by modality, curation level, or search by keyword.</p>
                     </div>
                   </li>
                   <li className="flex gap-3">
                     <span className="flex-shrink-0 w-8 h-8 bg-cyan-600 text-white font-extrabold rounded-full flex items-center justify-center border-2 border-black">3</span>
                     <div>
                       <p className="font-bold">Make Your First Purchase or Upload</p>
-                      <p className="text-sm text-black/70">Buy datasets instantly with Stripe, or upload your own to start selling.</p>
+                      <p className="text-sm text-black/70">Buy datasets instantly with secure Stripe payments, or upload your own to start earning 80% revenue share.</p>
                     </div>
                   </li>
                 </ol>
@@ -131,7 +131,7 @@ export default function ResourcesPage() {
                       <Upload className="h-6 w-6 text-yellow-700 flex-shrink-0" />
                       <div>
                         <h4 className="font-extrabold">Upload & Sell</h4>
-                        <p className="text-sm text-black/70">List datasets at any price. Keep 80% of revenue (Stripe fees apply).</p>
+                        <p className="text-sm text-black/70">List datasets at any price. Earn 80% revenue share on every sale (Stripe processing fees apply).</p>
                       </div>
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export default function ResourcesPage() {
                       <Database className="h-6 w-6 text-green-700 flex-shrink-0" />
                       <div>
                         <h4 className="font-extrabold">Instant Purchase</h4>
-                        <p className="text-sm text-black/70">Buy datasets with credit card. Download immediately after payment.</p>
+                        <p className="text-sm text-black/70">Secure credit card payments via Stripe. Download your dataset immediately after purchase.</p>
                       </div>
                     </div>
                   </div>
@@ -150,8 +150,8 @@ export default function ResourcesPage() {
                     <div className="flex items-start gap-3 mb-2">
                       <DollarSign className="h-6 w-6 text-pink-700 flex-shrink-0" />
                       <div>
-                        <h4 className="font-extrabold">Bounties (Curation Requests)</h4>
-                        <p className="text-sm text-black/70">Request specific datasets. Pro Curators bid to fulfill your needs.</p>
+                        <h4 className="font-extrabold">Curation Requests (Bounties)</h4>
+                        <p className="text-sm text-black/70">Need specific data? Post a bounty and Pro Curators will compete to deliver exactly what you need.</p>
                       </div>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export default function ResourcesPage() {
                       <Shield className="h-6 w-6 text-purple-700 flex-shrink-0" />
                       <div>
                         <h4 className="font-extrabold">Pro Curator Program</h4>
-                        <p className="text-sm text-black/70">Build reputation, earn trust level, access exclusive opportunities.</p>
+                        <p className="text-sm text-black/70">Earn verified badges, build reputation through trust levels, and access exclusive bounty opportunities.</p>
                       </div>
                     </div>
                   </div>
@@ -175,17 +175,17 @@ export default function ResourcesPage() {
                   <div className="border-3 border-black rounded-xl p-4 bg-gradient-to-r from-cyan-50 to-blue-50">
                     <h4 className="font-extrabold mb-2 flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      Data Buyers
+                      Data Buyers & AI Builders
                     </h4>
-                    <p className="text-sm text-black/70">Browse marketplace, purchase datasets, request custom curation via bounties.</p>
+                    <p className="text-sm text-black/70">Browse unique datasets, make instant purchases, or post curation requests (bounties) for custom data needs.</p>
                   </div>
 
                   <div className="border-3 border-black rounded-xl p-4 bg-gradient-to-r from-yellow-50 to-orange-50">
                     <h4 className="font-extrabold mb-2 flex items-center gap-2">
                       <Upload className="h-5 w-5" />
-                      Data Sellers
+                      Data Sellers & Creators
                     </h4>
-                    <p className="text-sm text-black/70">Upload datasets (raw/partial/curated), set prices, earn revenue from sales.</p>
+                    <p className="text-sm text-black/70">Upload datasets (raw/partial/curated), set your own prices, and earn 80% revenue share on all sales.</p>
                   </div>
 
                   <div className="border-3 border-black rounded-xl p-4 bg-gradient-to-r from-purple-50 to-pink-50">
@@ -193,7 +193,7 @@ export default function ResourcesPage() {
                       <Shield className="h-5 w-5" />
                       Pro Curators (Trust Level 3+)
                     </h4>
-                    <p className="text-sm text-black/70">Verified experts who fulfill bounties, upgrade raw datasets, and earn premium rates.</p>
+                    <p className="text-sm text-black/70">Verified experts who fulfill bounties, partner on dataset upgrades, and command premium rates for high-quality curation.</p>
                   </div>
                 </div>
               </div>
@@ -529,17 +529,17 @@ export default function ResourcesPage() {
               <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-3 border-purple-600 rounded-xl p-6">
                 <h3 className="text-xl font-extrabold mb-3 flex items-center gap-2">
                   <Shield className="h-6 w-6" />
-                  💎 Dataset Upgrade Partnerships
+                  💎 Dataset Partnership Program
                 </h3>
                 <p className="text-black/80 mb-4 font-semibold">
-                  Raw data owners can partner with Pro Curators to upgrade their datasets:
+                  Raw data owners can partner with Pro Curators to upgrade their datasets and split the revenue:
                 </p>
                 <ol className="space-y-2 ml-6">
-                  <li className="font-semibold">1. Upload raw data (admin approves within 24-48 hours)</li>
-                  <li className="font-semibold">2. Pro Curator offers to label/clean your data</li>
-                  <li className="font-semibold">3. Negotiate revenue split (typical: 60/40 or 50/50)</li>
-                  <li className="font-semibold">4. Curator upgrades dataset to &quot;Curated&quot; status</li>
-                  <li className="font-semibold">5. Sell at 3-10x higher price, both parties earn more</li>
+                  <li className="font-semibold">1. Upload your raw dataset to the marketplace</li>
+                  <li className="font-semibold">2. Pro Curators may propose to label and enhance your data</li>
+                  <li className="font-semibold">3. Negotiate revenue split (common splits: 60/40 or 50/50)</li>
+                  <li className="font-semibold">4. Curator upgrades dataset quality and curation level</li>
+                  <li className="font-semibold">5. Sell at 3-10x higher price point—both parties earn significantly more</li>
                 </ol>
               </div>
             </div>
@@ -583,14 +583,14 @@ export default function ResourcesPage() {
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Price Competitively</p>
-                      <p className="text-sm text-black/70">Raw: $5-25, Partial: $20-60, Curated: $50-500+ (research similar datasets)</p>
+                      <p className="text-sm text-black/70">Raw: $5-25, Partial: $20-60, Curated: $50-500+. Research similar datasets and price for value.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Tag Thoroughly</p>
-                      <p className="text-sm text-black/70">Use 5-10 relevant tags (modality, domain, file type) for better discoverability</p>
+                      <p className="text-sm text-black/70">Use 5-10 relevant tags (modality, domain, format) so buyers can discover your dataset in search.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -635,7 +635,7 @@ export default function ResourcesPage() {
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Consider Raw Data + Bounties</p>
-                      <p className="text-sm text-black/70">Buy cheap raw data, then request Pro Curator labeling via bounty</p>
+                      <p className="text-sm text-black/70">Buy affordable raw data, then post a bounty for Pro Curator labeling—often cheaper than buying fully curated.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -659,35 +659,35 @@ export default function ResourcesPage() {
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Build Your Reputation</p>
-                      <p className="text-sm text-black/70">Complete bounties on time, upload quality curated datasets to increase trust level</p>
+                      <p className="text-sm text-black/70">Complete bounties on time and upload high-quality datasets to increase your trust level and unlock benefits.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Specialize in a Domain</p>
-                      <p className="text-sm text-black/70">Become known for medical imaging, NLP, audio, etc. to attract repeat clients</p>
+                      <p className="text-sm text-black/70">Become the go-to expert for medical imaging, audio, NLP, etc. to attract repeat clients and premium rates.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold">Offer Dataset Upgrade Partnerships</p>
-                      <p className="text-sm text-black/70">Find raw datasets, propose labeling deal (60/40 split), earn passive income</p>
+                      <p className="font-bold">Propose Dataset Partnerships</p>
+                      <p className="text-sm text-black/70">Find raw datasets, propose labeling partnerships (60/40 split), and earn ongoing passive income from upgrades.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Document Your Process</p>
-                      <p className="text-sm text-black/70">Include labeling guidelines, quality checks in README to justify premium prices</p>
+                      <p className="text-sm text-black/70">Include labeling guidelines, quality checks, and methodology in your README to justify premium pricing.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Bid Competitively on Bounties</p>
-                      <p className="text-sm text-black/70">Balance pricing with timeline—fast + quality wins contracts</p>
+                      <p className="text-sm text-black/70">Balance pricing with delivery speed—fast turnaround plus high quality wins contracts and builds reputation.</p>
                     </div>
                   </div>
                 </div>
@@ -704,7 +704,7 @@ export default function ResourcesPage() {
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Overpricing Raw Data</p>
-                      <p className="text-sm text-black/70">Unlabeled data should be $5-25, not $100+. Be realistic about effort required.</p>
+                      <p className="text-sm text-black/70">Unlabeled data should be $5-25, not $100+. Price realistically based on the effort required by buyers.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -718,7 +718,7 @@ export default function ResourcesPage() {
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Vague Descriptions</p>
-                      <p className="text-sm text-black/70">&quot;Good dataset&quot; doesn&apos;t sell. Specify: 10,000 images, 224x224, JPEG, labeled into 50 categories.</p>
+                      <p className="text-sm text-black/70">&quot;Good dataset&quot; doesn&apos;t sell. Be specific: 10,000 images, 224x224px, JPEG format, labeled into 50 categories.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -732,7 +732,7 @@ export default function ResourcesPage() {
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold">Uploading Low Quality</p>
-                      <p className="text-sm text-black/70">Blurry images, corrupted files, inconsistent formatting hurt your reputation.</p>
+                      <p className="text-sm text-black/70">Blurry images, corrupted files, and inconsistent formatting damage your reputation. Quality matters.</p>
                     </div>
                   </div>
                 </div>
