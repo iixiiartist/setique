@@ -62,6 +62,10 @@ function DashboardPage() {
   // Curation request modal state
   const [curationRequestModalOpen, setCurationRequestModalOpen] = useState(false)
   
+  // TODO: Phase 2 - Consolidate modal states using useModalState hook
+  // Modals to combine: uploadModal, curationRequestModal, proposalsModal, proposalSubmissionModal,
+  // bountySubmissionModal, submissionModal, confirmDialog, deleteConfirm, editingDataset
+  
   // Curator data
   const [myDatasets, setMyDatasets] = useState([])
   const [earnings, setEarnings] = useState(null)
@@ -124,6 +128,8 @@ function DashboardPage() {
   // Dataset detail modal state
   const [selectedDatasetForDetail, setSelectedDatasetForDetail] = useState(null)
 
+  // TODO: Phase 6 - Extract into useDashboardData custom hook
+  // Centralize all user dashboard data fetching for better maintainability
   const fetchDashboardData = useCallback(async () => {
     if (!user) return
     
@@ -276,7 +282,7 @@ function DashboardPage() {
                 .then(({ data }) => setPayoutAccount(data));
             }
           })
-          .catch(err => console.log('Background verification failed:', err));
+          .catch(err => console.error('Background verification failed:', err));
       }
 
       // Batch 2: Bounty and curation data (parallel execution)
@@ -384,17 +390,13 @@ function DashboardPage() {
       // Verify Stripe account status with Stripe API
       ;(async () => {
         try {
-          console.log('Starting Stripe account verification for user:', user.id)
-          
           const response = await fetch('/.netlify/functions/verify-stripe-account', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ creatorId: user.id })
           })
           
-          console.log('Response status:', response.status)
           const data = await response.json()
-          console.log('Response data:', data)
           
           if (data.success) {
             alert(`✅ ${data.message || 'Stripe account connected successfully! Your payout account is now set up.'}`)
@@ -712,16 +714,12 @@ function DashboardPage() {
     }
 
     try {
-      console.log('🗑️ Attempting to delete submission:', { submissionId, userId: user.id })
-      
       const { data, error } = await supabase
         .from('bounty_submissions')
         .delete()
         .eq('id', submissionId)
         .eq('creator_id', user.id) // Only allow deleting own submissions
         .select() // Return deleted row to confirm
-
-      console.log('🗑️ Delete result:', { data, error })
 
       if (error) {
         console.error('❌ Delete error details:', error)
@@ -751,8 +749,6 @@ function DashboardPage() {
     try {
       const returnUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`
       const refreshUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`
-      
-      console.log('Creating Stripe onboarding with URLs:', { returnUrl, refreshUrl })
       
       const response = await fetch('/.netlify/functions/connect-onboarding', {
         method: 'POST',
@@ -800,6 +796,17 @@ function DashboardPage() {
 
   const totalSpent = myPurchases.reduce((sum, p) => sum + parseFloat(p.amount), 0)
 
+  // TODO: Phase 3 - Extract tab panels into separate components
+  // Create: DatasetsTab, PurchasesTab, EarningsTab, BountiesTab, CurationTab, FavoritesTab
+  // Each component should handle its own state and event handlers
+  
+  // TODO: Phase 4 - Standardize error handling
+  // Add try-catch with consistent error messages and user feedback
+  // Implement error boundaries for graceful failure
+  
+  // TODO: Phase 5 - Extract modals into separate components
+  // Move: DatasetUploadModal, CurationRequestModal, BountyCreationModal, etc.
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-pink-400 to-cyan-300 text-black font-sans">
       {/* Header */}
