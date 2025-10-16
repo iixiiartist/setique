@@ -50,6 +50,9 @@ export default function AdminDashboard() {
   // Confirm Dialog
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} })
 
+  // TODO: Phase 2 - Consolidate modal states using useModalState hook
+  // Combine: showUserModal, showBountyModal, confirmDialog, rejectingRequest states
+  
   // Stats
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -72,12 +75,9 @@ export default function AdminDashboard() {
   const checkAdminStatus = async () => {
     // Redirect if no user
     if (!user) {
-      console.log('No user logged in');
       navigate('/');
       return;
     }
-
-    console.log('Checking admin status for user:', user.id, user.email);
 
     try {
       const { data, error } = await supabase
@@ -86,13 +86,10 @@ export default function AdminDashboard() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('Admin query result:', { data, error });
-
       if (error) {
         console.error('Error querying admins table:', error);
         setIsAdmin(false);
         setLoading(false);
-        // Redirect unauthorized users
         navigate('/');
         return;
       }
@@ -101,13 +98,11 @@ export default function AdminDashboard() {
         console.error('User not found in admins table');
         setIsAdmin(false);
         setLoading(false);
-        // Redirect unauthorized users
         navigate('/');
         return;
       }
 
       if (data) {
-        console.log('User is admin!', data);
         setIsAdmin(true);
         await fetchAdminData();
       }
@@ -115,7 +110,6 @@ export default function AdminDashboard() {
       console.error('Exception checking admin status:', error);
       setIsAdmin(false);
       setLoading(false);
-      // Redirect on error
       navigate('/');
     }
   };
@@ -123,22 +117,21 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Wait for auth to finish loading
     if (authLoading) {
-      console.log('⏳ Waiting for auth to load...');
       return;
     }
 
     // Redirect if not logged in (after auth loaded)
     if (!user) {
-      console.log('❌ No user after auth loaded - redirecting to home');
       navigate('/');
       return;
     }
     
-    console.log('✅ User authenticated, checking admin status');
     checkAdminStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
+  // TODO: Phase 6 - Extract into useAdminData custom hook
+  // Centralize all admin data fetching logic for better maintainability
   const fetchAdminData = async () => {
     try {
       // Use admin function to fetch all data (bypasses RLS)
@@ -190,20 +183,16 @@ export default function AdminDashboard() {
       setActivityLog(activity.data || []);
 
       // Fetch bounties (curation requests) directly from Supabase
-      console.log('🔍 Fetching bounties...');
       const { data: bountiesData, error: bountiesError } = await supabase
         .from('curation_requests')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      console.log('📊 Admin bounties fetch:', { bountiesData, bountiesError });
       
       if (bountiesError) {
         console.error('Error fetching bounties:', bountiesError);
       }
       
       // Fetch bounty submissions
-      console.log('🔍 Fetching bounty submissions...');
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('bounty_submissions')
         .select(`
@@ -213,8 +202,6 @@ export default function AdminDashboard() {
           profiles (id, username, email)
         `)
         .order('submitted_at', { ascending: false });
-      
-      console.log('📊 Admin bounty submissions fetch:', { submissionsData, submissionsError });
       
       if (submissionsError) {
         console.error('Error fetching bounty submissions:', submissionsError);
@@ -245,10 +232,8 @@ export default function AdminDashboard() {
           curator_proposals: proposalsData?.filter(p => p.request_id === bounty.id) || []
         }));
         
-        console.log('📊 Setting bounties count:', bountiesWithData.length);
         setAllBounties(bountiesWithData);
       } else {
-        console.log('📊 Setting bounties count:', 0);
         setAllBounties([]);
       }
 
@@ -316,7 +301,6 @@ export default function AdminDashboard() {
 
       // Done loading admin data
       setLoading(false);
-      console.log('✅ Admin data loaded successfully');
 
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -629,15 +613,11 @@ export default function AdminDashboard() {
     }
 
     try {
-      console.log('🗑️ Admin attempting to delete submission:', { submissionId, adminUserId: user.id });
-      
       const { data, error } = await supabase
         .from('bounty_submissions')
         .delete()
         .eq('id', submissionId)
         .select(); // Return deleted row to confirm
-
-      console.log('🗑️ Admin delete result:', { data, error });
 
       if (error) {
         console.error('❌ Admin delete error details:', error);
@@ -645,7 +625,6 @@ export default function AdminDashboard() {
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ Admin: No rows were deleted - check RLS policies or admin permissions');
         alert('⚠️ Could not delete submission. Check admin permissions or RLS policies.');
         return;
       }
