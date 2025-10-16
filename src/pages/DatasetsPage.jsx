@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { stripePromise } from '../lib/stripe'
+import { logger, handleSupabaseError } from '../lib/logger'
+import { fetchUserPurchases as fetchPurchases } from '../lib/purchases'
+import { checkBetaAccess as checkBeta } from '../lib/betaAccess'
 import { SignInModal } from '../components/SignInModal'
 import FavoriteButton from '../components/FavoriteButton'
 import ShareModal from '../components/ShareModal'
@@ -94,30 +97,17 @@ export default function DatasetsPage() {
 
   // Check beta access when user changes
   useEffect(() => {
-    const checkBetaAccess = async () => {
+    const loadBetaAccess = async () => {
       if (!user) {
         setHasBetaAccess(false)
         return
       }
 
-      try {
-        const { data, error } = await supabase.rpc('has_beta_access', {
-          user_id_param: user.id
-        })
-        
-        if (error) {
-          console.error('Beta access check error:', error)
-          setHasBetaAccess(false)
-        } else {
-          setHasBetaAccess(data)
-        }
-      } catch (error) {
-        console.error('Error checking beta access:', error)
-        setHasBetaAccess(false)
-      }
+      const hasAccess = await checkBeta(user.id)
+      setHasBetaAccess(hasAccess)
     }
 
-    checkBetaAccess()
+    loadBetaAccess()
   }, [user])
 
   // Fetch datasets
@@ -149,26 +139,15 @@ export default function DatasetsPage() {
         setIsAdmin(true)
       }
     } catch (error) {
-      console.error('Error checking admin status:', error)
+      handleSupabaseError(error, 'checkAdminStatus')
       setIsAdmin(false)
     }
   }
 
   const fetchUserPurchases = async () => {
     if (!user) return
-    
-    try {
-      const { data, error } = await supabase
-        .from('purchases')
-        .select('dataset_id')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-      
-      if (error) throw error
-      setUserPurchases(data.map(p => p.dataset_id))
-    } catch (error) {
-      console.error('Error fetching user purchases:', error)
-    }
+    const purchases = await fetchPurchases(user.id)
+    setUserPurchases(purchases)
   }
 
   const userOwnsDataset = (datasetId) => {
@@ -200,7 +179,7 @@ export default function DatasetsPage() {
 
       // If partnership query fails (table doesn't exist), try without it
       if (error) {
-        console.warn('⚠️ Partnership query failed, trying without partnerships:', error.message)
+        logger.warn('⚠️ Partnership query failed, trying without partnerships:', error.message)
         const simpleQuery = await supabase
           .from('datasets')
           .select(
@@ -219,7 +198,7 @@ export default function DatasetsPage() {
       if (error) throw error
       setDatasets(data || [])
     } catch (error) {
-      console.error('❌ Error fetching datasets:', error)
+      handleSupabaseError(error, 'fetchDatasets')
     }
   }
 
@@ -387,7 +366,7 @@ export default function DatasetsPage() {
         throw stripeError
       }
     } catch (error) {
-      console.error('Error during checkout:', error)
+      handleSupabaseError(error, 'handleCheckout')
       alert('Error processing payment: ' + error.message)
       setProcessing(false)
       setCheckoutIdx(null)
