@@ -9,9 +9,7 @@ import BetaAccessManagement from '../components/BetaAccessManagement';
 import { AdminReviewPanel } from '../components/AdminReviewPanel';
 
 export default function AdminDashboard() {
-  console.log('🔵 AdminDashboard component loaded');
   const { user, loading: authLoading } = useAuth();
-  console.log('🔵 User from AuthContext:', user, 'Auth loading:', authLoading);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
