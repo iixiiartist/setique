@@ -273,13 +273,23 @@ export default function DatasetsPage() {
     try {
       const dataset = datasets[checkoutIdx]
 
+      // Prevent self-purchase
+      if (dataset.creator_id === user.id) {
+        alert('❌ You cannot purchase your own dataset!')
+        setCheckoutIdx(null)
+        setProcessing(false)
+        return
+      }
+
       // Check if user already owns this dataset
-      const { data: existingPurchase } = await supabase
+      const { data: existingPurchase, error: checkError } = await supabase
         .from('purchases')
         .select('id')
         .eq('user_id', user.id)
         .eq('dataset_id', dataset.id)
-        .single()
+        .maybeSingle()
+
+      if (checkError) throw checkError
 
       if (existingPurchase) {
         alert('You already own this dataset! Check your dashboard to download it.')
@@ -317,20 +327,20 @@ export default function DatasetsPage() {
         // Log activity for social feed and send notification
         await logDatasetPurchased(user.id, dataset.id, dataset.title, 0, dataset.user_id)
 
-        // Show success message and refresh
+        // Refresh user purchases to update UI
+        await fetchUserPurchases()
+
+        // Show success message
         alert(`✅ ${dataset.title} added to your library!`)
         setCheckoutIdx(null)
         setProcessing(false)
         
-        // Reload datasets and purchases
+        // Reload datasets
         const { data: newDatasets } = await supabase
           .from('datasets')
           .select('*, profiles(username)')
           .order('created_at', { ascending: false })
         if (newDatasets) setDatasets(newDatasets)
-        
-        // Refresh user purchases to update UI
-        fetchUserPurchases()
 
         return
       }
