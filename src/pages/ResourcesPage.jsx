@@ -87,7 +87,7 @@ export default function ResourcesPage() {
                   Getting Started with SETIQUE
                 </h2>
                 <p className="text-lg font-semibold text-black/70">
-                  Your complete guide to buying, selling, and curating datasets on the world&apos;s first dataset marketplace.
+                  Your complete guide to buying, selling, and curating datasets on a marketplace built for AI creators and data experts.
                 </p>
               </div>
 
