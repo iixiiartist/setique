@@ -18,6 +18,9 @@ import ActivityFeed from '../components/ActivityFeed'
 import FavoriteButton from '../components/FavoriteButton'
 import NotificationBell from '../components/NotificationBell'
 import { logBountyCreated } from '../lib/activityTracking'
+import { handleSupabaseError } from '../lib/logger'
+import { ERROR_MESSAGES } from '../lib/errorMessages'
+import { ErrorBanner } from '../components/ErrorBanner'
 import {
   Database,
   ShoppingBag,
@@ -53,6 +56,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [deletionRequests, setDeletionRequests] = useState([])
   const [deletionModalDataset, setDeletionModalDataset] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
@@ -268,7 +272,10 @@ function DashboardPage() {
                 .then(({ data }) => setPayoutAccount(data));
             }
           })
-          .catch(err => console.error('Background verification failed:', err));
+          .catch(err => {
+            handleSupabaseError(err, 'backgroundVerifyStripeAccount')
+            // Silent failure for background verification - no user notification needed
+          });
       }
 
       // Batch 2: Bounty and curation data (parallel execution)
@@ -352,7 +359,8 @@ function DashboardPage() {
       }
 
     } catch (error) {
-      console.error('Error fetching dashboard data:', error)
+      handleSupabaseError(error, 'fetchDashboardData')
+      setError(ERROR_MESSAGES.FETCH_DASHBOARD)
     }
 
     setLoading(false)
@@ -387,11 +395,13 @@ function DashboardPage() {
           if (data.success) {
             alert(`✅ ${data.message || 'Stripe account connected successfully! Your payout account is now set up.'}`)
           } else {
-            console.error('Verification failed:', data)
+            handleSupabaseError(new Error(data.message || 'Verification failed'), 'verifyStripeAccount')
+            setError(ERROR_MESSAGES.STRIPE_VERIFY)
             alert(`⚠️ ${data.message || 'Account verification incomplete. Please complete all required information.'}`)
           }
         } catch (error) {
-          console.error('Error verifying Stripe account:', error)
+          handleSupabaseError(error, 'verifyStripeAccount')
+          setError(ERROR_MESSAGES.STRIPE_VERIFY)
           alert('⚠️ Error verifying account status. Please refresh and try again.')
         }
         
@@ -452,7 +462,8 @@ function DashboardPage() {
       // Refresh download logs
       fetchDashboardData()
     } catch (error) {
-      console.error('Download error:', error)
+      handleSupabaseError(error, 'downloadDataset')
+      setError(ERROR_MESSAGES.DOWNLOAD_DATASET)
       alert('Error: ' + error.message)
     }
   }
@@ -476,7 +487,8 @@ function DashboardPage() {
       
       alert(`Dataset ${!currentStatus ? 'activated' : 'deactivated'} successfully!`)
     } catch (error) {
-      console.error('Error toggling dataset:', error)
+      handleSupabaseError(error, 'toggleDataset')
+      setError(ERROR_MESSAGES.TOGGLE_DATASET)
       alert('Failed to update dataset status')
     } finally {
       setActionLoading(false)
@@ -522,7 +534,8 @@ function DashboardPage() {
       editDatasetModal.close()
       alert('Dataset updated successfully!')
     } catch (error) {
-      console.error('Error updating dataset:', error)
+      handleSupabaseError(error, 'updateDataset')
+      setError(ERROR_MESSAGES.UPDATE_DATASET)
       alert('Failed to update dataset')
     } finally {
       setActionLoading(false)
@@ -573,7 +586,8 @@ function DashboardPage() {
             alert('✅ Dataset deleted successfully')
             await fetchDashboardData()
           } catch (error) {
-            console.error('Error deleting dataset:', error)
+            handleSupabaseError(error, 'deleteDataset')
+            setError(ERROR_MESSAGES.DELETE_DATASET)
             alert('Failed to delete dataset: ' + error.message)
           } finally {
             setActionLoading(false)
@@ -581,7 +595,8 @@ function DashboardPage() {
         }
       })
     } catch (error) {
-      console.error('Error checking dataset purchases:', error)
+      handleSupabaseError(error, 'checkDatasetPurchases')
+      setError(ERROR_MESSAGES.DELETE_DATASET)
       alert('Failed to check dataset status: ' + error.message)
     }
   }
@@ -613,7 +628,8 @@ function DashboardPage() {
       // Refresh deletion requests
       await fetchDashboardData()
     } catch (error) {
-      console.error('Error requesting deletion:', error)
+      handleSupabaseError(error, 'requestDeletion')
+      setError(ERROR_MESSAGES.REQUEST_DELETION)
       throw error
     }
   }
@@ -662,7 +678,8 @@ function DashboardPage() {
       })
       await fetchDashboardData()
     } catch (error) {
-      console.error('Error creating bounty:', error)
+      handleSupabaseError(error, 'createBounty')
+      setError(ERROR_MESSAGES.CREATE_BOUNTY)
       alert('Failed to create bounty: ' + error.message)
     }
   }
@@ -686,7 +703,8 @@ function DashboardPage() {
       // Refresh bounties
       await fetchDashboardData()
     } catch (error) {
-      console.error('Error closing bounty:', error)
+      handleSupabaseError(error, 'closeBounty')
+      setError(ERROR_MESSAGES.CLOSE_BOUNTY)
       alert('Failed to close bounty: ' + error.message)
     }
   }
@@ -705,12 +723,12 @@ function DashboardPage() {
         .select() // Return deleted row to confirm
 
       if (error) {
-        console.error('❌ Delete error details:', error)
+        handleSupabaseError(error, 'deleteBountySubmission')
         throw error
       }
 
       if (!data || data.length === 0) {
-        console.warn('⚠️ No rows were deleted - check RLS policies')
+        handleSupabaseError(new Error('No rows deleted - RLS policy issue'), 'deleteBountySubmission')
         alert('⚠️ Could not delete submission. You may not have permission or the submission may already be deleted.')
         return
       }
@@ -720,7 +738,8 @@ function DashboardPage() {
       // Refresh submissions
       await fetchDashboardData()
     } catch (error) {
-      console.error('Error deleting bounty submission:', error)
+      handleSupabaseError(error, 'deleteBountySubmission')
+      setError(ERROR_MESSAGES.DELETE_BOUNTY_SUBMISSION)
       alert('Failed to delete submission: ' + error.message)
     }
   }
@@ -755,7 +774,8 @@ function DashboardPage() {
       // Redirect to Stripe onboarding
       window.location.href = data.url
     } catch (error) {
-      console.error('Stripe Connect error:', error)
+      handleSupabaseError(error, 'handleStripeConnect')
+      setError(ERROR_MESSAGES.STRIPE_CONNECT)
       setConnectError(error.message)
       setConnectingStripe(false)
     }
@@ -899,6 +919,12 @@ function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Error Banner */}
+        <ErrorBanner 
+          message={error}
+          onDismiss={() => setError(null)}
+        />
+        
         {/* Welcome Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -2051,7 +2077,8 @@ function DashboardPage() {
                                   if (error) throw error
                                   await fetchDashboardData()
                                 } catch (error) {
-                                  console.error('Error closing request:', error)
+                                  handleSupabaseError(error, 'closeCurationRequest')
+                                  setError(ERROR_MESSAGES.CLOSE_CURATION_REQUEST)
                                   alert('Failed to close request')
                                 }
                               }}

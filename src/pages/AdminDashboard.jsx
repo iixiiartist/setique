@@ -8,6 +8,9 @@ import TrustLevelManager from '../components/TrustLevelManager';
 import FeedbackManagement from '../components/FeedbackManagement';
 import BetaAccessManagement from '../components/BetaAccessManagement';
 import { AdminReviewPanel } from '../components/AdminReviewPanel';
+import { handleSupabaseError } from '../lib/logger';
+import { ERROR_MESSAGES } from '../lib/errorMessages';
+import ErrorBanner from '../components/ErrorBanner';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +33,9 @@ export default function AdminDashboard() {
   const userModal = useModalState()
   const bountyModal = useModalState()
   const confirmDialogModal = useConfirmDialog()
+  
+  // Error state
+  const [error, setError] = useState(null)
   
   // Activity log
   const [activityLog, setActivityLog] = useState([]);
@@ -79,7 +85,8 @@ export default function AdminDashboard() {
         .maybeSingle();
 
       if (error) {
-        console.error('Error querying admins table:', error);
+        handleSupabaseError(error, 'checkAdminStatus')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
         setIsAdmin(false);
         setLoading(false);
         navigate('/');
@@ -87,7 +94,8 @@ export default function AdminDashboard() {
       }
 
       if (!data) {
-        console.error('User not found in admins table');
+        handleSupabaseError(new Error('User not found in admins table'), 'checkAdminStatus')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
         setIsAdmin(false);
         setLoading(false);
         navigate('/');
@@ -99,7 +107,8 @@ export default function AdminDashboard() {
         await fetchAdminData();
       }
     } catch (error) {
-      console.error('Exception checking admin status:', error);
+      handleSupabaseError(error, 'checkAdminStatus')
+      setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
       setIsAdmin(false);
       setLoading(false);
       navigate('/');
@@ -162,11 +171,26 @@ export default function AdminDashboard() {
       const activity = await activityRes.json();
 
       // Log any errors
-      if (!curatorsRes.ok) console.error('Curators error:', curators);
-      if (!usersRes.ok) console.error('Users error:', users);
-      if (!datasetsRes.ok) console.error('Datasets error:', datasets);
-      if (!revenueRes.ok) console.error('Revenue error:', revenue);
-      if (!activityRes.ok) console.error('Activity error:', activity);
+      if (!curatorsRes.ok) {
+        handleSupabaseError(new Error(JSON.stringify(curators)), 'fetchCurators')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
+      }
+      if (!usersRes.ok) {
+        handleSupabaseError(new Error(JSON.stringify(users)), 'fetchUsers')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
+      }
+      if (!datasetsRes.ok) {
+        handleSupabaseError(new Error(JSON.stringify(datasets)), 'fetchDatasets')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
+      }
+      if (!revenueRes.ok) {
+        handleSupabaseError(new Error(JSON.stringify(revenue)), 'fetchRevenue')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
+      }
+      if (!activityRes.ok) {
+        handleSupabaseError(new Error(JSON.stringify(activity)), 'fetchActivity')
+        setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
+      }
 
       setAllCurators(curators.data || []);
       setPendingCurators(curators.data?.filter(c => c.certification_status === 'pending') || []);
@@ -181,7 +205,8 @@ export default function AdminDashboard() {
         .order('created_at', { ascending: false });
       
       if (bountiesError) {
-        console.error('Error fetching bounties:', bountiesError);
+        handleSupabaseError(bountiesError, 'fetchBounties')
+        setError(ERROR_MESSAGES.FETCH_BOUNTIES)
       }
       
       // Fetch bounty submissions
@@ -196,7 +221,8 @@ export default function AdminDashboard() {
         .order('submitted_at', { ascending: false });
       
       if (submissionsError) {
-        console.error('Error fetching bounty submissions:', submissionsError);
+        handleSupabaseError(submissionsError, 'fetchBountySubmissions')
+        setError(ERROR_MESSAGES.FETCH_BOUNTY_SUBMISSIONS)
         setAllBountySubmissions([]);
       } else {
         setAllBountySubmissions(submissionsData || []);
@@ -236,7 +262,8 @@ export default function AdminDashboard() {
         .order('requested_at', { ascending: false });
       
       if (deletionError) {
-        console.error('Error fetching deletion requests:', deletionError);
+        handleSupabaseError(deletionError, 'fetchDeletionRequests')
+        setError(ERROR_MESSAGES.FETCH_DELETION_REQUESTS)
       }
 
       // Fetch moderation stats
@@ -295,7 +322,8 @@ export default function AdminDashboard() {
       setLoading(false);
 
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      handleSupabaseError(error, 'fetchAdminData')
+      setError(ERROR_MESSAGES.FETCH_ADMIN_DATA)
       // Set loading to false even on error so user can see the dashboard
       setLoading(false);
     }
@@ -326,7 +354,8 @@ export default function AdminDashboard() {
       alert('✅ Curator approved!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error approving curator:', error);
+      handleSupabaseError(error, 'approveCurator')
+      setError(ERROR_MESSAGES.APPROVE_CURATOR)
       alert('Failed to approve curator: ' + error.message);
     }
   };
@@ -357,7 +386,8 @@ export default function AdminDashboard() {
       alert('❌ Curator application rejected.');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error rejecting curator:', error);
+      handleSupabaseError(error, 'rejectCurator')
+      setError(ERROR_MESSAGES.REJECT_CURATOR)
       alert('Failed to reject curator: ' + error.message);
     }
   };
@@ -387,7 +417,8 @@ export default function AdminDashboard() {
       alert('⚠️ Curator suspended.');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error suspending curator:', error);
+      handleSupabaseError(error, 'suspendCurator')
+      setError(ERROR_MESSAGES.SUSPEND_CURATOR)
       alert('Failed to suspend curator: ' + error.message);
     }
   };
@@ -415,7 +446,8 @@ export default function AdminDashboard() {
       alert('✅ Featured status updated!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error toggling featured status:', error);
+      handleSupabaseError(error, 'toggleFeatured')
+      setError(ERROR_MESSAGES.TOGGLE_FEATURED)
       alert('Failed to update featured status: ' + error.message);
     }
   };
@@ -431,7 +463,7 @@ export default function AdminDashboard() {
     const dataset = allDatasets.find(d => d.id === datasetId);
     if (dataset) {
       // Note: Dataset modal not currently used in AdminDashboard, keeping for future use
-      console.log('Dataset details:', dataset);
+      // Dataset details available in variable for debugging if needed
     }
   };
 
@@ -463,7 +495,8 @@ export default function AdminDashboard() {
       alert('✅ Dataset permanently deleted!');
       await fetchAdminData();
       } catch (error) {
-        console.error('Error deleting dataset:', error);
+        handleSupabaseError(error, 'deleteDataset')
+        setError(ERROR_MESSAGES.DELETE_DATASET)
         alert('Failed to delete dataset: ' + error.message);
       }
     }
@@ -499,7 +532,8 @@ export default function AdminDashboard() {
       setAdminResponse('');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error approving deletion request:', error);
+      handleSupabaseError(error, 'approveDeletionRequest')
+      setError(ERROR_MESSAGES.APPROVE_DELETION_REQUEST)
       alert('Failed to approve deletion request: ' + error.message);
     }
   };
@@ -534,7 +568,8 @@ export default function AdminDashboard() {
       setAdminResponse('');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error rejecting deletion request:', error);
+      handleSupabaseError(error, 'rejectDeletionRequest')
+      setError(ERROR_MESSAGES.REJECT_DELETION_REQUEST)
       alert('Failed to reject deletion request: ' + error.message);
     }
   };
@@ -555,7 +590,8 @@ export default function AdminDashboard() {
       alert('✅ Bounty closed successfully!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error closing bounty:', error);
+      handleSupabaseError(error, 'closeBounty')
+      setError(ERROR_MESSAGES.CLOSE_BOUNTY)
       alert('Failed to close bounty: ' + error.message);
     }
   };
@@ -585,7 +621,8 @@ export default function AdminDashboard() {
           alert('✅ Bounty and all proposals deleted successfully!');
           await fetchAdminData();
         } catch (error) {
-          console.error('Error deleting bounty:', error);
+          handleSupabaseError(error, 'deleteBounty')
+          setError(ERROR_MESSAGES.DELETE_BOUNTY)
           alert('Failed to delete bounty: ' + error.message);
         }
       }
@@ -605,7 +642,8 @@ export default function AdminDashboard() {
         .select(); // Return deleted row to confirm
 
       if (error) {
-        console.error('❌ Admin delete error details:', error);
+        handleSupabaseError(error, 'adminDeleteBountySubmission')
+        setError(ERROR_MESSAGES.DELETE_BOUNTY_SUBMISSION)
         throw error;
       }
 
@@ -617,7 +655,8 @@ export default function AdminDashboard() {
       alert('✅ Bounty submission deleted successfully!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error deleting bounty submission:', error);
+      handleSupabaseError(error, 'adminDeleteBountySubmission')
+      setError(ERROR_MESSAGES.DELETE_BOUNTY_SUBMISSION)
       alert('Failed to delete bounty submission: ' + error.message);
     }
   };
@@ -638,7 +677,8 @@ export default function AdminDashboard() {
       alert('✅ Submission approved!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error approving submission:', error);
+      handleSupabaseError(error, 'adminApproveSubmission')
+      setError(ERROR_MESSAGES.APPROVE_BOUNTY_SUBMISSION)
       alert('Failed to approve submission: ' + error.message);
     }
   };
@@ -659,7 +699,8 @@ export default function AdminDashboard() {
       alert('❌ Submission rejected!');
       await fetchAdminData();
     } catch (error) {
-      console.error('Error rejecting submission:', error);
+      handleSupabaseError(error, 'adminRejectSubmission')
+      setError(ERROR_MESSAGES.REJECT_BOUNTY_SUBMISSION)
       alert('Failed to reject submission: ' + error.message);
     }
   };
@@ -691,6 +732,11 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Error Banner */}
+        {error && (
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+        )}
+
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
