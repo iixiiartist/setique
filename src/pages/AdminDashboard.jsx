@@ -10,7 +10,7 @@ import BetaAccessManagement from '../components/BetaAccessManagement';
 import { AdminReviewPanel } from '../components/AdminReviewPanel';
 import { handleSupabaseError } from '../lib/logger';
 import { ERROR_MESSAGES } from '../lib/errorMessages';
-import ErrorBanner from '../components/ErrorBanner';
+import { ErrorBanner } from '../components/ErrorBanner';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
