@@ -14,7 +14,6 @@ import SubmissionReviewCard from '../components/SubmissionReviewCard'
 import DeletionRequestModal from '../components/DeletionRequestModal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import TrustLevelBadge from '../components/TrustLevelBadge'
-import ActivityFeed from '../components/ActivityFeed'
 import FavoriteButton from '../components/FavoriteButton'
 import NotificationBell from '../components/NotificationBell'
 import { logBountyCreated } from '../lib/activityTracking'
@@ -24,6 +23,13 @@ import { ErrorBanner } from '../components/ErrorBanner'
 import { OverviewTab } from '../components/dashboard/tabs/OverviewTab'
 import { DatasetsTab } from '../components/dashboard/tabs/DatasetsTab'
 import { PurchasesTab } from '../components/dashboard/tabs/PurchasesTab'
+import { EarningsTab } from '../components/dashboard/tabs/EarningsTab'
+import { BountiesTab } from '../components/dashboard/tabs/BountiesTab'
+import { SubmissionsTab } from '../components/dashboard/tabs/SubmissionsTab'
+// Note: CurationRequestsTab and ProCuratorTab to be integrated next
+// Note: ActivityFeed, Package, tierDisplayInfo now used in tab components
+import { ActivityTab } from '../components/dashboard/tabs/ActivityTab'
+import { FavoritesTab } from '../components/dashboard/tabs/FavoritesTab'
 import {
   Database,
   ShoppingBag,
@@ -31,18 +37,10 @@ import {
   TrendingUp,
   LogOut,
   Home,
-  Package,
   X,
   Star,
 } from '../components/Icons'
-// Note: Download, Edit, Trash, Eye, EyeOff, Upload now used in tab components
-
-const tierDisplayInfo = {
-  newcomer: { label: 'Open to All', badge: '🌟', color: 'bg-gray-100 text-gray-800 border-gray-600' },
-  verified: { label: 'Verified+', badge: '✓', color: 'bg-blue-100 text-blue-800 border-blue-600' },
-  expert: { label: 'Expert+', badge: '✓✓', color: 'bg-purple-100 text-purple-800 border-purple-600' },
-  master: { label: 'Master Only', badge: '⭐', color: 'bg-yellow-100 text-yellow-800 border-yellow-600' }
-};
+// Note: Download, Edit, Trash, Eye, EyeOff, Upload, Package now used in tab components
 
 function DashboardPage() {
   const navigate = useNavigate()
@@ -1136,457 +1134,38 @@ function DashboardPage() {
           )}
 
           {activeTab === 'earnings' && (
-            <div>
-              <h3 className="text-2xl font-extrabold mb-4">Earnings & Payouts</h3>
-              
-              {/* Earnings Summary */}
-              <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-green-200 border-2 border-black rounded-xl p-4">
-                  <div className="text-sm font-bold text-black/60 uppercase mb-1">
-                    Total Earned
-                  </div>
-                  <div className="text-3xl font-extrabold">
-                    ${earnings?.total.toFixed(2) || '0.00'}
-                  </div>
-                </div>
-                <div className="bg-yellow-200 border-2 border-black rounded-xl p-4">
-                  <div className="text-sm font-bold text-black/60 uppercase mb-1">
-                    Pending
-                  </div>
-                  <div className="text-3xl font-extrabold">
-                    ${earnings?.pending.toFixed(2) || '0.00'}
-                  </div>
-                </div>
-                <div className="bg-blue-200 border-2 border-black rounded-xl p-4">
-                  <div className="text-sm font-bold text-black/60 uppercase mb-1">
-                    Paid Out
-                  </div>
-                  <div className="text-3xl font-extrabold">
-                    ${earnings?.paid.toFixed(2) || '0.00'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Payout Account Status */}
-              {payoutAccount && payoutAccount.payouts_enabled ? (
-                <div className="bg-white border-2 border-black rounded-xl p-4 mb-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-extrabold mb-2">Payout Account</h4>
-                      <p className="text-sm font-semibold">
-                        Status: <span className="font-extrabold">{payoutAccount.account_status}</span>
-                      </p>
-                      <p className="text-sm font-semibold">
-                        Payouts {payoutAccount.payouts_enabled ? 'Enabled ✅' : 'Disabled ❌'}
-                      </p>
-                    </div>
-                    <a
-                      href="https://dashboard.stripe.com/dashboard"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-purple-200 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition text-sm"
-                    >
-                      Manage on Stripe →
-                    </a>
-                  </div>
-                  {payoutAccount.current_balance >= payoutAccount.minimum_payout_threshold && (
-                    <button className="bg-green-300 text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition w-full">
-                      Request Payout (${payoutAccount.current_balance.toFixed(2)} available)
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-yellow-100 border-2 border-black rounded-xl p-4 mb-6">
-                  <h4 className="font-extrabold mb-2">⚠️ Setup Payout Account</h4>
-                  <p className="text-sm font-semibold mb-3">
-                    {payoutAccount ? 
-                      'Complete your Stripe onboarding to enable payouts' : 
-                      'Connect your Stripe account to receive payouts'
-                    }
-                  </p>
-                  {connectError && (
-                    <div className="bg-red-100 border-2 border-red-500 rounded-lg p-3 mb-3">
-                      <p className="text-sm font-bold text-red-800">❌ {connectError}</p>
-                    </div>
-                  )}
-                  <button 
-                    onClick={handleConnectStripe}
-                    disabled={connectingStripe}
-                    className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-bold px-4 py-2 rounded-full border-2 border-black hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                  >
-                    {connectingStripe ? 'Connecting...' : (payoutAccount ? 'Complete Stripe Onboarding' : 'Connect Stripe Account')}
-                  </button>
-                </div>
-              )}
-
-              {/* Transaction History */}
-              {earnings && earnings.transactions.length > 0 ? (
-                <div>
-                  <h4 className="font-extrabold mb-3">Transaction History</h4>
-                  <div className="space-y-2">
-                    {earnings.transactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex justify-between items-center p-3 border-2 border-black rounded-lg bg-gray-50"
-                      >
-                        <div>
-                          <div className="font-bold">
-                            Sale #{transaction.id.substring(0, 8)}
-                          </div>
-                          <div className="text-xs text-black/60">
-                            {new Date(transaction.earned_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-extrabold">
-                            ${parseFloat(transaction.creator_net).toFixed(2)}
-                          </div>
-                          <div className="text-xs font-bold text-black/60">
-                            {transaction.status}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <DollarSign className="h-16 w-16 mx-auto mb-4 text-black/30" />
-                  <p className="font-bold text-black/60">
-                    No earnings yet. Create and sell datasets to start earning!
-                  </p>
-                </div>
-              )}
-            </div>
+            <EarningsTab
+              earnings={earnings}
+              payoutAccount={payoutAccount}
+              connectingStripe={connectingStripe}
+              connectError={connectError}
+              handleConnectStripe={handleConnectStripe}
+            />
           )}
 
           {/* My Bounties Tab */}
           {activeTab === 'bounties' && (
-            <div className="space-y-8">
-              {/* Available Bounties Section */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-2xl font-extrabold mb-1">Available Bounties</h3>
-                    <p className="text-sm text-black/70">
-                      Browse open bounties and submit proposals {profile && `(Your tier: ${['newcomer', 'verified', 'expert', 'master'][profile.trust_level || 0]})`}
-                    </p>
-                  </div>
-                </div>
-
-                {openCurationRequests && openCurationRequests.length > 0 ? (
-                  <div className="space-y-4 mb-8">
-                    {openCurationRequests.map((bounty) => {
-                      const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
-                      // Map trust_level integer to tier string
-                      const trustLevelMap = ['newcomer', 'verified', 'expert', 'master'];
-                      const userTierString = trustLevelMap[profile?.trust_level || 0];
-                      const userTierInfo = tierDisplayInfo[userTierString];
-                      
-                      return (
-                        <div
-                          key={bounty.id}
-                          className="bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 border-2 border-black rounded-xl p-4"
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
-                              <div className="flex gap-3 text-sm font-semibold text-black/70 flex-wrap mb-2">
-                                <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                                  💰 ${bounty.budget_min} - ${bounty.budget_max}
-                                </span>
-                                <span className={`border-2 rounded-full px-3 py-1 ${tierInfo.color}`}>
-                                  {tierInfo.badge} {tierInfo.label} Required
-                                </span>
-                                <span className={`border-2 rounded-full px-3 py-1 ${userTierInfo.color}`}>
-                                  � Your Tier: {userTierInfo.label}
-                                </span>
-                              </div>
-                              <p className="text-sm text-black/70 mb-2">
-                                Posted by {bounty.profiles?.username || 'Anonymous'} • {new Date(bounty.created_at).toLocaleDateString()}
-                              </p>
-                              <p className="text-sm text-black/80">
-                                {bounty.description?.substring(0, 150)}{bounty.description?.length > 150 ? '...' : ''}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3 mt-3">
-                            <button
-                              onClick={() => {
-                                if (!user) {
-                                  alert('Please sign in to submit to bounties')
-                                  navigate('/?auth=signin')
-                                  return
-                                }
-                                bountySubmissionModal.open(bounty)
-                              }}
-                              className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-2 rounded-full border-2 border-black hover:opacity-90 transition"
-                            >
-                              📝 Submit Dataset
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="bg-white border-2 border-black rounded-xl p-8 text-center mb-8">
-                    <p className="text-sm font-bold text-black/60">
-                      No available bounties at the moment. Check back soon!
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Bounties I Posted Section */}
-              <div>
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h3 className="text-2xl font-extrabold mb-1">Bounties I Posted</h3>
-                  <p className="text-sm text-black/70">
-                    View submissions from creators responding to your bounties
-                  </p>
-                </div>
-                {myBounties.length > 0 && (
-                  <button
-                    onClick={() => setShowBountyModal(true)}
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-6 py-3 rounded-full border-2 border-black hover:opacity-90"
-                  >
-                    + Post Bounty
-                  </button>
-                )}
-              </div>
-
-              {myBounties.length > 0 ? (
-                <div className="space-y-4">
-                  {myBounties.map((bounty) => {
-                    const tierInfo = tierDisplayInfo[bounty.minimum_curator_tier || 'newcomer'];
-                    return (
-                    <div
-                      key={bounty.id}
-                      className="bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 border-2 border-black rounded-xl p-4"
-                    >
-                      {/* Bounty Header */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-extrabold text-lg mb-1">{bounty.title}</h4>
-                          <div className="flex gap-3 text-sm font-semibold text-black/70 flex-wrap">
-                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              ${bounty.budget_min} - ${bounty.budget_max}
-                            </span>
-                            <span className={`border-2 rounded-full px-3 py-1 ${tierInfo.color}`}>
-                              {tierInfo.badge} {tierInfo.label}
-                            </span>
-                            <span className="bg-white border-2 border-black rounded-full px-3 py-1">
-                              {bounty.curator_proposals?.length || 0} proposals
-                            </span>
-                            <span className={`bg-white border-2 border-black rounded-full px-3 py-1 ${
-                              bounty.status === 'open' ? 'text-green-700' :
-                              bounty.status === 'assigned' ? 'text-yellow-700' :
-                              'text-gray-700'
-                            }`}>
-                              {bounty.status}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          {bounty.status === 'open' && (
-                            <button
-                              onClick={() => handleCloseMyBounty(bounty.id)}
-                              className="bg-yellow-400 border-2 border-black rounded-lg px-4 py-2 font-bold hover:bg-yellow-300 transition text-sm"
-                            >
-                              🔒 Close Bounty
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setExpandedBounty(expandedBounty === bounty.id ? null : bounty.id)}
-                            className="bg-white border-2 border-black rounded-full px-4 py-2 font-bold hover:bg-gray-100 transition"
-                          >
-                            {expandedBounty === bounty.id ? 'Hide' : 'View'} Submissions
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Proposals (Expanded) */}
-                      {expandedBounty === bounty.id && (
-                        <div className="mt-4 space-y-3">
-                          {bounty.curator_proposals && bounty.curator_proposals.length > 0 ? (
-                            bounty.curator_proposals.map((proposal) => (
-                              <div
-                                key={proposal.id}
-                                className="bg-white border-2 border-black rounded-xl p-4"
-                              >
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h5 className="font-extrabold text-base mb-1">
-                                      Proposal from {proposal.pro_curators?.display_name || 'Curator'}
-                                    </h5>
-                                    <div className="flex gap-2 mb-2">
-                                      <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                        proposal.status === 'pending' ? 'bg-yellow-200 text-yellow-800' :
-                                        proposal.status === 'accepted' ? 'bg-green-200 text-green-800' :
-                                        'bg-gray-200 text-gray-800'
-                                      }`}>
-                                        {proposal.status}
-                                      </span>
-                                      {proposal.pro_curators?.badge_level && (
-                                        <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs font-bold">
-                                          {proposal.pro_curators.badge_level}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-black/70 mb-2">
-                                      💰 Suggested Price: ${proposal.suggested_price} | ⏱️ Est. {proposal.estimated_completion_days} days
-                                    </p>
-                                    {proposal.proposal_text && (
-                                      <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-3">
-                                        <p className="text-sm">
-                                          {proposal.proposal_text}
-                                        </p>
-                                      </div>
-                                    )}
-                                    <p className="text-xs text-black/50 font-semibold">
-                                      Submitted {new Date(proposal.created_at).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="bg-white border-2 border-black rounded-xl p-6 text-center">
-                              <p className="text-sm font-bold text-black/60">
-                                No proposals yet. Share your bounty to get responses from Pro Curators!
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 max-w-xl mx-auto">
-                  <Package className="h-16 w-16 mx-auto mb-4 text-black/30" />
-                  <h4 className="text-xl font-extrabold text-black mb-2">
-                    No bounties posted yet
-                  </h4>
-                  <p className="text-sm text-black/70 mb-3 leading-relaxed">
-                    <strong>Bounties</strong> let you request custom datasets from professional curators. 
-                    Set your budget and requirements, then review proposals from experts.
-                  </p>
-                  <div className="bg-cyan-50 border-2 border-cyan-200 rounded-lg p-4 mb-6 text-left">
-                    <p className="text-sm font-bold text-cyan-900 mb-2">💡 How it works:</p>
-                    <ol className="text-sm text-cyan-800 space-y-1 list-decimal list-inside">
-                      <li>Post your dataset requirements and budget</li>
-                      <li>Pro curators submit proposals with timelines</li>
-                      <li>Choose the best curator and get your custom dataset</li>
-                    </ol>
-                  </div>
-                  <button
-                    onClick={() => setShowBountyModal(true)}
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
-                  >
-                    🎯 Post Your First Bounty
-                  </button>
-                </div>
-              )}
-              </div>
-            </div>
+            <BountiesTab
+              openCurationRequests={openCurationRequests}
+              myBounties={myBounties}
+              profile={profile}
+              user={user}
+              expandedBounty={expandedBounty}
+              setExpandedBounty={setExpandedBounty}
+              setShowBountyModal={setShowBountyModal}
+              handleCloseMyBounty={handleCloseMyBounty}
+              bountySubmissionModal={bountySubmissionModal}
+              navigate={navigate}
+            />
           )}
 
           {/* My Submissions Tab */}
           {activeTab === 'submissions' && (
-            <div>
-              <h3 className="text-2xl font-extrabold mb-4">My Bounty Submissions</h3>
-              <p className="text-sm text-black/70 mb-6">
-                Track the status of datasets you&apos;ve submitted to bounties
-              </p>
-
-              {mySubmissions.length > 0 ? (
-                <div className="space-y-4">
-                  {mySubmissions.map((submission) => (
-                    <div
-                      key={submission.id}
-                      className="bg-white border-2 border-black rounded-xl p-4"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-extrabold text-lg mb-1">
-                            {submission.datasets?.title || 'Untitled Dataset'}
-                          </h4>
-                          <p className="text-sm font-semibold text-black/70 mb-2">
-                            → Submitted to: <strong>{submission.curation_requests?.title}</strong>
-                          </p>
-                          <p className="text-sm text-black/60 mb-2">
-                            Bounty Budget: ${submission.curation_requests?.budget_max} • Your Price: ${submission.datasets?.price}
-                          </p>
-                          {submission.notes && (
-                            <div className="bg-gray-50 border border-black/20 rounded-lg p-3 mb-2">
-                              <p className="text-sm italic">
-                                &quot;{submission.notes}&quot;
-                              </p>
-                            </div>
-                          )}
-                          <p className="text-xs text-black/50 font-semibold">
-                            Submitted {new Date(submission.submitted_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="ml-4 flex flex-col gap-2">
-                          {submission.status === 'pending' && (
-                            <span className="bg-yellow-100 border-2 border-yellow-600 text-yellow-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
-                              ⏳ Pending Review
-                            </span>
-                          )}
-                          {submission.status === 'approved' && (
-                            <span className="bg-green-100 border-2 border-green-600 text-green-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
-                              ✓ Approved
-                            </span>
-                          )}
-                          {submission.status === 'rejected' && (
-                            <span className="bg-red-100 border-2 border-red-600 text-red-800 font-bold px-4 py-2 rounded-full text-sm whitespace-nowrap">
-                              ✗ Rejected
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleDeleteBountySubmission(submission.id, submission.datasets?.title)}
-                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm border-2 border-black transition whitespace-nowrap"
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 max-w-xl mx-auto">
-                  <Database className="h-16 w-16 mx-auto mb-4 text-black/30" />
-                  <h4 className="text-xl font-extrabold text-black mb-2">
-                    No submissions yet
-                  </h4>
-                  <p className="text-sm text-black/70 mb-4 leading-relaxed">
-                    Submit your existing datasets to open bounties and earn rewards!
-                    Each bounty lists specific requirements and budgets.
-                  </p>
-                  <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6 text-left">
-                    <p className="text-sm font-bold text-yellow-900 mb-2">💰 Earn money by:</p>
-                    <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-                      <li>Finding bounties that match your datasets</li>
-                      <li>Submitting high-quality data that meets requirements</li>
-                      <li>Getting selected and receiving payment</li>
-                    </ul>
-                  </div>
-                  <button
-                    onClick={() => navigate('/')}
-                    className="bg-[linear-gradient(90deg,#00ffff,#ff00c3)] text-white font-bold px-8 py-3 rounded-full border-2 border-black hover:opacity-90 hover:scale-105 transition"
-                  >
-                    🎯 Browse Open Bounties
-                  </button>
-                </div>
-              )}
-            </div>
+            <SubmissionsTab
+              mySubmissions={mySubmissions}
+              handleDeleteBountySubmission={handleDeleteBountySubmission}
+              navigate={navigate}
+            />
           )}
 
           {/* My Curation Requests Tab */}
@@ -2033,99 +1612,12 @@ function DashboardPage() {
 
           {/* Activity Feed Tab */}
           {activeTab === 'activity' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-extrabold">Activity Feed</h3>
-                <p className="text-sm text-black/70">
-                  See what curators and buyers you follow are up to
-                </p>
-              </div>
-              
-              <ActivityFeed />
-            </div>
+            <ActivityTab />
           )}
 
           {/* Favorites Tab */}
           {activeTab === 'favorites' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-extrabold">My Favorites</h3>
-                <p className="text-sm text-black/70">
-                  {myFavorites.length} dataset{myFavorites.length !== 1 ? 's' : ''} bookmarked
-                </p>
-              </div>
-
-              {myFavorites.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 border-2 border-black rounded-xl">
-                  <p className="text-lg font-bold text-black/60">
-                    No favorites yet!
-                  </p>
-                  <p className="text-sm text-black/50 mt-2">
-                    Browse datasets and click the heart icon to save them here
-                  </p>
-                  <button
-                    onClick={() => navigate('/')}
-                    className="mt-4 bg-[linear-gradient(90deg,#ff00c3,#00ffff)] text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition"
-                  >
-                    Browse Datasets
-                  </button>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {myFavorites.map(favorite => {
-                    const dataset = favorite.datasets;
-                    if (!dataset) return null;
-                    
-                    return (
-                      <div
-                        key={favorite.id}
-                        className="bg-white border-4 border-black rounded-xl p-6 shadow-[4px_4px_0_#000] hover:shadow-[8px_8px_0_#000] transition-all"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h4 className="text-xl font-extrabold">{dataset.title}</h4>
-                              <span className="px-3 py-1 rounded-full text-xs font-bold border-2 border-black bg-yellow-100 text-yellow-800">
-                                {dataset.modality}
-                              </span>
-                            </div>
-                            
-                            <p className="text-black/70 mb-4 line-clamp-2">
-                              {dataset.description}
-                            </p>
-                            
-                            <div className="flex items-center gap-4 text-sm">
-                              <span className="font-bold text-lg text-purple-600">
-                                ${dataset.price}
-                              </span>
-                              <span className="text-black/60">
-                                Added {new Date(favorite.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-col gap-2">
-                            <FavoriteButton
-                              datasetId={dataset.id}
-                              datasetTitle={dataset.title}
-                              ownerId={dataset.user_id}
-                              initialCount={dataset.favorite_count || 0}
-                              size="md"
-                            />
-                            <button
-                              onClick={() => setSelectedDatasetForDetail(dataset)}
-                              className="px-4 py-2 bg-cyan-400 text-black font-bold rounded-full border-2 border-black hover:bg-cyan-500 transition whitespace-nowrap"
-                            >
-                              View Details
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <FavoritesTab myFavorites={myFavorites} navigate={navigate} />
           )}
         </div>
       </main>
