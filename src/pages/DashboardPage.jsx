@@ -1,8 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
 import { useModalState, useConfirmDialog } from '../lib/hooks/useModalState'
+import { useDashboardData } from '../lib/hooks/useDashboardData'
+import { useDatasetActions } from '../lib/hooks/useDatasetActions'
+import { useBountyActions } from '../lib/hooks/useBountyActions'
+import { useStripeConnect } from '../lib/hooks/useStripeConnect'
 import { DatasetUploadModal } from '../components/DatasetUploadModal'
 import CurationRequestModal from '../components/CurationRequestModal'
 import ProposalsModal from '../components/ProposalsModal'
@@ -14,9 +17,6 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import TrustLevelBadge from '../components/TrustLevelBadge'
 import FavoriteButton from '../components/FavoriteButton'
 import NotificationBell from '../components/NotificationBell'
-import { logBountyCreated } from '../lib/activityTracking'
-import { handleSupabaseError } from '../lib/logger'
-import { ERROR_MESSAGES } from '../lib/errorMessages'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { OverviewTab } from '../components/dashboard/tabs/OverviewTab'
 import { DatasetsTab } from '../components/dashboard/tabs/DatasetsTab'
@@ -43,11 +43,22 @@ import {
 function DashboardPage() {
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
-  const [loading, setLoading] = useState(true)
+  
+  // Local UI state
   const [error, setError] = useState(null)
-  const [deletionRequests, setDeletionRequests] = useState([])
   const [deletionModalDataset, setDeletionModalDataset] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [expandedBounty, setExpandedBounty] = useState(null)
+  const [selectedDatasetForDetail, setSelectedDatasetForDetail] = useState(null)
+  const [showBountyModal, setShowBountyModal] = useState(false)
+  const [newBounty, setNewBounty] = useState({
+    title: '',
+    description: '',
+    budget_min: '',
+    budget_max: '',
+    minimum_curator_tier: 'verified' // Default to Verified+ (recommended)
+  })
   
   // Modal states - Using useModalState hook (Phase 2 refactoring)
   const uploadModal = useModalState()
@@ -59,311 +70,84 @@ function DashboardPage() {
   const editDatasetModal = useModalState()
   const confirmDialogModal = useConfirmDialog()
   
-  // Curator data
-  const [myDatasets, setMyDatasets] = useState([])
-  const [earnings, setEarnings] = useState(null)
-  const [payoutAccount, setPayoutAccount] = useState(null)
+  // Phase 6: Custom hooks for data fetching and actions
+  // Centralized dashboard data fetching
+  const { loading, data, refetch } = useDashboardData(user, profile)
+  const {
+    myDatasets,
+    earnings,
+    payoutAccount,
+    myPurchases,
+    myFavorites,
+    myBounties,
+    mySubmissions,
+    myCurationRequests,
+    openCurationRequests,
+    curatorProfile,
+    curatorAssignedRequests,
+    deletionRequests,
+    isAdmin,
+    hasModerationAccess,
+  } = data
   
-  // Buyer data
-  const [myPurchases, setMyPurchases] = useState([])
-  const [myFavorites, setMyFavorites] = useState([])
-  
-  // Bounty data
-  const [myBounties, setMyBounties] = useState([])
-  const [mySubmissions, setMySubmissions] = useState([])
-  const [expandedBounty, setExpandedBounty] = useState(null)
-  
-  // Curation requests data
-  const [myCurationRequests, setMyCurationRequests] = useState([])
-  const [openCurationRequests, setOpenCurationRequests] = useState([])
-  const [curatorProfile, setCuratorProfile] = useState(null)
-  const [curatorAssignedRequests, setCuratorAssignedRequests] = useState([])
-  
-  // Stripe Connect state
-  const [connectingStripe, setConnectingStripe] = useState(false)
-  const [connectError, setConnectError] = useState(null)
-  
-  // Dataset management state
-  const [actionLoading, setActionLoading] = useState(false)
-  
-  // Mobile menu state
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  
-  // Admin state
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [hasModerationAccess, setHasModerationAccess] = useState(false)
-  
-  // Bounty creation modal state
-  const [showBountyModal, setShowBountyModal] = useState(false)
-  const [newBounty, setNewBounty] = useState({
-    title: '',
-    description: '',
-    budget_min: '',
-    budget_max: '',
-    minimum_curator_tier: 'verified' // Default to Verified+ (recommended)
+  // Dataset CRUD operations
+  const {
+    actionLoading,
+    handleDownload,
+    handleToggleActive,
+    handleEditDataset,
+    handleSaveEdit,
+    handleDeleteDataset,
+    handleRequestDeletion,
+  } = useDatasetActions({
+    user,
+    setMyDatasets: () => {}, // Data managed by useDashboardData hook, will use refetch instead
+    setError,
+    fetchDashboardData: refetch,
+    confirmDialogModal,
+    editDatasetModal,
   })
   
-  // Dataset detail modal state
-  const [selectedDatasetForDetail, setSelectedDatasetForDetail] = useState(null)
-
-  // TODO: Phase 6 - Extract into useDashboardData custom hook
-  // Centralize all user dashboard data fetching for better maintainability
-  const fetchDashboardData = useCallback(async () => {
-    if (!user) return
-    
-    setLoading(true)
-    try {
-      // Batch 1: Core user data (parallel execution)
-      const [
-        datasetsResult,
-        earningsResult,
-        payoutResult,
-        purchasesResult,
-        adminResult,
-        favoritesResult
-      ] = await Promise.all([
-        // Fetch user's created datasets with partnership info
-        supabase
-          .from('datasets')
-          .select(`
-            *,
-            dataset_partnerships (
-              id,
-              status,
-              curator_user_id,
-              pro_curators (
-                display_name,
-                badge_level
-              )
-            )
-          `)
-          .eq('creator_id', user.id)
-          .order('created_at', { ascending: false }),
-        
-        // Fetch earnings summary
-        supabase
-          .from('creator_earnings')
-          .select('*')
-          .eq('creator_id', user.id)
-          .order('earned_at', { ascending: false }),
-        
-        // Fetch payout account
-        supabase
-          .from('creator_payout_accounts')
-          .select('*')
-          .eq('creator_id', user.id)
-          .maybeSingle(),
-        
-        // Fetch user's purchases
-        supabase
-          .from('purchases')
-          .select(`
-            *,
-            datasets (*)
-          `)
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .order('purchased_at', { ascending: false }),
-        
-        // Check if user is admin
-        supabase
-          .from('admins')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle(),
-        
-        // Fetch user's favorited datasets
-        supabase
-          .from('dataset_favorites')
-          .select(`
-            *,
-            datasets (*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-      ]);
-
-      const datasets = datasetsResult.data || [];
-      
-      // Batch fetch all purchase counts in ONE query instead of loop
-      if (datasets.length > 0) {
-        const datasetIds = datasets.map(d => d.id);
-        const { data: purchaseCounts } = await supabase
-          .from('purchases')
-          .select('dataset_id')
-          .in('dataset_id', datasetIds)
-          .eq('status', 'completed');
-        
-        // Count purchases per dataset
-        const countMap = {};
-        purchaseCounts?.forEach(p => {
-          countMap[p.dataset_id] = (countMap[p.dataset_id] || 0) + 1;
-        });
-        
-        // Add counts to datasets
-        datasets.forEach(dataset => {
-          dataset.purchase_count = countMap[dataset.id] || 0;
-        });
-      }
-      
-      setMyDatasets(datasets)
-
-      // Process earnings (already fetched in parallel)
-      const earningsData = earningsResult.data || [];
-      const totalEarned = earningsData.reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0;
-      const pendingEarnings = earningsData.filter(e => e.status === 'pending').reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0;
-      
-      setEarnings({
-        total: totalEarned,
-        pending: pendingEarnings,
-        paid: totalEarned - pendingEarnings,
-        transactions: earningsData
-      });
-
-      // Process payout account (already fetched in parallel)
-      const payout = payoutResult.data;
-      setPayoutAccount(payout);
-      
-      // Process purchases (already fetched in parallel)
-      setMyPurchases(purchasesResult.data || []);
-      
-      // Process favorites (already fetched in parallel)
-      setMyFavorites(favoritesResult.data || []);
-
-      // Process admin status (already fetched in parallel)
-      if (!adminResult.error && adminResult.data) {
-        setIsAdmin(true);
-      }
-
-      // Check if user has moderation access (admin OR trust_level >= 3)
-      const hasAdminAccess = !adminResult.error && adminResult.data;
-      const hasModeratorTrustLevel = profile?.trust_level >= 3;
-      if (hasAdminAccess || hasModeratorTrustLevel) {
-        setHasModerationAccess(true);
-      }
-      
-      // Verify Stripe account if needed (background, non-blocking)
-      if (payout && payout.stripe_connect_account_id && !payout.payouts_enabled) {
-        fetch('/.netlify/functions/verify-stripe-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ creatorId: user.id })
-        })
-          .then(res => res.json())
-          .then(verifyData => {
-            if (verifyData.success && verifyData.account?.payouts_enabled) {
-              supabase
-                .from('creator_payout_accounts')
-                .select('*')
-                .eq('creator_id', user.id)
-                .single()
-                .then(({ data }) => setPayoutAccount(data));
-            }
-          })
-          .catch(err => {
-            handleSupabaseError(err, 'backgroundVerifyStripeAccount')
-            // Silent failure for background verification - no user notification needed
-          });
-      }
-
-      // Batch 2: Bounty and curation data (parallel execution)
-      const [
-        bountiesResult,
-        submissionsResult,
-        curationRequestsResult,
-        openRequestsResult,
-        curatorProfileResult,
-        deletionRequestsResult
-      ] = await Promise.all([
-        supabase.from('curation_requests').select('*').eq('creator_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('bounty_submissions').select('*, curation_requests!request_id (*), datasets (*)').eq('creator_id', user.id).order('submitted_at', { ascending: false }),
-        supabase.from('curation_requests').select('*, curator_proposals (id, status, curator_id, proposal_text, estimated_completion_days, suggested_price, created_at, pro_curators (id, display_name, badge_level, rating, total_projects, specialties)), curator_submissions (id, submission_number, file_name, file_size, file_path, completion_notes, changes_made, status, reviewer_feedback, created_at, reviewed_at)').eq('creator_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('curation_requests').select('*').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
-        supabase.from('pro_curators').select('*').eq('user_id', user.id).maybeSingle(),
-        supabase.from('deletion_requests').select('*, datasets (id, title, description)').eq('requester_id', user.id).order('requested_at', { ascending: false })
-      ]);
-
-      // Process bounties with proposals
-      const bounties = bountiesResult.data || [];
-      if (bounties.length > 0) {
-        const requestIds = bounties.map(b => b.id);
-        const [proposalsResult, curatorsResult] = await Promise.all([
-          supabase.from('curator_proposals').select('*').in('request_id', requestIds),
-          supabase.from('pro_curators').select('id, display_name, badge_level')
-        ]);
-        
-        const proposalsWithCurators = (proposalsResult.data || []).map(proposal => ({
-          ...proposal,
-          pro_curators: (curatorsResult.data || []).find(c => c.id === proposal.curator_id)
-        }));
-        
-        setMyBounties(bounties.map(bounty => ({
-          ...bounty,
-          curator_proposals: proposalsWithCurators.filter(p => p.request_id === bounty.id)
-        })));
-      } else {
-        setMyBounties([]);
-      }
-
-      setMySubmissions(submissionsResult.data || []);
-      setMyCurationRequests(curationRequestsResult.data || []);
-      setOpenCurationRequests(openRequestsResult.data || []);
-      setCuratorProfile(curatorProfileResult.data);
-      setDeletionRequests(deletionRequestsResult.data || []);
-
-      // If user is a Pro Curator, fetch assigned requests
-      const curatorData = curatorProfileResult.data;
-      if (curatorData) {
-        const { data: assignedData } = await supabase
-          .from('curation_requests')
-          .select('*')
-          .eq('assigned_curator_id', curatorData.id)
-          .order('created_at', { ascending: false });
-
-        if (assignedData && assignedData.length > 0) {
-          const requestIds = assignedData.map(r => r.id);
-          const creatorIds = assignedData.map(r => r.creator_id).filter(Boolean);
-
-          // Fetch proposals and creator profiles in parallel
-          const [proposalsResult, creatorsResult] = await Promise.all([
-            supabase.from('curator_proposals').select('*').in('request_id', requestIds),
-            supabase.from('profiles').select('id, username, avatar_url').in('id', creatorIds)
-          ]);
-
-          const proposals = proposalsResult.data || [];
-          const creators = creatorsResult.data || [];
-
-          setCuratorAssignedRequests(assignedData.map(request => ({
-            ...request,
-            requestor: creators.find(c => c.id === request.creator_id) || null,
-            curator_proposals: proposals.filter(p => p.request_id === request.id),
-            accepted_proposal: proposals.filter(p => p.request_id === request.id && p.status === 'accepted')
-          })));
-        } else {
-          setCuratorAssignedRequests([]);
-        }
-      } else {
-        setCuratorAssignedRequests([]);
-      }
-
-    } catch (error) {
-      handleSupabaseError(error, 'fetchDashboardData')
-      setError(ERROR_MESSAGES.FETCH_DASHBOARD)
+  // Bounty management operations
+  const {
+    handleCreateBounty: createBounty,
+    handleCloseMyBounty,
+    handleDeleteBountySubmission,
+  } = useBountyActions({
+    user,
+    fetchDashboardData: refetch,
+    setError,
+  })
+  
+  // Stripe Connect onboarding
+  const {
+    connectingStripe,
+    connectError,
+    handleConnectStripe,
+  } = useStripeConnect({
+    user,
+    profile,
+    setError,
+  })
+  
+  // Wrapper for bounty creation that handles modal state
+  const handleCreateBounty = async () => {
+    const result = await createBounty(newBounty)
+    if (result.success) {
+      setShowBountyModal(false)
+      setNewBounty({
+        title: '',
+        description: '',
+        budget_min: '',
+        budget_max: '',
+        minimum_curator_tier: 'verified'
+      })
     }
-
-    setLoading(false)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/')
-      return
-    }
-    
-    fetchDashboardData()
-    
-    // Check for Stripe onboarding completion
+  }
+  
+  // Handle Stripe onboarding completion (from URL params)
+  // This check runs once on mount when user returns from Stripe
+  if (user) {
     const urlParams = new URLSearchParams(window.location.search)
     const onboardingStatus = urlParams.get('onboarding')
     const tabParam = urlParams.get('tab')
@@ -383,13 +167,11 @@ function DashboardPage() {
           if (data.success) {
             alert(`✅ ${data.message || 'Stripe account connected successfully! Your payout account is now set up.'}`)
           } else {
-            handleSupabaseError(new Error(data.message || 'Verification failed'), 'verifyStripeAccount')
-            setError(ERROR_MESSAGES.STRIPE_VERIFY)
+            setError('Stripe account verification incomplete')
             alert(`⚠️ ${data.message || 'Account verification incomplete. Please complete all required information.'}`)
           }
-        } catch (error) {
-          handleSupabaseError(error, 'verifyStripeAccount')
-          setError(ERROR_MESSAGES.STRIPE_VERIFY)
+        } catch {
+          setError('Failed to verify Stripe account')
           alert('⚠️ Error verifying account status. Please refresh and try again.')
         }
         
@@ -400,7 +182,7 @@ function DashboardPage() {
         // Clean up URL
         window.history.replaceState({}, '', '/dashboard')
         // Refresh data to show updated payout account
-        setTimeout(() => fetchDashboardData(), 1000)
+        setTimeout(() => refetch(), 1000)
       })()
     } else if (onboardingStatus === 'refresh') {
       alert('⚠️ Stripe onboarding was interrupted. Please try again.')
@@ -409,369 +191,16 @@ function DashboardPage() {
       }
       window.history.replaceState({}, '', '/dashboard')
     }
-  }, [user, navigate, fetchDashboardData])
-
-  const handleDownload = async (datasetId) => {
-    try {
-      const response = await fetch('/.netlify/functions/generate-download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          datasetId: datasetId,
-          userId: user.id,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate download link')
-      }
-
-      // Handle demo datasets with data URLs
-      if (data.isDemo && data.downloadUrl.startsWith('data:')) {
-        // Create a download link for the data URL
-        const link = document.createElement('a')
-        link.href = data.downloadUrl
-        link.download = data.fileName || 'DEMO_README.txt'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        
-        alert('📝 Demo dataset info downloaded! This is a sample to showcase how Setique works. Real datasets include actual data files.')
-      } else {
-        // For real datasets, open in new tab
-        window.open(data.downloadUrl, '_blank')
-        alert('Download started! Link expires in 24 hours.')
-      }
-      
-      // Refresh download logs
-      fetchDashboardData()
-    } catch (error) {
-      handleSupabaseError(error, 'downloadDataset')
-      setError(ERROR_MESSAGES.DOWNLOAD_DATASET)
-      alert('Error: ' + error.message)
-    }
-  }
-
-  // Dataset management handlers
-  const handleToggleActive = async (datasetId, currentStatus) => {
-    setActionLoading(true)
-    try {
-      const { error } = await supabase
-        .from('datasets')
-        .update({ is_active: !currentStatus })
-        .eq('id', datasetId)
-        .eq('creator_id', user.id)
-      
-      if (error) throw error
-      
-      // Update local state
-      setMyDatasets(prev => 
-        prev.map(d => d.id === datasetId ? { ...d, is_active: !currentStatus } : d)
-      )
-      
-      alert(`Dataset ${!currentStatus ? 'activated' : 'deactivated'} successfully!`)
-    } catch (error) {
-      handleSupabaseError(error, 'toggleDataset')
-      setError(ERROR_MESSAGES.TOGGLE_DATASET)
-      alert('Failed to update dataset status')
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleEditDataset = (dataset) => {
-    editDatasetModal.open({
-      id: dataset.id,
-      title: dataset.title,
-      description: dataset.description,
-      price: dataset.price,
-      modality: dataset.modality,
-      tags: dataset.tags || []
-    })
-  }
-
-  const handleSaveEdit = async () => {
-    if (!editDatasetModal.data) return
-    
-    setActionLoading(true)
-    try {
-      const editData = editDatasetModal.data
-      const { error } = await supabase
-        .from('datasets')
-        .update({
-          title: editData.title,
-          description: editData.description,
-          price: parseFloat(editData.price),
-          modality: editData.modality,
-          tags: editData.tags,
-        })
-        .eq('id', editData.id)
-        .eq('creator_id', user.id)
-      
-      if (error) throw error
-      
-      // Update local state
-      setMyDatasets(prev => 
-        prev.map(d => d.id === editData.id ? { ...d, ...editData, price: parseFloat(editData.price) } : d)
-      )
-      
-      editDatasetModal.close()
-      alert('Dataset updated successfully!')
-    } catch (error) {
-      handleSupabaseError(error, 'updateDataset')
-      setError(ERROR_MESSAGES.UPDATE_DATASET)
-      alert('Failed to update dataset')
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleDeleteDataset = async (datasetId) => {
-    try {
-      // Check if dataset has purchases
-      const { data: purchases, error: purchaseError } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('dataset_id', datasetId)
-        .eq('status', 'completed')
-        .limit(1)
-      
-      if (purchaseError) throw purchaseError
-      
-      const hasPurchases = purchases && purchases.length > 0
-      
-      // Show confirmation dialog
-      confirmDialogModal.show({
-        title: hasPurchases ? 'Delete Dataset with Purchases?' : 'Delete Dataset?',
-        message: hasPurchases 
-          ? '⚠️ This dataset has purchases! Deleting it will break download access for buyers. This action cannot be undone. Are you absolutely sure?'
-          : 'Are you sure you want to delete this dataset? This action cannot be undone.',
-        onConfirm: async () => {
-          setActionLoading(true)
-          try {
-            // Call Netlify function to delete (bypasses RLS)
-            const response = await fetch('/.netlify/functions/delete-dataset', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                datasetId: datasetId,
-                userId: user.id
-              })
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-              throw new Error(data.error || 'Failed to delete dataset')
-            }
-
-            alert('✅ Dataset deleted successfully')
-            await fetchDashboardData()
-          } catch (error) {
-            handleSupabaseError(error, 'deleteDataset')
-            setError(ERROR_MESSAGES.DELETE_DATASET)
-            alert('Failed to delete dataset: ' + error.message)
-          } finally {
-            setActionLoading(false)
-          }
-        }
-      })
-    } catch (error) {
-      handleSupabaseError(error, 'checkDatasetPurchases')
-      setError(ERROR_MESSAGES.DELETE_DATASET)
-      alert('Failed to check dataset status: ' + error.message)
-    }
-  }
-
-  const handleRequestDeletion = async (datasetId, reason) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      const response = await fetch('/.netlify/functions/request-deletion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          datasetId,
-          reason
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit deletion request')
-      }
-
-      alert('Deletion request submitted! An admin will review your request.')
-      
-      // Refresh deletion requests
-      await fetchDashboardData()
-    } catch (error) {
-      handleSupabaseError(error, 'requestDeletion')
-      setError(ERROR_MESSAGES.REQUEST_DELETION)
-      throw error
-    }
-  }
-
-  const handleCreateBounty = async () => {
-    if (!newBounty.title || !newBounty.description || !newBounty.budget_max) {
-      alert('Please fill in all required fields')
-      return
-    }
-
-    try {
-      const { data: createdBounty, error } = await supabase.from('curation_requests').insert([
-        {
-          creator_id: user.id,
-          title: newBounty.title,
-          description: newBounty.description,
-          budget_min: parseFloat(newBounty.budget_min) || parseFloat(newBounty.budget_max) * 0.8,
-          budget_max: parseFloat(newBounty.budget_max),
-          status: 'open',
-          target_quality: 'standard',
-          specialties_needed: [],
-          minimum_curator_tier: newBounty.minimum_curator_tier
-        }
-      ]).select()
-
-      if (error) throw error
-
-      // Log activity for social feed
-      if (createdBounty && createdBounty[0]) {
-        await logBountyCreated(
-          user.id,
-          createdBounty[0].id,
-          newBounty.title,
-          parseFloat(newBounty.budget_max)
-        )
-      }
-
-      alert(`Bounty "${newBounty.title}" posted successfully!`)
-      setShowBountyModal(false)
-      setNewBounty({
-        title: '',
-        description: '',
-        budget_min: '',
-        budget_max: '',
-        minimum_curator_tier: 'verified'
-      })
-      await fetchDashboardData()
-    } catch (error) {
-      handleSupabaseError(error, 'createBounty')
-      setError(ERROR_MESSAGES.CREATE_BOUNTY)
-      alert('Failed to create bounty: ' + error.message)
-    }
-  }
-
-  const handleCloseMyBounty = async (bountyId) => {
-    if (!window.confirm('Close this bounty? No more proposals will be accepted.')) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('curation_requests')
-        .update({ status: 'closed' })
-        .eq('id', bountyId)
-        .eq('creator_id', user.id) // Only allow closing own bounties
-
-      if (error) throw error
-
-      alert('✅ Bounty closed successfully!')
-      
-      // Refresh bounties
-      await fetchDashboardData()
-    } catch (error) {
-      handleSupabaseError(error, 'closeBounty')
-      setError(ERROR_MESSAGES.CLOSE_BOUNTY)
-      alert('Failed to close bounty: ' + error.message)
-    }
-  }
-
-  const handleDeleteBountySubmission = async (submissionId, datasetTitle) => {
-    if (!window.confirm(`Delete your submission "${datasetTitle}"? This cannot be undone.`)) {
-      return
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('bounty_submissions')
-        .delete()
-        .eq('id', submissionId)
-        .eq('creator_id', user.id) // Only allow deleting own submissions
-        .select() // Return deleted row to confirm
-
-      if (error) {
-        handleSupabaseError(error, 'deleteBountySubmission')
-        throw error
-      }
-
-      if (!data || data.length === 0) {
-        handleSupabaseError(new Error('No rows deleted - RLS policy issue'), 'deleteBountySubmission')
-        alert('⚠️ Could not delete submission. You may not have permission or the submission may already be deleted.')
-        return
-      }
-
-      alert('✅ Submission deleted successfully!')
-      
-      // Refresh submissions
-      await fetchDashboardData()
-    } catch (error) {
-      handleSupabaseError(error, 'deleteBountySubmission')
-      setError(ERROR_MESSAGES.DELETE_BOUNTY_SUBMISSION)
-      alert('Failed to delete submission: ' + error.message)
-    }
-  }
-
-  const handleConnectStripe = async () => {
-    setConnectingStripe(true)
-    setConnectError(null)
-    
-    try {
-      const returnUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`
-      const refreshUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`
-      
-      const response = await fetch('/.netlify/functions/connect-onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          creatorId: user.id,
-          email: profile?.email || user.email,
-          returnUrl,
-          refreshUrl,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create Stripe Connect link')
-      }
-
-      // Redirect to Stripe onboarding
-      window.location.href = data.url
-    } catch (error) {
-      handleSupabaseError(error, 'handleStripeConnect')
-      setError(ERROR_MESSAGES.STRIPE_CONNECT)
-      setConnectError(error.message)
-      setConnectingStripe(false)
-    }
   }
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
+  }
+
+  if (!user) {
+    navigate('/')
+    return null
   }
 
   if (loading) {
@@ -1172,7 +601,7 @@ function DashboardPage() {
               myCurationRequests={myCurationRequests}
               curationRequestModal={curationRequestModal}
               proposalsModal={proposalsModal}
-              fetchDashboardData={fetchDashboardData}
+              fetchDashboardData={refetch}
               setError={setError}
             />
           )}
@@ -1307,14 +736,14 @@ function DashboardPage() {
       <DatasetUploadModal 
         isOpen={uploadModal.isOpen}
         onClose={uploadModal.close}
-        onSuccess={fetchDashboardData}
+        onSuccess={refetch}
       />
       
       {/* Curation Request Modal */}
       <CurationRequestModal 
         isOpen={curationRequestModal.isOpen}
         onClose={curationRequestModal.close}
-        onSuccess={fetchDashboardData}
+        onSuccess={refetch}
       />
       
       {/* Proposals Modal */}
@@ -1322,7 +751,7 @@ function DashboardPage() {
         isOpen={proposalsModal.isOpen}
         onClose={proposalsModal.close}
         request={proposalsModal.data}
-        onAccept={fetchDashboardData}
+        onAccept={refetch}
       />
       
       {/* Proposal Submission Modal */}
@@ -1332,7 +761,7 @@ function DashboardPage() {
         request={proposalSubmissionModal.data}
         curatorProfile={curatorProfile}
         userProfile={profile}
-        onSuccess={fetchDashboardData}
+        onSuccess={refetch}
       />
 
       {/* Bounty Submission Modal - For custom dataset uploads to bounties */}
@@ -1340,7 +769,7 @@ function DashboardPage() {
         isOpen={bountySubmissionModal.isOpen}
         onClose={bountySubmissionModal.close}
         bounty={bountySubmissionModal.data}
-        onSuccess={fetchDashboardData}
+        onSuccess={refetch}
       />
 
       {/* Curator Submission Modal */}
@@ -1349,7 +778,7 @@ function DashboardPage() {
         onClose={curatorSubmissionModal.close}
         request={curatorSubmissionModal.data}
         curatorProfile={curatorProfile}
-        onSuccess={fetchDashboardData}
+        onSuccess={refetch}
       />
 
       {/* Deletion Request Modal */}
