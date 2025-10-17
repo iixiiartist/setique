@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useModalState, useConfirmDialog } from '../lib/hooks/useModalState'
@@ -18,16 +18,18 @@ import TrustLevelBadge from '../components/TrustLevelBadge'
 import FavoriteButton from '../components/FavoriteButton'
 import NotificationBell from '../components/NotificationBell'
 import { ErrorBanner } from '../components/ErrorBanner'
-import { OverviewTab } from '../components/dashboard/tabs/OverviewTab'
-import { DatasetsTab } from '../components/dashboard/tabs/DatasetsTab'
-import { PurchasesTab } from '../components/dashboard/tabs/PurchasesTab'
-import { EarningsTab } from '../components/dashboard/tabs/EarningsTab'
-import { BountiesTab } from '../components/dashboard/tabs/BountiesTab'
-import { SubmissionsTab } from '../components/dashboard/tabs/SubmissionsTab'
-import { CurationRequestsTab } from '../components/dashboard/tabs/CurationRequestsTab'
-import { ProCuratorTab } from '../components/dashboard/tabs/ProCuratorTab'
-import { ActivityTab } from '../components/dashboard/tabs/ActivityTab'
-import { FavoritesTab } from '../components/dashboard/tabs/FavoritesTab'
+
+// Lazy load tab components for better performance
+const OverviewTab = lazy(() => import('../components/dashboard/tabs/OverviewTab').then(m => ({ default: m.OverviewTab })))
+const DatasetsTab = lazy(() => import('../components/dashboard/tabs/DatasetsTab').then(m => ({ default: m.DatasetsTab })))
+const PurchasesTab = lazy(() => import('../components/dashboard/tabs/PurchasesTab').then(m => ({ default: m.PurchasesTab })))
+const EarningsTab = lazy(() => import('../components/dashboard/tabs/EarningsTab').then(m => ({ default: m.EarningsTab })))
+const BountiesTab = lazy(() => import('../components/dashboard/tabs/BountiesTab').then(m => ({ default: m.BountiesTab })))
+const SubmissionsTab = lazy(() => import('../components/dashboard/tabs/SubmissionsTab').then(m => ({ default: m.SubmissionsTab })))
+const CurationRequestsTab = lazy(() => import('../components/dashboard/tabs/CurationRequestsTab').then(m => ({ default: m.CurationRequestsTab })))
+const ProCuratorTab = lazy(() => import('../components/dashboard/tabs/ProCuratorTab').then(m => ({ default: m.ProCuratorTab })))
+const ActivityTab = lazy(() => import('../components/dashboard/tabs/ActivityTab').then(m => ({ default: m.ActivityTab })))
+const FavoritesTab = lazy(() => import('../components/dashboard/tabs/FavoritesTab').then(m => ({ default: m.FavoritesTab })))
 import {
   Database,
   ShoppingBag,
@@ -131,7 +133,7 @@ function DashboardPage() {
   })
   
   // Wrapper for bounty creation that handles modal state
-  const handleCreateBounty = async () => {
+  const handleCreateBounty = useCallback(async () => {
     const result = await createBounty(newBounty)
     if (result.success) {
       setShowBountyModal(false)
@@ -143,7 +145,7 @@ function DashboardPage() {
         minimum_curator_tier: 'verified'
       })
     }
-  }
+  }, [createBounty, newBounty])
   
   // Handle Stripe onboarding completion (from URL params)
   // This check runs once on mount when user returns from Stripe
@@ -193,10 +195,10 @@ function DashboardPage() {
     }
   }
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut()
     navigate('/')
-  }
+  }, [signOut, navigate])
 
   if (!user) {
     navigate('/')
@@ -528,15 +530,20 @@ function DashboardPage() {
 
         {/* Tab Content */}
         <div className="bg-white border-4 border-black rounded-3xl shadow-[8px_8px_0_#000] p-6">
-          {activeTab === 'overview' && (
-            <OverviewTab
-              myPurchases={myPurchases}
-              myDatasets={myDatasets}
-              earnings={earnings}
-              handleDownload={handleDownload}
-              setActiveTab={setActiveTab}
-            />
-          )}
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-600"></div>
+            </div>
+          }>
+            {activeTab === 'overview' && (
+              <OverviewTab
+                myPurchases={myPurchases}
+                myDatasets={myDatasets}
+                earnings={earnings}
+                handleDownload={handleDownload}
+                setActiveTab={setActiveTab}
+              />
+            )}
 
           {activeTab === 'datasets' && (
             <DatasetsTab
@@ -627,6 +634,7 @@ function DashboardPage() {
           {activeTab === 'favorites' && (
             <FavoritesTab myFavorites={myFavorites} navigate={navigate} />
           )}
+          </Suspense>
         </div>
       </main>
       

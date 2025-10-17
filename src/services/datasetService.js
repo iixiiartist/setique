@@ -1,9 +1,11 @@
 import { supabase } from '../lib/supabase'
+import { dashboardCache } from '../lib/cache'
 
 /**
  * Dataset Service
  * Centralizes dataset management operations
  * Pure functions that interact with Supabase/Netlify and return data or throw errors
+ * Invalidates caches on mutations to ensure fresh data
  */
 
 /**
@@ -20,6 +22,9 @@ export async function updateDatasetActiveStatus(datasetId, isActive) {
     .eq('id', datasetId)
   
   if (error) throw error
+  
+  // Invalidate dataset caches
+  dashboardCache.invalidatePattern('datasets:')
 }
 
 /**
@@ -36,6 +41,9 @@ export async function updateDataset(datasetId, updates) {
     .eq('id', datasetId)
   
   if (error) throw error
+  
+  // Invalidate dataset caches
+  dashboardCache.invalidatePattern('datasets:')
 }
 
 /**
@@ -76,6 +84,10 @@ export async function deleteDatasetViaFunction(datasetId, userId) {
     throw new Error(data.error || 'Failed to delete dataset')
   }
   
+  // Invalidate all dataset-related caches
+  dashboardCache.invalidatePattern('datasets:')
+  dashboardCache.invalidatePattern('purchase-counts:')
+  
   return data
 }
 
@@ -103,6 +115,9 @@ export async function requestDatasetDeletion(datasetId, reason, accessToken) {
     throw new Error(data.error || 'Failed to submit deletion request')
   }
   
+  // Invalidate deletion requests cache
+  dashboardCache.invalidatePattern('deletion-requests:')
+  
   return data
 }
 
@@ -119,6 +134,10 @@ export async function deleteDataset(datasetId) {
     .eq('id', datasetId)
   
   if (error) throw error
+  
+  // Invalidate dataset caches
+  dashboardCache.invalidatePattern('datasets:')
+  dashboardCache.invalidatePattern('purchase-counts:')
 }
 
 /**

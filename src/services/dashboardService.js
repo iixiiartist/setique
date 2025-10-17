@@ -1,9 +1,11 @@
 import { supabase } from '../lib/supabase'
+import { dashboardCache } from '../lib/cache'
 
 /**
  * Dashboard Service
  * Centralizes all dashboard data fetching operations
  * Pure functions that interact with Supabase and return data or throw errors
+ * Implements caching layer to reduce redundant API calls
  */
 
 /**
@@ -13,6 +15,12 @@ import { supabase } from '../lib/supabase'
  * @throws {Error} If query fails
  */
 export async function fetchUserDatasets(userId) {
+  const cacheKey = `datasets:${userId}`
+  
+  // Check cache first
+  const cached = dashboardCache.get(cacheKey)
+  if (cached) return cached
+  
   const { data, error } = await supabase
     .from('datasets')
     .select(`
@@ -31,7 +39,10 @@ export async function fetchUserDatasets(userId) {
     .order('created_at', { ascending: false })
   
   if (error) throw error
-  return data || []
+  
+  const result = data || []
+  dashboardCache.set(cacheKey, result)
+  return result
 }
 
 /**
@@ -44,6 +55,12 @@ export async function fetchDatasetPurchaseCounts(datasetIds) {
   if (!datasetIds || datasetIds.length === 0) {
     return {}
   }
+  
+  const cacheKey = `purchase-counts:${datasetIds.sort().join(',')}`
+  
+  // Check cache first
+  const cached = dashboardCache.get(cacheKey)
+  if (cached) return cached
   
   const { data, error } = await supabase
     .from('purchases')
@@ -59,6 +76,8 @@ export async function fetchDatasetPurchaseCounts(datasetIds) {
     countMap[p.dataset_id] = (countMap[p.dataset_id] || 0) + 1
   })
   
+  // Cache the result
+  dashboardCache.set(cacheKey, countMap)
   return countMap
 }
 
@@ -69,6 +88,12 @@ export async function fetchDatasetPurchaseCounts(datasetIds) {
  * @throws {Error} If query fails
  */
 export async function fetchEarnings(userId) {
+  const cacheKey = `earnings:${userId}`
+  
+  // Check cache first
+  const cached = dashboardCache.get(cacheKey)
+  if (cached) return cached
+  
   const { data, error } = await supabase
     .from('creator_earnings')
     .select('*')
@@ -76,16 +101,25 @@ export async function fetchEarnings(userId) {
     .order('earned_at', { ascending: false })
   
   if (error) throw error
-  return data || []
+  
+  const result = data || []
+  dashboardCache.set(cacheKey, result)
+  return result
 }
 
 /**
  * Fetch user's payout account
  * @param {string} userId - User ID
- * @returns {Promise<Object|null>} Payout account or null if not found
+ * @returns {Promise<Object|null}> Payout account or null if not found
  * @throws {Error} If query fails
  */
 export async function fetchPayoutAccount(userId) {
+  const cacheKey = `payout:${userId}`
+  
+  // Check cache first
+  const cached = dashboardCache.get(cacheKey)
+  if (cached !== null && cached !== undefined) return cached
+  
   const { data, error } = await supabase
     .from('creator_payout_accounts')
     .select('*')
@@ -93,6 +127,8 @@ export async function fetchPayoutAccount(userId) {
     .maybeSingle()
   
   if (error) throw error
+  
+  dashboardCache.set(cacheKey, data)
   return data
 }
 
