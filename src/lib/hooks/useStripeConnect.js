@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { handleSupabaseError } from '../logger'
 import { ERROR_MESSAGES } from '../errorMessages'
+import * as stripeService from '../../services/stripeService'
 
 /**
  * Custom hook for managing Stripe Connect onboarding flow
@@ -29,7 +30,7 @@ export const useStripeConnect = ({
 
   /**
    * Initiate Stripe Connect onboarding flow
-   * Creates onboarding link via Netlify function and redirects to Stripe
+   * Creates onboarding link via service layer and redirects to Stripe
    */
   const handleConnectStripe = async () => {
     setConnectingStripe(true)
@@ -39,24 +40,12 @@ export const useStripeConnect = ({
       const returnUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=complete`
       const refreshUrl = `${window.location.origin}/dashboard?tab=earnings&onboarding=refresh`
       
-      const response = await fetch('/.netlify/functions/connect-onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          creatorId: user.id,
-          email: profile?.email || user.email,
-          returnUrl,
-          refreshUrl,
-        }),
+      const data = await stripeService.createStripeOnboardingLink({
+        creatorId: user.id,
+        email: profile?.email || user.email,
+        returnUrl,
+        refreshUrl,
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create Stripe Connect link')
-      }
 
       // Redirect to Stripe onboarding
       window.location.href = data.url

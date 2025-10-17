@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
-import { supabase } from '../supabase'
 import { handleSupabaseError } from '../logger'
 import { ERROR_MESSAGES } from '../errorMessages'
+import * as dashboardService from '../../services/dashboardService'
 
 /**
  * Custom hook for fetching and managing all dashboard data
@@ -54,92 +54,27 @@ export const useDashboardData = (user, profile) => {
     setError(null)
     
     try {
-      // Batch 1: Core user data (parallel execution)
+      // Batch 1: Core user data (parallel execution using service layer)
       const [
-        datasetsResult,
-        earningsResult,
-        payoutResult,
-        purchasesResult,
-        adminResult,
-        favoritesResult
+        datasets,
+        earningsData,
+        payout,
+        purchases,
+        adminData,
+        favorites
       ] = await Promise.all([
-        // Fetch user's created datasets with partnership info
-        supabase
-          .from('datasets')
-          .select(`
-            *,
-            dataset_partnerships (
-              id,
-              status,
-              curator_user_id,
-              pro_curators (
-                display_name,
-                badge_level
-              )
-            )
-          `)
-          .eq('creator_id', user.id)
-          .order('created_at', { ascending: false }),
-        
-        // Fetch earnings summary
-        supabase
-          .from('creator_earnings')
-          .select('*')
-          .eq('creator_id', user.id)
-          .order('earned_at', { ascending: false }),
-        
-        // Fetch payout account
-        supabase
-          .from('creator_payout_accounts')
-          .select('*')
-          .eq('creator_id', user.id)
-          .maybeSingle(),
-        
-        // Fetch user's purchases
-        supabase
-          .from('purchases')
-          .select(`
-            *,
-            datasets (*)
-          `)
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .order('purchased_at', { ascending: false }),
-        
-        // Check if user is admin
-        supabase
-          .from('admins')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle(),
-        
-        // Fetch user's favorited datasets
-        supabase
-          .from('dataset_favorites')
-          .select(`
-            *,
-            datasets (*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+        dashboardService.fetchUserDatasets(user.id),
+        dashboardService.fetchEarnings(user.id),
+        dashboardService.fetchPayoutAccount(user.id),
+        dashboardService.fetchUserPurchases(user.id),
+        dashboardService.checkAdminStatus(user.id),
+        dashboardService.fetchUserFavorites(user.id)
       ])
-
-      const datasets = datasetsResult.data || []
       
-      // Batch fetch all purchase counts in ONE query instead of loop
+      // Batch fetch all purchase counts in ONE query
       if (datasets.length > 0) {
         const datasetIds = datasets.map(d => d.id)
-        const { data: purchaseCounts } = await supabase
-          .from('purchases')
-          .select('dataset_id')
-          .in('dataset_id', datasetIds)
-          .eq('status', 'completed')
-        
-        // Count purchases per dataset
-        const countMap = {}
-        purchaseCounts?.forEach(p => {
-          countMap[p.dataset_id] = (countMap[p.dataset_id] || 0) + 1
-        })
+        const countMap = await dashboardService.fetchDatasetPurchaseCounts(datasetIds)
         
         // Add counts to datasets
         datasets.forEach(dataset => {
@@ -149,8 +84,7 @@ export const useDashboardData = (user, profile) => {
       
       setMyDatasets(datasets)
 
-      // Process earnings (already fetched in parallel)
-      const earningsData = earningsResult.data || []
+      // Process earnings
       const totalEarned = earningsData.reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0
       const pendingEarnings = earningsData.filter(e => e.status === 'pending').reduce((sum, e) => sum + parseFloat(e.creator_net), 0) || 0
       
@@ -161,44 +95,31 @@ export const useDashboardData = (user, profile) => {
         transactions: earningsData
       })
 
-      // Process payout account (already fetched in parallel)
-      const payout = payoutResult.data
+      // Set payout account
       setPayoutAccount(payout)
       
-      // Process purchases (already fetched in parallel)
-      setMyPurchases(purchasesResult.data || [])
+      // Set purchases
+      setMyPurchases(purchases)
       
-      // Process favorites (already fetched in parallel)
-      setMyFavorites(favoritesResult.data || [])
+      // Set favorites
+      setMyFavorites(favorites)
 
-      // Process admin status (already fetched in parallel)
-      if (!adminResult.error && adminResult.data) {
+      // Process admin status
+      if (adminData) {
         setIsAdmin(true)
       }
 
       // Check if user has moderation access (admin OR trust_level >= 3)
-      const hasAdminAccess = !adminResult.error && adminResult.data
-      const hasModeratorTrustLevel = profile?.trust_level >= 3
-      if (hasAdminAccess || hasModeratorTrustLevel) {
-        setHasModerationAccess(true)
-      }
+      const hasModAccess = dashboardService.checkModerationAccess(!!adminData, profile?.trust_level || 0)
+      setHasModerationAccess(hasModAccess)
       
       // Verify Stripe account if needed (background, non-blocking)
       if (payout && payout.stripe_connect_account_id && !payout.payouts_enabled) {
-        fetch('/.netlify/functions/verify-stripe-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ creatorId: user.id })
-        })
-          .then(res => res.json())
+        dashboardService.verifyStripeAccount(user.id)
           .then(verifyData => {
             if (verifyData.success && verifyData.account?.payouts_enabled) {
-              supabase
-                .from('creator_payout_accounts')
-                .select('*')
-                .eq('creator_id', user.id)
-                .single()
-                .then(({ data }) => setPayoutAccount(data))
+              dashboardService.fetchPayoutAccount(user.id)
+                .then(data => setPayoutAccount(data))
             }
           })
           .catch(err => {
@@ -207,35 +128,34 @@ export const useDashboardData = (user, profile) => {
           })
       }
 
-      // Batch 2: Bounty and curation data (parallel execution)
+      // Batch 2: Bounty and curation data (parallel execution using service layer)
       const [
-        bountiesResult,
-        submissionsResult,
-        curationRequestsResult,
-        openRequestsResult,
-        curatorProfileResult,
-        deletionRequestsResult
+        bounties,
+        submissions,
+        curationRequests,
+        openRequests,
+        curatorData,
+        deletionReqs
       ] = await Promise.all([
-        supabase.from('curation_requests').select('*').eq('creator_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('bounty_submissions').select('*, curation_requests!request_id (*), datasets (*)').eq('creator_id', user.id).order('submitted_at', { ascending: false }),
-        supabase.from('curation_requests').select('*, curator_proposals (id, status, curator_id, proposal_text, estimated_completion_days, suggested_price, created_at, pro_curators (id, display_name, badge_level, rating, total_projects, specialties)), curator_submissions (id, submission_number, file_name, file_size, file_path, completion_notes, changes_made, status, reviewer_feedback, created_at, reviewed_at)').eq('creator_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('curation_requests').select('*').eq('status', 'open').order('created_at', { ascending: false }).limit(20),
-        supabase.from('pro_curators').select('*').eq('user_id', user.id).maybeSingle(),
-        supabase.from('deletion_requests').select('*, datasets (id, title, description)').eq('requester_id', user.id).order('requested_at', { ascending: false })
+        dashboardService.fetchUserBounties(user.id),
+        dashboardService.fetchBountySubmissions(user.id),
+        dashboardService.fetchCurationRequests(user.id),
+        dashboardService.fetchOpenCurationRequests(20),
+        dashboardService.fetchCuratorProfile(user.id),
+        dashboardService.fetchDeletionRequests(user.id)
       ])
 
       // Process bounties with proposals
-      const bounties = bountiesResult.data || []
       if (bounties.length > 0) {
         const requestIds = bounties.map(b => b.id)
-        const [proposalsResult, curatorsResult] = await Promise.all([
-          supabase.from('curator_proposals').select('*').in('request_id', requestIds),
-          supabase.from('pro_curators').select('id, display_name, badge_level')
+        const [proposals, curators] = await Promise.all([
+          dashboardService.fetchBountyProposals(requestIds),
+          dashboardService.fetchProCurators()
         ])
         
-        const proposalsWithCurators = (proposalsResult.data || []).map(proposal => ({
+        const proposalsWithCurators = proposals.map(proposal => ({
           ...proposal,
-          pro_curators: (curatorsResult.data || []).find(c => c.id === proposal.curator_id)
+          pro_curators: curators.find(c => c.id === proposal.curator_id)
         }))
         
         setMyBounties(bounties.map(bounty => ({
@@ -246,33 +166,25 @@ export const useDashboardData = (user, profile) => {
         setMyBounties([])
       }
 
-      setMySubmissions(submissionsResult.data || [])
-      setMyCurationRequests(curationRequestsResult.data || [])
-      setOpenCurationRequests(openRequestsResult.data || [])
-      setCuratorProfile(curatorProfileResult.data)
-      setDeletionRequests(deletionRequestsResult.data || [])
+      setMySubmissions(submissions)
+      setMyCurationRequests(curationRequests)
+      setOpenCurationRequests(openRequests)
+      setCuratorProfile(curatorData)
+      setDeletionRequests(deletionReqs)
 
       // If user is a Pro Curator, fetch assigned requests
-      const curatorData = curatorProfileResult.data
       if (curatorData) {
-        const { data: assignedData } = await supabase
-          .from('curation_requests')
-          .select('*')
-          .eq('assigned_curator_id', curatorData.id)
-          .order('created_at', { ascending: false })
+        const assignedData = await dashboardService.fetchAssignedRequests(curatorData.id)
 
         if (assignedData && assignedData.length > 0) {
           const requestIds = assignedData.map(r => r.id)
           const creatorIds = assignedData.map(r => r.creator_id).filter(Boolean)
 
           // Fetch proposals and creator profiles in parallel
-          const [proposalsResult, creatorsResult] = await Promise.all([
-            supabase.from('curator_proposals').select('*').in('request_id', requestIds),
-            supabase.from('profiles').select('id, username, avatar_url').in('id', creatorIds)
+          const [proposals, creators] = await Promise.all([
+            dashboardService.fetchProposalsForRequests(requestIds),
+            dashboardService.fetchCreatorProfiles(creatorIds)
           ])
-
-          const proposals = proposalsResult.data || []
-          const creators = creatorsResult.data || []
 
           setCuratorAssignedRequests(assignedData.map(request => ({
             ...request,

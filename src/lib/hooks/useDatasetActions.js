@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabase'
 import { handleSupabaseError } from '../logger'
 import { ERROR_MESSAGES } from '../errorMessages'
+import * as datasetService from '../../services/datasetService'
 
 /**
  * Custom hook for managing dataset actions (CRUD operations)
@@ -38,27 +39,12 @@ export const useDatasetActions = ({
 
   /**
    * Download a dataset
-   * Generates a secure download link via Netlify function
+   * Generates a secure download link via service layer
    * Handles both demo datasets and real datasets
    */
   const handleDownload = async (datasetId) => {
     try {
-      const response = await fetch('/.netlify/functions/generate-download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          datasetId: datasetId,
-          userId: user.id,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate download link')
-      }
+      const data = await datasetService.triggerDatasetDownload(datasetId)
 
       // Handle demo datasets with data URLs
       if (data.isDemo && data.downloadUrl.startsWith('data:')) {
@@ -93,13 +79,7 @@ export const useDatasetActions = ({
   const handleToggleActive = async (datasetId, currentStatus) => {
     setActionLoading(true)
     try {
-      const { error } = await supabase
-        .from('datasets')
-        .update({ is_active: !currentStatus })
-        .eq('id', datasetId)
-        .eq('creator_id', user.id)
-      
-      if (error) throw error
+      await datasetService.updateDatasetActiveStatus(datasetId, !currentStatus)
       
       // Update local state
       setMyDatasets(prev => 
@@ -141,19 +121,13 @@ export const useDatasetActions = ({
     setActionLoading(true)
     try {
       const editData = editDatasetModal.data
-      const { error } = await supabase
-        .from('datasets')
-        .update({
-          title: editData.title,
-          description: editData.description,
-          price: parseFloat(editData.price),
-          modality: editData.modality,
-          tags: editData.tags,
-        })
-        .eq('id', editData.id)
-        .eq('creator_id', user.id)
-      
-      if (error) throw error
+      await datasetService.updateDataset(editData.id, {
+        title: editData.title,
+        description: editData.description,
+        price: parseFloat(editData.price),
+        modality: editData.modality,
+        tags: editData.tags,
+      })
       
       // Update local state
       setMyDatasets(prev => 
@@ -173,21 +147,12 @@ export const useDatasetActions = ({
 
   /**
    * Delete a dataset
-   * Checks for purchases first, shows confirmation, then deletes via Netlify function
+   * Checks for purchases first, shows confirmation, then deletes via service layer
    */
   const handleDeleteDataset = async (datasetId) => {
     try {
       // Check if dataset has purchases
-      const { data: purchases, error: purchaseError } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('dataset_id', datasetId)
-        .eq('status', 'completed')
-        .limit(1)
-      
-      if (purchaseError) throw purchaseError
-      
-      const hasPurchases = purchases && purchases.length > 0
+      const hasPurchases = await datasetService.datasetHasPurchases(datasetId)
       
       // Show confirmation dialog
       confirmDialogModal.show({
@@ -198,24 +163,7 @@ export const useDatasetActions = ({
         onConfirm: async () => {
           setActionLoading(true)
           try {
-            // Call Netlify function to delete (bypasses RLS)
-            const response = await fetch('/.netlify/functions/delete-dataset', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                datasetId: datasetId,
-                userId: user.id
-              })
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-              throw new Error(data.error || 'Failed to delete dataset')
-            }
-
+            await datasetService.deleteDatasetViaFunction(datasetId, user.id)
             alert('✅ Dataset deleted successfully')
             await fetchDashboardData()
           } catch (error) {
@@ -236,30 +184,13 @@ export const useDatasetActions = ({
 
   /**
    * Request dataset deletion via admin approval
-   * Submits deletion request through Netlify function
+   * Submits deletion request through service layer
    */
   const handleRequestDeletion = async (datasetId, reason) => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      await datasetService.requestDatasetDeletion(datasetId, reason, session.access_token)
       
-      const response = await fetch('/.netlify/functions/request-deletion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          datasetId,
-          reason
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit deletion request')
-      }
-
       alert('Deletion request submitted! An admin will review your request.')
       
       // Refresh deletion requests

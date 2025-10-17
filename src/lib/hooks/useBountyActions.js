@@ -1,7 +1,7 @@
-import { supabase } from '../supabase'
 import { handleSupabaseError } from '../logger'
 import { ERROR_MESSAGES } from '../errorMessages'
 import { logBountyCreated } from '../activityTracking'
+import * as bountyService from '../../services/bountyService'
 
 /**
  * Custom hook for managing bounty/curation request actions
@@ -27,7 +27,7 @@ export const useBountyActions = ({
 }) => {
   /**
    * Create a new bounty/curation request
-   * Validates fields, inserts into database, logs activity
+   * Validates fields, uses service layer to insert, logs activity
    * 
    * @param {Object} newBounty - Bounty data object
    * @param {string} newBounty.title - Bounty title
@@ -43,27 +43,20 @@ export const useBountyActions = ({
     }
 
     try {
-      const { data: createdBounty, error } = await supabase.from('curation_requests').insert([
-        {
-          creator_id: user.id,
-          title: newBounty.title,
-          description: newBounty.description,
-          budget_min: parseFloat(newBounty.budget_min) || parseFloat(newBounty.budget_max) * 0.8,
-          budget_max: parseFloat(newBounty.budget_max),
-          status: 'open',
-          target_quality: 'standard',
-          specialties_needed: [],
-          minimum_curator_tier: newBounty.minimum_curator_tier
-        }
-      ]).select()
-
-      if (error) throw error
+      const createdBounty = await bountyService.createCurationRequest({
+        creatorId: user.id,
+        title: newBounty.title,
+        description: newBounty.description,
+        budget: parseFloat(newBounty.budget_max),
+        deadline: null, // Add deadline support if needed
+        requirements: [] // Add requirements support if needed
+      })
 
       // Log activity for social feed
-      if (createdBounty && createdBounty[0]) {
+      if (createdBounty) {
         await logBountyCreated(
           user.id,
-          createdBounty[0].id,
+          createdBounty.id,
           newBounty.title,
           parseFloat(newBounty.budget_max)
         )
@@ -73,7 +66,7 @@ export const useBountyActions = ({
       
       await fetchDashboardData()
       
-      return { success: true, bounty: createdBounty[0] }
+      return { success: true, bounty: createdBounty }
     } catch (error) {
       handleSupabaseError(error, 'createBounty')
       setError(ERROR_MESSAGES.CREATE_BOUNTY)
@@ -84,7 +77,7 @@ export const useBountyActions = ({
 
   /**
    * Close a bounty (prevent new proposals)
-   * Confirms with user before closing
+   * Confirms with user before closing using service layer
    * 
    * @param {string} bountyId - ID of the bounty to close
    */
@@ -94,14 +87,7 @@ export const useBountyActions = ({
     }
 
     try {
-      const { error } = await supabase
-        .from('curation_requests')
-        .update({ status: 'closed' })
-        .eq('id', bountyId)
-        .eq('creator_id', user.id) // Only allow closing own bounties
-
-      if (error) throw error
-
+      await bountyService.closeCurationRequest(bountyId, user.id)
       alert('✅ Bounty closed successfully!')
       
       // Refresh bounties
@@ -115,7 +101,7 @@ export const useBountyActions = ({
 
   /**
    * Delete a bounty submission
-   * Confirms with user before deletion
+   * Confirms with user before deletion using service layer
    * 
    * @param {string} submissionId - ID of the submission to delete
    * @param {string} datasetTitle - Title of the dataset (for confirmation message)
@@ -126,24 +112,7 @@ export const useBountyActions = ({
     }
 
     try {
-      const { data, error } = await supabase
-        .from('bounty_submissions')
-        .delete()
-        .eq('id', submissionId)
-        .eq('creator_id', user.id) // Only allow deleting own submissions
-        .select() // Return deleted row to confirm
-
-      if (error) {
-        handleSupabaseError(error, 'deleteBountySubmission')
-        throw error
-      }
-
-      if (!data || data.length === 0) {
-        handleSupabaseError(new Error('No rows deleted - RLS policy issue'), 'deleteBountySubmission')
-        alert('⚠️ Could not delete submission. You may not have permission or the submission may already be deleted.')
-        return
-      }
-
+      await bountyService.deleteBountySubmission(submissionId, user.id)
       alert('✅ Submission deleted successfully!')
       
       // Refresh submissions
