@@ -26,8 +26,9 @@ import { PurchasesTab } from '../components/dashboard/tabs/PurchasesTab'
 import { EarningsTab } from '../components/dashboard/tabs/EarningsTab'
 import { BountiesTab } from '../components/dashboard/tabs/BountiesTab'
 import { SubmissionsTab } from '../components/dashboard/tabs/SubmissionsTab'
-// Note: CurationRequestsTab and ProCuratorTab to be integrated next
-// Note: ActivityFeed, Package, tierDisplayInfo now used in tab components
+// TODO: Integrate these final 2 tabs (components ready, just need to replace inline JSX)
+// import { CurationRequestsTab } from '../components/dashboard/tabs/CurationRequestsTab'
+// import { ProCuratorTab } from '../components/dashboard/tabs/ProCuratorTab'
 import { ActivityTab } from '../components/dashboard/tabs/ActivityTab'
 import { FavoritesTab } from '../components/dashboard/tabs/FavoritesTab'
 import {
@@ -40,7 +41,7 @@ import {
   X,
   Star,
 } from '../components/Icons'
-// Note: Download, Edit, Trash, Eye, EyeOff, Upload, Package now used in tab components
+// Note: Download, Edit, Trash, Eye, EyeOff, Upload, Package, tierDisplayInfo now used in tab components
 
 function DashboardPage() {
   const navigate = useNavigate()
