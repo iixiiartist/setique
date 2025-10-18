@@ -1,0 +1,195 @@
+{
+  "platform": "shopify",
+  "displayName": "Shopify",
+  "description": "Shopify E-commerce Analytics",
+  "dataType": "ecommerce",
+  
+  "requiredHeaders": [
+    "date",
+    "orders",
+    "revenue",
+    "sessions",
+    "conversion_rate"
+  ],
+  
+  "optionalHeaders": [
+    "aov",
+    "returning_customers",
+    "cart_abandonment_rate",
+    "product_views"
+  ],
+  
+  "headerAliases": {
+    "date": ["date", "day", "order_date", "transaction_date"],
+    "views": ["sessions", "store_sessions", "total_sessions", "visits"],
+    "likes": ["favorites", "wishlist_adds", "product_favorites"],
+    "comments": ["reviews", "review_count", "product_reviews"],
+    "shares": ["social_shares", "share_count"],
+    "followers": ["email_subscribers", "customer_count", "total_customers"],
+    "revenue": ["sales", "total_sales", "revenue", "gross_sales"]
+  },
+  
+  "patterns": {
+    "order_id": "^#[0-9]{4,}$",
+    "url": "myshopify\\.com|[a-z0-9-]+\\.myshopify\\.com",
+    "id": "shopify"
+  },
+  
+  "extendedFields": [
+    {
+      "name": "shopify_orders",
+      "description": "Total orders placed",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_aov",
+      "description": "Average order value",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_conversion_rate",
+      "description": "Sessions to orders percentage",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_cart_abandonment_rate",
+      "description": "Percentage of abandoned carts",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_returning_customer_rate",
+      "description": "Percentage returning customers",
+      "type": "float",
+      "category": "audience"
+    },
+    {
+      "name": "shopify_product_views",
+      "description": "Product page views",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "shopify_add_to_cart",
+      "description": "Add to cart actions",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "shopify_checkout_started",
+      "description": "Checkout processes started",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_discount_codes_used",
+      "description": "Number of discount applications",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_refund_rate",
+      "description": "Percentage of orders refunded",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_top_traffic_source",
+      "description": "Primary traffic referrer",
+      "type": "string",
+      "category": "metadata"
+    },
+    {
+      "name": "shopify_mobile_sessions",
+      "description": "Sessions from mobile devices",
+      "type": "integer",
+      "category": "audience"
+    },
+    {
+      "name": "shopify_top_selling_product",
+      "description": "Best performing product",
+      "type": "string",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_inventory_sold",
+      "description": "Units sold",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_shipping_revenue",
+      "description": "Revenue from shipping charges",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "shopify_tax_collected",
+      "description": "Total tax collected",
+      "type": "float",
+      "category": "commerce"
+    }
+  ],
+  
+  "piiRules": {
+    "removeUsernames": false,
+    "removeUrls": true,
+    "strictMode": true,
+    "customPatterns": [
+      {
+        "name": "customer_email",
+        "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+        "severity": "critical",
+        "replacement": "[CUSTOMER_EMAIL]"
+      },
+      {
+        "name": "customer_name",
+        "pattern": "customer_name|billing_name|shipping_name",
+        "severity": "critical",
+        "replacement": "[CUSTOMER_NAME]"
+      },
+      {
+        "name": "customer_address",
+        "pattern": "address|street|city|postal|zip",
+        "severity": "critical",
+        "replacement": "[ADDRESS]"
+      }
+    ]
+  },
+  
+  "qualityChecks": [
+    {
+      "field": "revenue",
+      "type": "range",
+      "min": 0,
+      "max": 10000000,
+      "required": true
+    },
+    {
+      "field": "conversion_rate",
+      "type": "range",
+      "min": 0,
+      "max": 100,
+      "required": false
+    },
+    {
+      "field": "aov",
+      "type": "range",
+      "min": 0,
+      "max": 100000,
+      "required": false
+    }
+  ],
+  
+  "exportInstructions": "In Shopify Admin, go to Analytics > Reports > Create Custom Report. Select metrics and date range, then Export as CSV.",
+  
+  "valueProps": [
+    "E-commerce conversion funnel data",
+    "AOV and pricing optimization insights",
+    "Product performance benchmarks",
+    "Highest commercial value data"
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "platform": "youtube",
+  "displayName": "YouTube",
+  "description": "YouTube Creator Analytics",
+  "dataType": "social_analytics",
+  
+  "requiredHeaders": [
+    "date",
+    "views",
+    "likes",
+    "comments",
+    "shares"
+  ],
+  
+  "optionalHeaders": [
+    "subscribers",
+    "watch_time",
+    "average_view_duration",
+    "revenue",
+    "cpm",
+    "rpm"
+  ],
+  
+  "headerAliases": {
+    "date": ["date", "day", "video_publish_time", "published_at"],
+    "views": ["views", "video_views", "total_views", "view_count"],
+    "likes": ["likes", "like_count", "thumbs_up"],
+    "comments": ["comments", "comment_count", "total_comments"],
+    "shares": ["shares", "share_count", "total_shares"],
+    "followers": ["subscribers", "subscriber_count", "total_subscribers", "subs"],
+    "revenue": ["estimated_revenue", "revenue", "earnings", "total_revenue"]
+  },
+  
+  "patterns": {
+    "video_id": "^[a-zA-Z0-9_-]{11}$",
+    "url": "youtube\\.com/watch\\?v=[a-zA-Z0-9_-]{11}|youtu\\.be/[a-zA-Z0-9_-]{11}",
+    "id": "youtube"
+  },
+  
+  "extendedFields": [
+    {
+      "name": "youtube_watch_time_hours",
+      "description": "Total watch time in hours",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_average_view_duration",
+      "description": "Average time watched per view (seconds)",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_cpm",
+      "description": "Cost per mille (per 1000 views)",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "youtube_rpm",
+      "description": "Revenue per mille (per 1000 views)",
+      "type": "float",
+      "category": "commerce"
+    },
+    {
+      "name": "youtube_impressions",
+      "description": "Number of thumbnail impressions",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_ctr",
+      "description": "Click-through rate percentage",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_end_screen_clicks",
+      "description": "Clicks on end screen elements",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_card_clicks",
+      "description": "Clicks on info cards",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_traffic_source",
+      "description": "Primary traffic source (browse, search, suggested)",
+      "type": "string",
+      "category": "metadata"
+    },
+    {
+      "name": "youtube_audience_retention",
+      "description": "Percentage of video watched on average",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "youtube_subscribers_gained",
+      "description": "New subscribers from this video",
+      "type": "integer",
+      "category": "audience"
+    },
+    {
+      "name": "youtube_subscribers_lost",
+      "description": "Unsubscribes from this video",
+      "type": "integer",
+      "category": "audience"
+    },
+    {
+      "name": "youtube_video_length",
+      "description": "Video duration in seconds",
+      "type": "integer",
+      "category": "content"
+    }
+  ],
+  
+  "piiRules": {
+    "removeUsernames": false,
+    "removeUrls": false,
+    "strictMode": false,
+    "customPatterns": []
+  },
+  
+  "qualityChecks": [
+    {
+      "field": "views",
+      "type": "range",
+      "min": 0,
+      "max": 10000000000,
+      "required": true
+    },
+    {
+      "field": "revenue",
+      "type": "range",
+      "min": 0,
+      "max": 1000000,
+      "required": false
+    },
+    {
+      "field": "date",
+      "type": "pattern",
+      "pattern": "\\d{4}-\\d{2}-\\d{2}",
+      "required": true
+    }
+  ],
+  
+  "exportInstructions": "Go to YouTube Studio > Analytics > Advanced Mode > Export. Select 'Comma-separated values (.csv)' and download.",
+  
+  "valueProps": [
+    "Monetization data (CPM, RPM) for creator economy research",
+    "Watch time and retention metrics",
+    "Traffic source attribution",
+    "Subscriber growth patterns"
+  ]
+}

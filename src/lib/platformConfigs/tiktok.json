@@ -1,0 +1,160 @@
+{
+  "platform": "tiktok",
+  "displayName": "TikTok",
+  "description": "TikTok Creator Analytics",
+  "dataType": "social_analytics",
+  
+  "requiredHeaders": [
+    "date",
+    "video_views",
+    "likes",
+    "comments",
+    "shares"
+  ],
+  
+  "optionalHeaders": [
+    "followers",
+    "video_id",
+    "video_title",
+    "video_duration",
+    "sound_name",
+    "hashtags"
+  ],
+  
+  "headerAliases": {
+    "date": ["date", "post_date", "published_date", "video_date", "timestamp"],
+    "views": ["video_views", "views", "total_views", "view_count", "playcount"],
+    "likes": ["likes", "like_count", "total_likes", "hearts"],
+    "comments": ["comments", "comment_count", "total_comments"],
+    "shares": ["shares", "share_count", "total_shares", "forwards"],
+    "followers": ["followers", "follower_count", "total_followers", "fans"],
+    "revenue": ["revenue", "earnings", "total_revenue", "income"]
+  },
+  
+  "patterns": {
+    "video_id": "^[0-9]{19}$",
+    "url": "tiktok\\.com/@[a-zA-Z0-9_]+/video/[0-9]+",
+    "id": "tiktok"
+  },
+  
+  "extendedFields": [
+    {
+      "name": "tiktok_sound_name",
+      "description": "Name of the audio/sound used in video",
+      "type": "string",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_sound_id",
+      "description": "Unique ID of the sound/music",
+      "type": "string",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_duet_count",
+      "description": "Number of duet videos created",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "tiktok_stitch_count",
+      "description": "Number of stitch videos created",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "tiktok_video_duration",
+      "description": "Video length in seconds",
+      "type": "integer",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_is_paid_partnership",
+      "description": "Whether video is a paid partnership",
+      "type": "boolean",
+      "category": "commerce"
+    },
+    {
+      "name": "tiktok_effect_ids",
+      "description": "Special effects used in video",
+      "type": "array",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_hashtag_names",
+      "description": "Hashtags used in caption",
+      "type": "array",
+      "category": "metadata"
+    },
+    {
+      "name": "tiktok_caption_length",
+      "description": "Length of video caption",
+      "type": "integer",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_music_genre",
+      "description": "Genre of sound/music used",
+      "type": "string",
+      "category": "content"
+    },
+    {
+      "name": "tiktok_trending_score",
+      "description": "Platform trending algorithm score",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "tiktok_virality_coefficient",
+      "description": "Rate of exponential growth",
+      "type": "float",
+      "category": "engagement"
+    }
+  ],
+  
+  "piiRules": {
+    "removeUsernames": true,
+    "removeUrls": false,
+    "strictMode": false,
+    "customPatterns": [
+      {
+        "name": "tiktok_username",
+        "pattern": "@[a-zA-Z0-9_.]{1,24}",
+        "severity": "high",
+        "replacement": "[TIKTOK_USER]"
+      }
+    ]
+  },
+  
+  "qualityChecks": [
+    {
+      "field": "views",
+      "type": "range",
+      "min": 0,
+      "max": 1000000000,
+      "required": true
+    },
+    {
+      "field": "likes",
+      "type": "range",
+      "min": 0,
+      "max": 100000000,
+      "required": false
+    },
+    {
+      "field": "date",
+      "type": "pattern",
+      "pattern": "\\d{4}-\\d{2}-\\d{2}|\\d{1,2}/\\d{1,2}/\\d{2,4}",
+      "required": true
+    }
+  ],
+  
+  "exportInstructions": "Download your TikTok analytics from TikTok Studio > Analytics > Content > Export Data. Select date range and export as CSV.",
+  
+  "valueProps": [
+    "Most valuable short-form video data for 2025",
+    "Trending sounds and effects insights",
+    "Virality pattern analysis",
+    "Duet/Stitch engagement metrics"
+  ]
+}

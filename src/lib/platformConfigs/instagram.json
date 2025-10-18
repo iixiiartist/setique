@@ -1,0 +1,153 @@
+{
+  "platform": "instagram",
+  "displayName": "Instagram",
+  "description": "Instagram Creator Analytics",
+  "dataType": "social_analytics",
+  
+  "requiredHeaders": [
+    "date",
+    "impressions",
+    "likes",
+    "comments",
+    "shares"
+  ],
+  
+  "optionalHeaders": [
+    "followers",
+    "reach",
+    "saves",
+    "profile_visits",
+    "website_clicks"
+  ],
+  
+  "headerAliases": {
+    "date": ["date", "day", "post_date", "published_date"],
+    "views": ["impressions", "total_impressions", "reach", "accounts_reached"],
+    "likes": ["likes", "like_count", "total_likes"],
+    "comments": ["comments", "comment_count", "total_comments"],
+    "shares": ["shares", "share_count", "sends", "direct_shares"],
+    "followers": ["followers", "follower_count", "total_followers"],
+    "revenue": ["revenue", "earnings", "shopping_revenue"]
+  },
+  
+  "patterns": {
+    "post_id": "instagram",
+    "url": "instagram\\.com/p/[a-zA-Z0-9_-]+",
+    "id": "instagram"
+  },
+  
+  "extendedFields": [
+    {
+      "name": "instagram_reach",
+      "description": "Unique accounts reached",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_saves",
+      "description": "Number of post saves/bookmarks",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_profile_visits",
+      "description": "Profile visits from this post",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_website_clicks",
+      "description": "Clicks on profile link",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "instagram_story_views",
+      "description": "Story views (if story post)",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_story_exits",
+      "description": "Story exits before completion",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_reel_plays",
+      "description": "Reel play count",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "instagram_post_type",
+      "description": "Type: feed, story, reel, carousel",
+      "type": "string",
+      "category": "metadata"
+    },
+    {
+      "name": "instagram_hashtag_count",
+      "description": "Number of hashtags used",
+      "type": "integer",
+      "category": "content"
+    },
+    {
+      "name": "instagram_tagged_accounts",
+      "description": "Number of accounts tagged",
+      "type": "integer",
+      "category": "content"
+    },
+    {
+      "name": "instagram_shopping_product_clicks",
+      "description": "Product tag clicks",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "instagram_location_used",
+      "description": "Whether location tag was used",
+      "type": "boolean",
+      "category": "metadata"
+    }
+  ],
+  
+  "piiRules": {
+    "removeUsernames": true,
+    "removeUrls": false,
+    "strictMode": false,
+    "customPatterns": [
+      {
+        "name": "instagram_username",
+        "pattern": "@[a-zA-Z0-9._]{1,30}",
+        "severity": "high",
+        "replacement": "[INSTAGRAM_USER]"
+      }
+    ]
+  },
+  
+  "qualityChecks": [
+    {
+      "field": "views",
+      "type": "range",
+      "min": 0,
+      "max": 1000000000,
+      "required": true
+    },
+    {
+      "field": "likes",
+      "type": "range",
+      "min": 0,
+      "max": 100000000,
+      "required": false
+    }
+  ],
+  
+  "exportInstructions": "Go to Instagram Professional Dashboard > Insights > Export Data. Select date range and content type, then download CSV.",
+  
+  "valueProps": [
+    "Shopping/commerce analytics",
+    "Reels vs Feed vs Stories performance",
+    "Saves metric (high-value engagement)",
+    "Profile visit attribution"
+  ]
+}

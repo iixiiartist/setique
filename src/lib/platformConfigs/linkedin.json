@@ -1,0 +1,158 @@
+{
+  "platform": "linkedin",
+  "displayName": "LinkedIn",
+  "description": "LinkedIn Professional Analytics",
+  "dataType": "professional",
+  
+  "requiredHeaders": [
+    "date",
+    "impressions",
+    "likes",
+    "comments",
+    "shares"
+  ],
+  
+  "optionalHeaders": [
+    "followers",
+    "engagement_rate",
+    "clicks",
+    "reactions"
+  ],
+  
+  "headerAliases": {
+    "date": ["date", "post_date", "published_date", "day"],
+    "views": ["impressions", "total_impressions", "unique_impressions"],
+    "likes": ["likes", "reactions", "total_reactions"],
+    "comments": ["comments", "comment_count", "total_comments"],
+    "shares": ["shares", "share_count", "reposts"],
+    "followers": ["followers", "follower_count", "connections"],
+    "revenue": ["revenue", "lead_value", "conversion_value"]
+  },
+  
+  "patterns": {
+    "post_id": "linkedin",
+    "url": "linkedin\\.com/feed/update/urn:li:activity:",
+    "id": "linkedin"
+  },
+  
+  "extendedFields": [
+    {
+      "name": "linkedin_engagement_rate",
+      "description": "Total engagement / impressions",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "linkedin_clicks",
+      "description": "Link clicks in post",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "linkedin_reactions_breakdown",
+      "description": "Like, celebrate, support, love, insightful, curious",
+      "type": "object",
+      "category": "engagement"
+    },
+    {
+      "name": "linkedin_follower_demographics",
+      "description": "Job titles, industries, seniority",
+      "type": "object",
+      "category": "audience"
+    },
+    {
+      "name": "linkedin_company_page",
+      "description": "Whether posted from company page",
+      "type": "boolean",
+      "category": "metadata"
+    },
+    {
+      "name": "linkedin_post_type",
+      "description": "Text, image, video, document, poll, article",
+      "type": "string",
+      "category": "metadata"
+    },
+    {
+      "name": "linkedin_video_views",
+      "description": "Video play count",
+      "type": "integer",
+      "category": "engagement"
+    },
+    {
+      "name": "linkedin_video_completion_rate",
+      "description": "Percentage who watched to end",
+      "type": "float",
+      "category": "engagement"
+    },
+    {
+      "name": "linkedin_lead_gen_forms",
+      "description": "Lead form submissions",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "linkedin_job_applications",
+      "description": "Job applications from post",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "linkedin_event_registrations",
+      "description": "Event sign-ups from post",
+      "type": "integer",
+      "category": "commerce"
+    },
+    {
+      "name": "linkedin_document_downloads",
+      "description": "Document/PDF downloads",
+      "type": "integer",
+      "category": "engagement"
+    }
+  ],
+  
+  "piiRules": {
+    "removeUsernames": true,
+    "removeUrls": false,
+    "strictMode": true,
+    "customPatterns": [
+      {
+        "name": "linkedin_profile_url",
+        "pattern": "linkedin\\.com/in/[a-zA-Z0-9-]+",
+        "severity": "critical",
+        "replacement": "[LINKEDIN_PROFILE]"
+      },
+      {
+        "name": "company_name",
+        "pattern": "linkedin\\.com/company/[a-zA-Z0-9-]+",
+        "severity": "medium",
+        "replacement": "[COMPANY]"
+      }
+    ]
+  },
+  
+  "qualityChecks": [
+    {
+      "field": "views",
+      "type": "range",
+      "min": 0,
+      "max": 10000000,
+      "required": true
+    },
+    {
+      "field": "engagement_rate",
+      "type": "range",
+      "min": 0,
+      "max": 100,
+      "required": false
+    }
+  ],
+  
+  "exportInstructions": "Go to your LinkedIn page > Analytics > Updates > Export Data. Select date range and metrics, then download CSV.",
+  
+  "valueProps": [
+    "B2B audience demographics (job titles, seniority)",
+    "Lead generation performance",
+    "Professional engagement patterns",
+    "Highest value per follower ($1.5x premium)"
+  ]
+}
