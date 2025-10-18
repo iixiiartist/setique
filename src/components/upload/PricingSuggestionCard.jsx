@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, Info, Sparkles } from 'lucide-react';
+import { DollarSign, TrendingUp, Info } from 'lucide-react';
 
 /**
  * PricingSuggestionCard Component
@@ -76,8 +76,8 @@ const PricingSuggestionCard = ({ pricing, isLoading, error, onAcceptPrice }) => 
       <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            <h3 className="font-semibold">AI Pricing Suggestion</h3>
+            <DollarSign className="w-5 h-5" />
+            <h3 className="font-semibold">Suggested Pricing</h3>
           </div>
           <span className={`px-2 py-1 rounded text-xs font-medium ${confidenceStyle.bg} ${confidenceStyle.text}`}>
             {Math.round(confidence * 100)}% Confidence
@@ -85,13 +85,18 @@ const PricingSuggestionCard = ({ pricing, isLoading, error, onAcceptPrice }) => 
         </div>
         
         {/* Suggested Price */}
-        <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold">${suggestedPrice.toFixed(2)}</span>
-          {priceRange && (
-            <span className="text-sm text-green-100">
-              Range: ${priceRange.min}-${priceRange.max}
-            </span>
-          )}
+        <div className="mb-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold">${suggestedPrice.toFixed(2)}</span>
+            {priceRange && (
+              <span className="text-sm text-green-100">
+                (typical range: ${priceRange.min}-${priceRange.max})
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-green-100 mt-1">
+            💡 This is just a suggestion based on market data - you set the final price!
+          </p>
         </div>
       </div>
 
@@ -186,16 +191,20 @@ const PricingSuggestionCard = ({ pricing, isLoading, error, onAcceptPrice }) => 
           </div>
         )}
 
-        {/* Accept Button */}
+        {/* Use This Price Button */}
         {onAcceptPrice && (
           <button
             onClick={() => onAcceptPrice(suggestedPrice)}
-            className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 group"
           >
-            <DollarSign className="w-4 h-4" />
-            Accept ${suggestedPrice.toFixed(2)}
+            <DollarSign className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            Use This Price (${suggestedPrice.toFixed(2)})
           </button>
         )}
+        
+        <p className="text-xs text-gray-500 text-center mt-2">
+          This fills the price field below - you can still change it manually
+        </p>
       </div>
     </div>
   );

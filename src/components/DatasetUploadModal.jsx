@@ -10,6 +10,7 @@ import SchemaAnalysisResults from './upload/SchemaAnalysisResults'
 import PricingSuggestionCard from './upload/PricingSuggestionCard'
 import VersionSelector from './upload/VersionSelector'
 import HygieneReport from './upload/HygieneReport'
+import SetiqueSeocialExplainer from './upload/SetiqueSeocialExplainer'
 import { useSchemaDetection } from '@/hooks/useSchemaDetection'
 import { usePricingSuggestion } from '@/hooks/usePricingSuggestion'
 import { processDataset } from '@/services/hygieneService'
@@ -825,6 +826,11 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                   Detecting platform, scanning for PII, calculating pricing...
                 </p>
               </div>
+            )}
+            
+            {/* Week 2: Setique Social Explainer - Show when CSV detected */}
+            {!isAnalyzing && schemaDetection.analysis && (
+              <SetiqueSeocialExplainer />
             )}
             
             {/* Week 2: Schema Analysis Results */}
