@@ -64,7 +64,9 @@ Objects are not valid as a React child
 (found: object with keys {type, message, action})
 ```
 
-### Root Cause
+### Root Causes (3 separate issues)
+
+#### Issue 1: Error Objects in Hooks
 Week 2 hooks were setting **Error objects** instead of **error strings**:
 
 **useSchemaDetection.js (Line 24, 44):**
@@ -79,14 +81,22 @@ Week 2 hooks were setting **Error objects** instead of **error strings**:
 ❌ setError(err)                                 // Error object
 ```
 
-When ErrorBanner tried to render these:
+#### Issue 2: Recommendation Objects Rendered Directly
+**HygieneReport.jsx (Line 174):**
+```jsx
+❌ <span>{rec}</span>  // rec is {type, message, action} object
+```
+
+When ErrorBanner or components tried to render these:
 ```jsx
 <p className="font-semibold flex-1">{message}</p>
 ```
 
-React threw error #31 because `message` was an object, not a string.
+React threw error #31 because objects cannot be rendered as children.
 
 ### Fix
+
+#### Fix 1: Error Objects → Strings
 
 **File:** `src/hooks/useSchemaDetection.js`
 
@@ -114,13 +124,28 @@ Changed Error objects to strings:
 + setError(err.message || 'Pricing calculation failed');
 ```
 
+#### Fix 2: Recommendation Objects → Proper Rendering
+
+**File:** `src/components/upload/HygieneReport.jsx`
+
+Changed to properly destructure recommendation objects:
+```jsx
+- <span>{rec}</span>
++ <div>
++   <strong>{rec.message}</strong>
++   {rec.action && <p className="text-gray-600 mt-1">{rec.action}</p>}
++ </div>
+```
+
 ### Why This Happened
-This was introduced in Week 2 commit (ffe66ca) when creating the new hooks. The hooks followed JavaScript Error object patterns, but React components can only render strings/numbers/components - not objects.
+1. **Week 2 hooks** (commit ffe66ca): Followed JavaScript Error object patterns, but React components can only render strings/numbers/components - not objects.
+2. **HygieneReport component**: Assumed recommendations were strings, but they're objects from `generateHygieneRecommendations()` service.
 
 ### Impact
 - ErrorBanner now renders error messages correctly
 - No more React render crashes
 - Week 2 CSV upload errors display properly
+- Hygiene recommendations show message + action properly formatted
 
 ---
 
@@ -134,7 +159,8 @@ npm test
 ```
 
 ### Production Deployment
-- Commit: `c02d205`
+- Commit 1: `c02d205` (manifest icons + error strings)
+- Commit 2: `05c283b` (HygieneReport recommendations)
 - Pushed to: `main` branch
 - Netlify: Auto-deployed (build should succeed)
 
@@ -149,12 +175,18 @@ npm test
    - Upload invalid CSV
    - Verify error message displays as text (not "[object Object]")
 
+3. **Hygiene Recommendations** (Week 2):
+   - Upload CSV with PII (emails, phones)
+   - Check HygieneReport recommendations section
+   - Verify messages and actions display properly formatted
+
 ---
 
 ## Files Changed
 - ✅ `public/site.webmanifest` - Fixed icon paths
 - ✅ `src/hooks/useSchemaDetection.js` - Error strings instead of objects
 - ✅ `src/hooks/usePricingSuggestion.js` - Error strings instead of objects
+- ✅ `src/components/upload/HygieneReport.jsx` - Render recommendation objects properly
 
 ## Related Documentation
 - Week 2 implementation: `WEEK_2_COMPLETION_SUMMARY.md`
