@@ -95,7 +95,7 @@ LIMIT 10;
 -- QUERY 5: Test inserting a new record with all new fields
 -- This creates a sample TikTok dataset to verify everything works
 INSERT INTO datasets (
-  user_id,
+  creator_id,
   title,
   description,
   price,
@@ -111,10 +111,9 @@ INSERT INTO datasets (
   pii_issues_found,
   suggested_price,
   price_confidence,
-  pricing_factors,
-  status
+  pricing_factors
 ) VALUES (
-  (SELECT id FROM profiles LIMIT 1), -- Replace with your user_id
+  (SELECT id FROM profiles LIMIT 1), -- Replace with your creator_id if needed
   'TEST: TikTok Creator Analytics - Q4 2025',
   'Test dataset with extended fields (sound names, duets, stitches, virality)',
   85.00,
@@ -130,8 +129,7 @@ INSERT INTO datasets (
   3,
   85.00,
   0.88,
-  '{"basePrice": 75, "dateMultiplier": 1.5, "platformMultiplier": 1.3, "extendedFieldsMultiplier": 2.0, "curationMultiplier": 1.0, "engagementMultiplier": 1.0}'::jsonb,
-  'draft' -- Keep as draft for testing
+  '{"basePrice": 75, "dateMultiplier": 1.5, "platformMultiplier": 1.3, "extendedFieldsMultiplier": 2.0, "curationMultiplier": 1.0, "engagementMultiplier": 1.0}'::jsonb
 )
 RETURNING id, title, platform, has_extended_fields, suggested_price;
 
