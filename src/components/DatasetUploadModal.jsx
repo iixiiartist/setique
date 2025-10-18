@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabase'
 import { logDatasetPublished } from '../lib/activityTracking'
 import { X, Upload, Package, Wrench, Tag as TagIcon } from './Icons'
 import { TagInput } from './TagInput'
+import Papa from 'papaparse'
+// Week 2: Upload Flow Integration
+import SchemaAnalysisResults from './upload/SchemaAnalysisResults'
+import PricingSuggestionCard from './upload/PricingSuggestionCard'
+import VersionSelector from './upload/VersionSelector'
+import HygieneReport from './upload/HygieneReport'
+import { useSchemaDetection } from '../hooks/useSchemaDetection'
+import { usePricingSuggestion } from '../hooks/usePricingSuggestion'
+import { processDataset } from '../services/hygieneService'
 
 export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth()
@@ -89,6 +98,16 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   
+  // Week 2: Social Analytics State
+  const [, setCsvData] = useState(null)
+  const [datasetVersion, setDatasetVersion] = useState('standard')
+  const [hygieneReport, setHygieneReport] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  
+  // Week 2: Custom Hooks
+  const schemaDetection = useSchemaDetection()
+  const pricingSuggestion = usePricingSuggestion()
+  
   // Allow price = 0 for demo datasets; treat blank or negative as invalid
   const numericPrice = price === '' ? NaN : parseFloat(price)
   
@@ -117,11 +136,59 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     return true
   })()
   
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0]
     if (file) {
       setUploadFile(file)
       setUploadError('')
+      
+      // Week 2: Auto-detect CSV files and trigger schema analysis
+      if (file.name.endsWith('.csv')) {
+        setIsAnalyzing(true)
+        
+        // Parse CSV file
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: async (results) => {
+            try {
+              if (results.data && results.data.length > 0) {
+                setCsvData(results.data)
+                
+                // Run schema detection
+                const analysis = await schemaDetection.detectSchema(results.data)
+                
+                // Run hygiene scan
+                const hygiene = await processDataset(results.data)
+                setHygieneReport(hygiene)
+                
+                // Calculate pricing if schema detected
+                if (analysis) {
+                  await pricingSuggestion.calculatePricing(
+                    {
+                      rowCount: results.data.length,
+                      platform: analysis.platform,
+                      hasExtendedFields: analysis.extendedFields?.length > 0,
+                      extendedFieldCount: analysis.extendedFields?.length || 0
+                    },
+                    analysis
+                  )
+                }
+              }
+            } catch (error) {
+              console.error('CSV analysis failed:', error)
+              setUploadError('CSV analysis failed. You can still upload manually.')
+            } finally {
+              setIsAnalyzing(false)
+            }
+          },
+          error: (error) => {
+            console.error('CSV parsing failed:', error)
+            setUploadError('Failed to parse CSV file')
+            setIsAnalyzing(false)
+          }
+        })
+      }
     }
   }
   
@@ -241,6 +308,23 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
           sample_preview_urls: samplePreviewUrls,
           readme_content: curationLevel === 'raw' ? readmeContent.trim() : null,
           metadata_completeness: curationLevel === 'partial' ? metadataCompleteness : 100,
+          // Week 2: Social Analytics Fields
+          platform: schemaDetection.platform || null,
+          data_type: schemaDetection.platform ? 'social_analytics' : 'other',
+          has_extended_fields: schemaDetection.extendedFields?.length > 0 || false,
+          extended_field_count: schemaDetection.extendedFields?.length || 0,
+          extended_fields_list: schemaDetection.extendedFields || [],
+          dataset_version: datasetVersion,
+          schema_detected: schemaDetection.analysis ? true : false,
+          schema_confidence: schemaDetection.confidence || null,
+          canonical_fields: schemaDetection.canonicalFields || {},
+          hygiene_version: hygieneReport?.version || 'v1.0',
+          hygiene_passed: hygieneReport?.passed || false,
+          pii_issues_found: hygieneReport?.issuesFound || 0,
+          hygiene_report: hygieneReport || {},
+          suggested_price: pricingSuggestion.suggestedPrice || null,
+          price_confidence: pricingSuggestion.confidence || null,
+          pricing_factors: pricingSuggestion.factors || {},
           // review_status will be auto-set by trigger based on Pro Curator status
         },
       ]).select()
@@ -279,6 +363,13 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
       setMetadataCompleteness(50)
       setCurationLevel('curated')
       setUploadProgress(0)
+      // Week 2: Reset social analytics state
+      setCsvData(null)
+      setDatasetVersion('standard')
+      setHygieneReport(null)
+      setIsAnalyzing(false)
+      schemaDetection.resetAnalysis()
+      pricingSuggestion.resetPricing()
       localStorage.removeItem('draft_modal_dataset_title')
       localStorage.removeItem('draft_modal_dataset_desc')
       localStorage.removeItem('draft_modal_dataset_price')
@@ -321,6 +412,13 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
     setCurationLevel('curated')
     setUploadProgress(0)
     setUploadError('')
+    // Week 2: Reset social analytics state
+    setCsvData(null)
+    setDatasetVersion('standard')
+    setHygieneReport(null)
+    setIsAnalyzing(false)
+    schemaDetection.resetAnalysis()
+    pricingSuggestion.resetPricing()
     onClose()
   }
 
@@ -717,6 +815,64 @@ export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
                 <p className="text-red-600 font-semibold text-sm mt-2">⚠️ {uploadError}</p>
               )}
             </div>
+            
+            {/* Week 2: CSV Analysis Loading */}
+            {isAnalyzing && (
+              <div className="bg-blue-50 border-2 border-blue-500 rounded-lg p-6 text-center">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="font-bold text-blue-900">Analyzing your CSV...</p>
+                <p className="text-sm text-blue-700 mt-1">
+                  Detecting platform, scanning for PII, calculating pricing...
+                </p>
+              </div>
+            )}
+            
+            {/* Week 2: Schema Analysis Results */}
+            {!isAnalyzing && schemaDetection.analysis && (
+              <div className="space-y-4">
+                <SchemaAnalysisResults
+                  analysis={schemaDetection.analysis}
+                  isLoading={schemaDetection.isLoading}
+                  error={schemaDetection.error}
+                />
+                
+                {/* Version Selector (only if extended fields detected) */}
+                {schemaDetection.extendedFields?.length > 0 && (
+                  <VersionSelector
+                    selectedVersion={datasetVersion}
+                    onVersionChange={setDatasetVersion}
+                    pricing={{
+                      standard: pricingSuggestion.suggestedPrice || 0,
+                      extended: (pricingSuggestion.suggestedPrice || 0) * 2,
+                      both: (pricingSuggestion.suggestedPrice || 0) * 2.5
+                    }}
+                    extendedFields={schemaDetection.extendedFields}
+                    disabled={isUploading}
+                  />
+                )}
+                
+                {/* Hygiene Report */}
+                {hygieneReport && (
+                  <HygieneReport
+                    report={hygieneReport}
+                    isLoading={false}
+                    error={null}
+                  />
+                )}
+                
+                {/* Pricing Suggestion */}
+                {pricingSuggestion.pricing && (
+                  <PricingSuggestionCard
+                    pricing={pricingSuggestion.pricing}
+                    isLoading={pricingSuggestion.isLoading}
+                    error={pricingSuggestion.error}
+                    onAcceptPrice={(suggestedPrice) => {
+                      setPrice(suggestedPrice.toString())
+                    }}
+                  />
+                )}
+              </div>
+            )}
             
             {/* Upload Progress */}
             {isUploading && (
