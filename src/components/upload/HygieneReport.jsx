@@ -169,7 +169,10 @@ const HygieneReport = ({ report, isLoading, error }) => {
             {recommendations.map((rec, index) => (
               <li key={index} className="flex items-start gap-2 text-xs text-gray-700">
                 <span className="text-blue-600 flex-shrink-0">•</span>
-                <span>{rec}</span>
+                <div>
+                  <strong>{rec.message}</strong>
+                  {rec.action && <p className="text-gray-600 mt-1">{rec.action}</p>}
+                </div>
               </li>
             ))}
           </ul>
