@@ -178,7 +178,7 @@ export function SocialDataUploadModal({ isOpen, onClose, onSuccess }) {
           description: description.trim(),
           price: numericPrice,
           tags: tags,
-          file_path: fileName,
+          download_url: fileName,
           file_size: uploadFile.size,
           modality: 'text', // Social analytics is text data
           curation_level: 'curated', // Social data is typically clean
