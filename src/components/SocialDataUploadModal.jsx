@@ -227,6 +227,7 @@ export function SocialDataUploadModal({ isOpen, onClose, onSuccess }) {
       onClose()
     } catch (error) {
       console.error('Upload failed:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
       setUploadError(error.message || 'Upload failed. Please try again.')
     } finally {
       setIsUploading(false)
