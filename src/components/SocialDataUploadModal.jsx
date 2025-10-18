@@ -238,8 +238,8 @@ export function SocialDataUploadModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-beige rounded-xl border-4 border-black max-w-4xl w-full my-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl border-4 border-black max-w-4xl w-full my-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         {/* Header with Setique Social branding */}
         <div className="flex justify-between items-center p-6 border-b-4 border-black bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100">
           <div>
