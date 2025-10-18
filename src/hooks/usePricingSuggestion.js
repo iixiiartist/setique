@@ -22,7 +22,7 @@ export const usePricingSuggestion = () => {
    */
   const calculatePricing = useCallback(async (dataset, schemaAnalysis) => {
     if (!dataset) {
-      setError(new Error('No dataset provided'));
+      setError('No dataset provided');
       return null;
     }
 
@@ -35,7 +35,7 @@ export const usePricingSuggestion = () => {
       return result;
     } catch (err) {
       console.error('Pricing calculation failed:', err);
-      setError(err);
+      setError(err.message || 'Pricing calculation failed');
       return null;
     } finally {
       setIsLoading(false);

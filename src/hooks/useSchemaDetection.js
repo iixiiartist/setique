@@ -21,7 +21,7 @@ export const useSchemaDetection = () => {
    */
   const detectSchema = useCallback(async (csvData) => {
     if (!csvData || csvData.length === 0) {
-      setError(new Error('No CSV data provided'));
+      setError('No CSV data provided');
       return null;
     }
 
@@ -42,7 +42,7 @@ export const useSchemaDetection = () => {
       return result;
     } catch (err) {
       console.error('Schema detection failed:', err);
-      setError(err);
+      setError(err.message || 'Schema detection failed');
       return null;
     } finally {
       setIsLoading(false);
