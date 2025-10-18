@@ -173,7 +173,7 @@ export function SocialDataUploadModal({ isOpen, onClose, onSuccess }) {
       const { data: dataset, error: insertError } = await supabase
         .from('datasets')
         .insert({
-          user_id: user.id,
+          creator_id: user.id,
           title: title.trim(),
           description: description.trim(),
           price: numericPrice,
