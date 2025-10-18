@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { calculateSuggestedPrice } from '../../services/pricingService';
+import { calculateSuggestedPrice } from '@/services/pricingService';
 
 /**
  * usePricingSuggestion Hook

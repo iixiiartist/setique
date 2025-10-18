@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { analyzeSchema } from '../../services/schemaDetectorService';
+import { analyzeSchema } from '@/services/schemaDetectorService';
 
 /**
  * useSchemaDetection Hook

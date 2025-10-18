@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     extensions: ['.js', '.jsx', '.json'],
+    alias: {
+      '@': '/src',
+    },
   },
   server: {
     port: 3000,

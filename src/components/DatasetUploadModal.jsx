@@ -10,9 +10,9 @@ import SchemaAnalysisResults from './upload/SchemaAnalysisResults'
 import PricingSuggestionCard from './upload/PricingSuggestionCard'
 import VersionSelector from './upload/VersionSelector'
 import HygieneReport from './upload/HygieneReport'
-import { useSchemaDetection } from '../hooks/useSchemaDetection'
-import { usePricingSuggestion } from '../hooks/usePricingSuggestion'
-import { processDataset } from '../services/hygieneService'
+import { useSchemaDetection } from '@/hooks/useSchemaDetection'
+import { usePricingSuggestion } from '@/hooks/usePricingSuggestion'
+import { processDataset } from '@/services/hygieneService'
 
 export function DatasetUploadModal({ isOpen, onClose, onSuccess }) {
   const { user } = useAuth()

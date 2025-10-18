@@ -11,7 +11,7 @@
  * - Confidence scoring
  */
 
-import { platformConfigs } from '../lib/platformConfigs';
+import { platformConfigs } from '@/lib/platformConfigs';
 
 // USS v1.0 Core Fields (7 fields required for Standard version)
 const USS_CORE_FIELDS = [
