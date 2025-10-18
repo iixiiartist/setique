@@ -29,19 +29,29 @@ export function DatasetsTab({
   handleEditDataset,
   handleDeleteDataset,
   setDeletionModalDataset,
-  uploadModal
+  uploadModal,
+  socialUploadModal
 }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-2xl font-extrabold">My Datasets</h3>
-        <button
-          onClick={() => uploadModal.open()}
-          className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
-        >
-          <Upload className="h-4 w-4" />
-          Upload New Dataset
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => socialUploadModal.open()}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Social Data
+          </button>
+          <button
+            onClick={() => uploadModal.open()}
+            className="bg-[linear-gradient(90deg,#ffea00,#00ffff)] text-black font-extrabold px-6 py-3 rounded-full border-2 border-black hover:scale-105 transition flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Dataset
+          </button>
+        </div>
       </div>
       
       {myDatasets.length > 0 ? (

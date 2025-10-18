@@ -7,6 +7,7 @@ import { useDatasetActions } from '../lib/hooks/useDatasetActions'
 import { useBountyActions } from '../lib/hooks/useBountyActions'
 import { useStripeConnect } from '../lib/hooks/useStripeConnect'
 import { DatasetUploadModal } from '../components/DatasetUploadModal'
+import { SocialDataUploadModal } from '../components/SocialDataUploadModal'
 import CurationRequestModal from '../components/CurationRequestModal'
 import ProposalsModal from '../components/ProposalsModal'
 import ProposalSubmissionModal from '../components/ProposalSubmissionModal'
@@ -64,6 +65,7 @@ function DashboardPage() {
   
   // Modal states - Using useModalState hook (Phase 2 refactoring)
   const uploadModal = useModalState()
+  const socialUploadModal = useModalState() // NEW: Setique Social upload
   const curationRequestModal = useModalState()
   const proposalsModal = useModalState()
   const proposalSubmissionModal = useModalState()
@@ -556,6 +558,7 @@ function DashboardPage() {
               handleDeleteDataset={handleDeleteDataset}
               setDeletionModalDataset={setDeletionModalDataset}
               uploadModal={uploadModal}
+              socialUploadModal={socialUploadModal}
             />
           )}
 
@@ -744,6 +747,13 @@ function DashboardPage() {
       <DatasetUploadModal 
         isOpen={uploadModal.isOpen}
         onClose={uploadModal.close}
+        onSuccess={refetch}
+      />
+      
+      {/* Upload Social Data Modal */}
+      <SocialDataUploadModal 
+        isOpen={socialUploadModal.isOpen}
+        onClose={socialUploadModal.close}
         onSuccess={refetch}
       />
       
