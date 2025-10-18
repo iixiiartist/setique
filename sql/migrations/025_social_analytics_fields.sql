@@ -61,8 +61,8 @@ CREATE INDEX IF NOT EXISTS idx_datasets_hygiene_passed
 
 -- Composite index for social analytics marketplace queries
 CREATE INDEX IF NOT EXISTS idx_datasets_social_marketplace 
-  ON datasets(platform, has_extended_fields, hygiene_passed, status) 
-  WHERE data_type = 'social_analytics' AND status = 'active';
+  ON datasets(platform, has_extended_fields, hygiene_passed) 
+  WHERE data_type = 'social_analytics';
 
 -- ============================================================================
 -- PART 3: Add Comments for Documentation
