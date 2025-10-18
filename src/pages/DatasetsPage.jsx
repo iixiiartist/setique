@@ -15,6 +15,8 @@ import DatasetComments from '../components/comments/DatasetComments'
 import DatasetReviews from '../components/DatasetReviews'
 import StarRating from '../components/StarRating'
 import { CurationLevelBadge } from '../components/CurationLevelBadge'
+import PlatformBadge from '../components/social/PlatformBadge'
+import ExtendedFieldsPreview, { ExtendedFieldsBadge } from '../components/social/ExtendedFieldsPreview'
 import {
   Star,
   Database,
@@ -42,6 +44,9 @@ export default function DatasetsPage() {
   const [query, setQuery] = useState('')
   const [modality, setModality] = useState('all')
   const [curationFilter, setCurationFilter] = useState('all')
+  const [platformFilter, setPlatformFilter] = useState('all')
+  const [extendedFieldsFilter, setExtendedFieldsFilter] = useState(false)
+  const [hygieneFilter, setHygieneFilter] = useState(false)
   
   // Beta access state
   const [hasBetaAccess, setHasBetaAccess] = useState(false)
@@ -211,9 +216,12 @@ export default function DatasetsPage() {
           (modality === 'all' || d.tags.some((tag) => tag === modality)) &&
           (curationFilter === 'all' || 
            curationFilter === 'verified' ? d.verified_by_curator === true :
-           (d.curation_level || 'curated') === curationFilter)
+           (d.curation_level || 'curated') === curationFilter) &&
+          (platformFilter === 'all' || d.platform === platformFilter) &&
+          (!extendedFieldsFilter || d.has_extended_fields === true) &&
+          (!hygieneFilter || d.hygiene_passed === true)
       ),
-    [datasets, query, modality, curationFilter]
+    [datasets, query, modality, curationFilter, platformFilter, extendedFieldsFilter, hygieneFilter]
   )
 
   useEffect(() => {
@@ -532,6 +540,98 @@ export default function DatasetsPage() {
             </div>
           </div>
           
+          {/* Platform & Social Analytics Filters */}
+          <div className="mb-6 bg-gradient-to-r from-cyan-100 via-purple-100 to-pink-100 border-4 border-black rounded-xl p-4">
+            <h3 className="font-extrabold text-sm mb-3">Filter by Platform & Data Type:</h3>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <button
+                onClick={() => setPlatformFilter('all')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'all'
+                    ? 'bg-black text-white shadow-none'
+                    : 'bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                📊 All Platforms
+              </button>
+              <button
+                onClick={() => setPlatformFilter('tiktok')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'tiktok'
+                    ? 'bg-black text-white shadow-none'
+                    : 'bg-gray-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🎵 TikTok
+              </button>
+              <button
+                onClick={() => setPlatformFilter('youtube')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'youtube'
+                    ? 'bg-red-500 text-white shadow-none'
+                    : 'bg-red-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                ▶️ YouTube
+              </button>
+              <button
+                onClick={() => setPlatformFilter('instagram')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'instagram'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-none'
+                    : 'bg-pink-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                📷 Instagram
+              </button>
+              <button
+                onClick={() => setPlatformFilter('linkedin')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'linkedin'
+                    ? 'bg-blue-600 text-white shadow-none'
+                    : 'bg-blue-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                💼 LinkedIn
+              </button>
+              <button
+                onClick={() => setPlatformFilter('shopify')}
+                className={`px-4 py-2 font-bold rounded-full border-2 border-black transition-all ${
+                  platformFilter === 'shopify'
+                    ? 'bg-green-600 text-white shadow-none'
+                    : 'bg-green-200 text-black shadow-[2px_2px_0_#000] hover:shadow-[4px_4px_0_#000]'
+                }`}
+              >
+                🛍️ Shopify
+              </button>
+            </div>
+            
+            {/* Advanced Filters */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t-2 border-black/20">
+              <button
+                onClick={() => setExtendedFieldsFilter(!extendedFieldsFilter)}
+                className={`px-3 py-1.5 text-sm font-bold rounded-full border-2 border-black transition-all ${
+                  extendedFieldsFilter
+                    ? 'bg-cyan-500 text-white shadow-none'
+                    : 'bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[3px_3px_0_#000]'
+                }`}
+              >
+                <Database className="inline w-3.5 h-3.5 mr-1" />
+                Extended Fields Only
+              </button>
+              <button
+                onClick={() => setHygieneFilter(!hygieneFilter)}
+                className={`px-3 py-1.5 text-sm font-bold rounded-full border-2 border-black transition-all ${
+                  hygieneFilter
+                    ? 'bg-green-500 text-white shadow-none'
+                    : 'bg-white text-black shadow-[2px_2px_0_#000] hover:shadow-[3px_3px_0_#000]'
+                }`}
+              >
+                ✓ PII Hygiene Verified
+              </button>
+            </div>
+          </div>
+          
           {/* Datasets Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {filtered.length > 0 ? (
@@ -578,6 +678,29 @@ export default function DatasetsPage() {
                         </span>
                       </div>
                     )}
+                    
+                    {/* Platform & Social Analytics Badges */}
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {d.platform && (
+                        <PlatformBadge 
+                          platform={d.platform} 
+                          size="sm"
+                          showIcon={true}
+                          showName={true}
+                        />
+                      )}
+                      {d.has_extended_fields && d.extended_field_count > 0 && (
+                        <ExtendedFieldsBadge 
+                          count={d.extended_field_count}
+                          showCount={true}
+                        />
+                      )}
+                      {d.hygiene_passed && (
+                        <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full border-2 border-green-600">
+                          ✓ PII Clean
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="p-6 pt-2 flex flex-col flex-grow">
                     <p className="text-black/80 mb-4 text-sm leading-relaxed font-semibold flex-grow">
@@ -850,6 +973,37 @@ export default function DatasetsPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Platform & Extended Fields (Social Analytics) */}
+                {datasets[selected].platform && (
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Platform</h3>
+                    <div className="flex items-center gap-3">
+                      <PlatformBadge 
+                        platform={datasets[selected].platform} 
+                        size="lg"
+                        showIcon={true}
+                        showName={true}
+                      />
+                      {datasets[selected].data_type && (
+                        <span className="text-sm font-semibold text-gray-600">
+                          {datasets[selected].data_type === 'social_analytics' && '📊 Social Analytics Dataset'}
+                          {datasets[selected].data_type === 'ecommerce' && '🛒 E-commerce Data'}
+                          {datasets[selected].data_type === 'professional' && '💼 Professional Network Data'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {datasets[selected].has_extended_fields && datasets[selected].extended_fields_list && (
+                  <ExtendedFieldsPreview 
+                    fields={datasets[selected].extended_fields_list}
+                    count={datasets[selected].extended_field_count}
+                    platform={datasets[selected].platform}
+                    defaultExpanded={false}
+                  />
+                )}
 
                 <div>
                   <h3 className="font-bold text-lg mb-2">Details</h3>
